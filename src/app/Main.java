@@ -73,7 +73,7 @@ public class Main {
         } catch (IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
+        job.getConfiguration().set("fs.defaultFS", "hdfs://192.168.1.14:9000");
         job.setJobName("Fase 1");
         
         job.setJarByClass(Main.class);
@@ -135,7 +135,7 @@ public class Main {
         } catch (IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
+        job.getConfiguration().set("fs.defaultFS", "hdfs://192.168.1.14:9000");
         job.setJobName("Fase 2");
         
         job.setJarByClass(Main.class);
@@ -199,7 +199,6 @@ public class Main {
      * 
      */
     public void job3(){
-        
         Configuration c = new Configuration();
         Job job = null;
         try {
@@ -208,6 +207,7 @@ public class Main {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
         
+        job.getConfiguration().set("fs.defaultFS", "hdfs://192.168.1.14:9000");
         job.setJobName("Fase 3");
         
         job.setJarByClass(Main.class);
@@ -293,10 +293,11 @@ public class Main {
     private void delDirs(String d) {
         
         log.info("Excluindo diretórios anteriores...");
-        
+        Configuration c = new Configuration();
+        c.set("fs.defaultFS", "hdfs://192.168.1.14:9000");
         Path p = new Path(d);
         try {
-            FileSystem fs = FileSystem.get(new Configuration());
+            FileSystem fs = FileSystem.get(c);
             
             if(fs.isDirectory(p)){
                 
@@ -328,12 +329,13 @@ public class Main {
     private void delOutDirs(String d) {
         
         log.info("Excluindo diretórios anteriores...");
-        
+        Configuration c = new Configuration();
+        c.set("fs.defaultFS", "hdfs://192.168.1.14:9000");
         Path p = new Path(d);
         Path aux;
         
         try {
-            FileSystem fs = FileSystem.get(new Configuration());
+            FileSystem fs = FileSystem.get(c);
             
             if(fs.isDirectory(p)){
                 
@@ -342,7 +344,7 @@ public class Main {
                 for(FileStatus f: ff){
                     aux = f.getPath();
                     
-                    if(aux.getName().startsWith("output")){
+                    if(aux.getName().contains("output")){
                         
                         if(fs.delete(aux, true)){
                             log.info("Excluido diretório -> "+aux.getName());
@@ -362,9 +364,10 @@ public class Main {
     }
     
     public void createTempDir(String d){
-     
+    	 Configuration c = new Configuration();
+         c.set("fs.defaultFS", "hdfs://192.168.1.14:9000");
         try {
-            FileSystem fs = FileSystem.get(new Configuration());
+            FileSystem fs = FileSystem.get(c);
             
             if(fs.mkdirs(new Path(d))){
                 log.info("Diretorio "+d+" criado com sucesso.");
@@ -380,9 +383,10 @@ public class Main {
     
     public void delContentFiles(String dir){
         Path p = new Path(dir);
-        
+        Configuration c = new Configuration();
+        c.set("fs.defaultFS", "hdfs://192.168.1.14:9000");
         try {
-            FileSystem fs = FileSystem.get(new Configuration());
+            FileSystem fs = FileSystem.get(c);
             
             if(fs.isDirectory(p)){
                 
@@ -422,11 +426,12 @@ public class Main {
         
         Path p = new Path(dir);
         Path aux;
-        
+        Configuration c = new Configuration();
+        c.set("fs.defaultFS", "hdfs://192.168.1.14:9000");
         System.out.println("Verificando diretório: "+dir);
         
         try{
-            FileSystem fs = FileSystem.get(new Configuration());
+            FileSystem fs = FileSystem.get(c);
 
                 if(fs.isDirectory(p)){
 
@@ -462,7 +467,7 @@ public class Main {
     public static void main(String[] args) throws IOException {
         Main m = new Main();
 //        System.out.println(m.checkOutput("output1"));
-        m.delOutDirs("/user/hadoop/");
+        m.delOutDirs("/user/eduardo/");
         m.delContentFiles("invert");
 
         if(args.length > 0){
