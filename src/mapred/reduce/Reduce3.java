@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-package mapred;
+package mapred.reduce;
 
 import java.io.IOException;
 import java.util.logging.Level;
@@ -21,9 +21,9 @@ import org.apache.hadoop.mapreduce.lib.output.MultipleOutputs;
  *
  * @author eduardo
  */
-public class Reduce3v2 extends Reducer<Text, Text, Text, Text> {
+public class Reduce3 extends Reducer<Text, Text, Text, Text> {
     
-    Log log = LogFactory.getLog(Reduce3v2.class);
+    Log log = LogFactory.getLog(Reduce3.class);
     SequenceFile.Writer writer;
     MultipleOutputs<Text, Text> mo;
     String count;
@@ -52,7 +52,7 @@ public class Reduce3v2 extends Reducer<Text, Text, Text, Text> {
                 
             }
         } catch (IOException | InterruptedException ex) {
-            Logger.getLogger(Reduce3v2.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Reduce3.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
     
@@ -65,7 +65,7 @@ public class Reduce3v2 extends Reducer<Text, Text, Text, Text> {
         try {
             writer.append(key, value);
         } catch (IOException ex) {
-            Logger.getLogger(Reduce3v2.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Reduce3.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
     
@@ -76,7 +76,7 @@ public class Reduce3v2 extends Reducer<Text, Text, Text, Text> {
         try {
             mo.write(key, value, out);
         } catch (IOException | InterruptedException ex) {
-            Logger.getLogger(Reduce3v2.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Reduce3.class.getName()).log(Level.SEVERE, null, ex);
         }
         
     }
@@ -88,7 +88,7 @@ public class Reduce3v2 extends Reducer<Text, Text, Text, Text> {
             writer.close();
             mo.close();
         } catch (IOException | InterruptedException ex) {
-            Logger.getLogger(Reduce3v2.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Reduce3.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 }

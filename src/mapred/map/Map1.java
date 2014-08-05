@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-package mapred;
+package mapred.map;
 
 import java.io.IOException;
 import java.util.StringTokenizer;

@@ -4,14 +4,17 @@
  * and open the template in the editor.
  */
 
-package mapred;
+package mapred.map;
 
 import app.ItemTid;
-import app.Main;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import main.Main;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.Path;
@@ -26,9 +29,9 @@ import org.apache.hadoop.util.ReflectionUtils;
  *
  * @author eduardo
  */
-public class Map3v2 extends Mapper<LongWritable, Text, Text, Text>{
+public class Map3 extends Mapper<LongWritable, Text, Text, Text>{
     
-    Log log = LogFactory.getLog(Map3v2.class);
+    Log log = LogFactory.getLog(Map3.class);
     
     ItemTid invert;
     ArrayList<String> keys;
@@ -48,7 +51,7 @@ public class Map3v2 extends Mapper<LongWritable, Text, Text, Text>{
         support = Integer.parseInt(c.getConfiguration().get("support"));
         
         log.info("Iniciando map 3v2");
-        log.info("Map3v2 support = "+support);
+        log.info("Map3 support = "+support);
         
         invert = new ItemTid(); 
         keys = new ArrayList();
@@ -102,7 +105,7 @@ public class Map3v2 extends Mapper<LongWritable, Text, Text, Text>{
         try {
             context.write(key, value);
         } catch (IOException | InterruptedException ex) {
-            Logger.getLogger(Map3v2.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Map3.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
     
@@ -209,6 +212,6 @@ public class Map3v2 extends Mapper<LongWritable, Text, Text, Text>{
     
     @Override
     public void cleanup(Context c){
-        log.info("Finalizando o Map3v2!");
+        log.info("Finalizando o Map3!");
     }
 }

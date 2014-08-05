@@ -4,14 +4,17 @@
  * and open the template in the editor.
  */
 
-package mapred;
+package mapred.map;
 
 import app.ItemTid;
-import app.Main;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import main.Main;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.Path;
@@ -27,9 +30,9 @@ import org.apache.hadoop.util.ReflectionUtils;
  * Gerar itemsets de tamanho 2.
  * @author eduardo
  */
-public class Map2v2  extends Mapper<LongWritable, Text, Text, Text>{
+public class Map2  extends Mapper<LongWritable, Text, Text, Text>{
     
-    Log log = LogFactory.getLog(Map2v2.class);
+    Log log = LogFactory.getLog(Map2.class);
     
     ItemTid invert;
     ArrayList<String> keys;
@@ -47,7 +50,7 @@ public class Map2v2  extends Mapper<LongWritable, Text, Text, Text>{
         support = Integer.parseInt(c.getConfiguration().get("support"));
         
         log.info("Iniciando map 2v2");
-        log.info("Map2v2 support = "+support);
+        log.info("Map2 support = "+support);
         
         invert = new ItemTid(); 
         keys = new ArrayList();
@@ -137,7 +140,7 @@ public class Map2v2  extends Mapper<LongWritable, Text, Text, Text>{
                 try {
                     context.write(key, value);
                 } catch (IOException | InterruptedException ex) {
-                    Logger.getLogger(Map2v2.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(Map2.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
             

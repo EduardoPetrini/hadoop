@@ -4,21 +4,21 @@
  * and open the template in the editor.
  */
 
-package app;
+package main;
 
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import mapred.Map1;
-import mapred.Map2;
-import mapred.Map2v2;
-import mapred.Map3v2;
-import mapred.Reduce1;
-import mapred.Reduce2;
-import mapred.Reduce2v2;
-import mapred.Reduce3v2;
+
+import mapred.map.Map1;
+import mapred.map.Map2;
+import mapred.map.Map3;
+import mapred.reduce.Reduce1;
+import mapred.reduce.Reduce2;
+import mapred.reduce.Reduce3;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -140,9 +140,9 @@ public class Main {
         
         job.setJarByClass(Main.class);
         
-        job.setMapperClass(Map2v2.class);
-//        job.setCombinerClass(Reduce2v2.class);
-        job.setReducerClass(Reduce2v2.class);
+        job.setMapperClass(Map2.class);
+//        job.setCombinerClass(Reduce2.class);
+        job.setReducerClass(Reduce2.class);
         
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(Text.class);
@@ -215,9 +215,9 @@ public class Main {
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(Text.class);
         
-        job.setMapperClass(Map3v2.class);
-//        job.setCombinerClass(Reduce3v2.class);d
-        job.setReducerClass(Reduce3v2.class);
+        job.setMapperClass(Map3.class);
+//        job.setCombinerClass(Reduce3.class);d
+        job.setReducerClass(Reduce3.class);
 //        job.setNumReduceTasks(2);
         
         /*Loop*/
