@@ -33,7 +33,7 @@ public class Reduce3 extends Reducer<Text, Text, Text, Text> {
         count = c.getConfiguration().get("count");
         log.info("Iniciando o REDUCE 3. Count dir: "+count);
         
-        writer = SequenceFile.createWriter(c.getConfiguration(), SequenceFile.Writer.file(new Path("/user/hadoop/invert/invertido"+count)),
+        writer = SequenceFile.createWriter(c.getConfiguration(), SequenceFile.Writer.file(new Path("/user/eduardo/invert/invertido"+count)),
                SequenceFile.Writer.keyClass(Text.class), SequenceFile.Writer.valueClass(Text.class));
         mo = new MultipleOutputs(c);
     }
@@ -70,7 +70,7 @@ public class Reduce3 extends Reducer<Text, Text, Text, Text> {
     }
     
     public void outputInter(Text key, Text value){
-        String out = "/user/hadoop/output"+count+"1/out";
+        String out = "/user/eduardo/output"+count+"1/out";
         
         
         try {

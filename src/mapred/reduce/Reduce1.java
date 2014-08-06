@@ -40,7 +40,7 @@ public class Reduce1 extends Reducer<IntWritable, Text, IntWritable, Text>{
         log.info("Iniciando o REDUCE 1. Count Dir: "+count);
         log.info("Reduce1 support = "+support);
         
-        writer = SequenceFile.createWriter(c.getConfiguration(), SequenceFile.Writer.file(new Path("/user/hadoop/invert/invertido"+count)),
+        writer = SequenceFile.createWriter(c.getConfiguration(), SequenceFile.Writer.file(new Path("/user/eduardo/invert/invertido"+count)),
                SequenceFile.Writer.keyClass(IntWritable.class), SequenceFile.Writer.valueClass(Text.class));
         
         

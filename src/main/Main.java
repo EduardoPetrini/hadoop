@@ -159,7 +159,7 @@ public class Main {
         System.out.println("Job 2 - CountDir: "+Main.countDir);
         
         try {
-           job.addCacheFile(new URI("/user/hadoop/invert/invertido"+(Main.countDir-1)));
+           job.addCacheFile(new URI("/user/eduardo/invert/invertido"+(Main.countDir-1)));
         } catch (URISyntaxException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -243,7 +243,7 @@ public class Main {
         MultipleOutputs.addNamedOutput(job, "text", TextOutputFormat.class, TextOutputFormat.class, Text.class);
         
         try {
-           job.addCacheArchive(new URI("/user/hadoop/invert/invertido"+(Main.countDir-1)));
+           job.addCacheArchive(new URI("/user/eduardo/invert/invertido"+(Main.countDir-1)));
         } catch (URISyntaxException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -478,7 +478,6 @@ public class Main {
             System.exit(-1);
         }
         
-        /*Remover os arquivos invertidos anteriores*/
         
         Main.countDir++;
         m.job1();
@@ -496,7 +495,8 @@ public class Main {
             m.job3();
         }
         
-//        m.delOutDirs("/user/hadoop/");
+        /*Remover os arquivos invertidos anteriores*/
+//        m.delOutDirs("/user/eduardo/");
 //        m.delContentFiles("invert");
         
         double seg = ((double)m.timeTotal/1000);
@@ -555,7 +555,7 @@ public class Main {
         job2.setReducerClass(Reduce2.class);
 
 
-        job2.addCacheFile(new URI("/user/hadoop/output/part-r-00000"));
+        job2.addCacheFile(new URI("/user/eduardo/output/part-r-00000"));
 
         FileInputFormat.setInputPaths(job2, new Path("output"));
 

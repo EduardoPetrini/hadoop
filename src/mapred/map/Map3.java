@@ -56,7 +56,7 @@ public class Map3 extends Mapper<LongWritable, Text, Text, Text>{
         invert = new ItemTid(); 
         keys = new ArrayList();
         
-        reader = new SequenceFile.Reader(c.getConfiguration(), SequenceFile.Reader.file(new Path("/user/hadoop/invert/invertido"+(Integer.parseInt(count)-1))));
+        reader = new SequenceFile.Reader(c.getConfiguration(), SequenceFile.Reader.file(new Path("/user/eduardo/invert/invertido"+(Integer.parseInt(count)-1))));
         
         Text key = (Text) ReflectionUtils.newInstance(reader.getKeyClass(), c.getConfiguration());
         Text value = (Text) ReflectionUtils.newInstance(reader.getValueClass(), c.getConfiguration());

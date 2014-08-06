@@ -31,7 +31,7 @@ public class Reduce2 extends Reducer<Text, Text, Text, Text> {
         
         log.info("Iniciando o REDUCE 2. Count dir: "+count);
         
-         writer = SequenceFile.createWriter(c.getConfiguration(), SequenceFile.Writer.file(new Path("/user/hadoop/invert/invertido"+count)),
+         writer = SequenceFile.createWriter(c.getConfiguration(), SequenceFile.Writer.file(new Path("/user/eduardo/invert/invertido"+count)),
                SequenceFile.Writer.keyClass(Text.class), SequenceFile.Writer.valueClass(Text.class));
     }
     
