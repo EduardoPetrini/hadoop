@@ -22,23 +22,20 @@ import org.apache.hadoop.mapreduce.Mapper;
  *
  * @author eduardo
  */
-public class Map1 extends Mapper<LongWritable, Text, IntWritable, Text>{
+public class Map1 extends Mapper<LongWritable, Text, Text, IntWritable>{
     
     Log log = LogFactory.getLog(Map1.class);
-    int size = 0;
+    IntWritable count = new IntWritable(1);
+    Text keyOut = new Text();
     
     @Override
     public void map(LongWritable key, Text value, Context context) throws IOException{
         
         StringTokenizer token = new StringTokenizer(value.toString());
-        String tid = token.nextToken();
-        String t;
-        
         while(token.hasMoreTokens()){
-            t = token.nextToken();
-            
+        	keyOut.set(token.nextToken());
             try {
-                context.write(new IntWritable(Integer.parseInt(t)), new Text(tid));
+                context.write(keyOut, count);
             } catch (InterruptedException ex) {
                 Logger.getLogger(Map1.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
             }

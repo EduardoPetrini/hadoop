@@ -82,8 +82,8 @@ public class Main {
 //        job.setCombinerClass(Combiner1.class);
         job.setReducerClass(Reduce1.class);
         
-        job.setOutputKeyClass(IntWritable.class);
-        job.setOutputValueClass(Text.class);
+        job.setOutputKeyClass(Text.class);
+        job.setOutputValueClass(IntWritable.class);
         
         /* Defines additional single text based output 'text' for the job
         "text" é o tipo de arquivo
@@ -146,33 +146,20 @@ public class Main {
         
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(Text.class);
-//        job.setNumReduceTasks(2);
-        /* Defines additional single text based output 'text' for the job
-        "text" é o tipo de arquivo
-        3º e 4º argumento refere-se a chave e valor respectivamente.
-        */
-        
-//        MultipleOutputs.addNamedOutput(job, "text", TextOutputFormat.class, LongWritable.class, Text.class);
+
         job.getConfiguration().set("count", String.valueOf(Main.countDir));
         job.getConfiguration().set("support", String.valueOf(support));
         
         System.out.println("Job 2 - CountDir: "+Main.countDir);
         
         try {
-           job.addCacheFile(new URI("/user/eduardo/invert/invertido"+(Main.countDir-1)));
+           job.addCacheFile(new URI("/user/eduardo/output"+(Main.countDir-1)));
         } catch (URISyntaxException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
         
         try {
-            Path p = new Path("output"+(Main.countDir-1));
-//            
-//            if(increseMapTask(p, c)){
-//                System.out.println("Aumentando o número de task map que está definido como: "+c.get("mapreduce.tasktracker.map.tasks.maximum"));
-//                c.set("mapreduce.tasktracker.map.tasks.maximum","2");
-//            }
-            
-            FileInputFormat.setInputPaths(job, p);
+            FileInputFormat.setInputPaths(job, new Path("input"));
         } catch (IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -486,14 +473,14 @@ public class Main {
         Main.countDir++;
         m.job2();
         m.checkOutput("output"+Main.countDir);
-
-        int l = 0;
-        while(m.checkOutput("output"+Main.countDir)){
-            System.out.println("LOOP "+l++);
-            
-            Main.countDir++;
-            m.job3();
-        }
+//
+//        int l = 0;
+//        while(m.checkOutput("output"+Main.countDir)){
+//            System.out.println("LOOP "+l++);
+//            
+//            Main.countDir++;
+//            m.job3();
+//        }
         
         /*Remover os arquivos invertidos anteriores*/
 //        m.delOutDirs("/user/eduardo/");
@@ -502,97 +489,5 @@ public class Main {
         double seg = ((double)m.timeTotal/1000);
         
         System.out.println("Tempo total: "+m.timeTotal+" mile ou "+seg+" segundos! ou "+seg/60+" minutos");
-    }
-
-    private void startJobs() throws IOException, URISyntaxException {
-        
-        /*Configure JOB 1*/
-        JobControl jobControl = new JobControl("Apriori MapReduce");
-        
-        Configuration c = new Configuration();
-        Job job = null;
-        try {
-            job = new Job(c);
-        } catch (IOException ex) {
-            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        
-        job.setJobName("TestItemCount");
-        job.setJarByClass(Main.class);
-        
-        job.setMapperClass(Map1.class);
-        job.setReducerClass(Reduce1.class);
-        
-        job.setOutputKeyClass(IntWritable.class);
-        job.setOutputValueClass(Text.class);
-        
-        
-        FileInputFormat.setInputPaths(job, new Path("input"));
-        
-        FileOutputFormat.setOutputPath(job, new Path("output"));
-        
-        ControlledJob controle1 = new ControlledJob(c);
-        controle1.setJob(job);
-            
-        jobControl.addJob(controle1);
-        
-        /*********************************************/
-        /*Configure JOB 2*/
-        
-        Configuration c2 = new Configuration();
-        Job job2 = null;
-        
-        job2 = new Job(c2);
-        
-        job2.setJobName("TestItemReader");
-        
-        job2.setJarByClass(Main.class);
-        
-        job2.setOutputKeyClass(Text.class);
-        job2.setOutputValueClass(IntWritable.class);
-        
-        job2.setMapperClass(Map2.class);
-        job2.setReducerClass(Reduce2.class);
-
-
-        job2.addCacheFile(new URI("/user/eduardo/output/part-r-00000"));
-
-        FileInputFormat.setInputPaths(job2, new Path("output"));
-
-        FileOutputFormat.setOutputPath(job2, new Path("output2"));
-        
-        ControlledJob controle2 = new ControlledJob(c);
-        controle2.setJob(job2);
-        
-        controle2.addDependingJob(controle1);
-        
-        jobControl.addJob(controle2);
-        
-        /*Start thread*/
-        Thread jobControlThread = new Thread(jobControl);
-        jobControlThread.start();
-        
-        while( !jobControl.allFinished()){
-            System.out.println("Jobs in waiting state: "
-              + jobControl.getWaitingJobList().size());
-            System.out.println("Jobs in ready state: "
-              + jobControl.getReadyJobsList().size());
-            System.out.println("Jobs in running state: "
-              + jobControl.getRunningJobList().size());
-            System.out.println("Jobs in success state: "
-              + jobControl.getSuccessfulJobList().size());
-            System.out.println("Jobs in failed state: "
-              + jobControl.getFailedJobList().size());
-            //sleep 5 seconds
-            try {
-              Thread.sleep(5000);
-            } catch (Exception e) {  }
-        }
-        try {
-            jobControlThread.join();
-        } catch (InterruptedException ex) {
-            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        
     }
 }
