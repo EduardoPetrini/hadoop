@@ -13,6 +13,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.Path;
@@ -33,12 +34,16 @@ public class Reduce1 extends Reducer<Text, IntWritable, Text, IntWritable>{
     IntWritable valueOut = new IntWritable();
     
     @Override
-    public void setup(Context c) throws IOException{
-        String count = c.getConfiguration().get("count");
-        support = Integer.parseInt(c.getConfiguration().get("support"));
-        
+    public void setup(Context context) throws IOException{
+        String count = context.getConfiguration().get("count");
+        support = Integer.parseInt(context.getConfiguration().get("support"));
+        String fileCachedPath = context.getConfiguration().get("fileCached");
+        Path path = new Path(fileCachedPath);
         log.info("Iniciando o REDUCE 1. Count Dir: "+count);
         log.info("Reduce1 support = "+support);
+        
+        writer = SequenceFile.createWriter(context.getConfiguration(), SequenceFile.Writer.file(path),
+                SequenceFile.Writer.keyClass(Text.class), SequenceFile.Writer.valueClass(IntWritable.class));
     }
     
     @Override
@@ -51,6 +56,7 @@ public class Reduce1 extends Reducer<Text, IntWritable, Text, IntWritable>{
         if(count >= support){
         	valueOut.set(count);
             try {
+            	saveInCache(key, valueOut);
                 context.write(key, valueOut);
             } catch (IOException | InterruptedException ex) {
                 Logger.getLogger(Reduce1.class.getName()).log(Level.SEVERE, null, ex);
@@ -58,8 +64,22 @@ public class Reduce1 extends Reducer<Text, IntWritable, Text, IntWritable>{
         }
     }
        
+    public void saveInCache(Text key, IntWritable value){
+    	try {
+            writer.append(key, value);
+        } catch (IOException ex) {
+            Logger.getLogger(Reduce1.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
     @Override
     public void cleanup(Context c){
         log.info("Finalizando o REDUCE 1.");
+        try {
+			writer.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
     }
 }

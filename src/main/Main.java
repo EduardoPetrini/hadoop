@@ -69,7 +69,7 @@ public class Main {
         Configuration c = new Configuration();
         Job job = null;
         try {
-            job = new Job(c);
+            job = Job.getInstance(c);
         } catch (IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -85,14 +85,10 @@ public class Main {
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(IntWritable.class);
         
-        /* Defines additional single text based output 'text' for the job
-        "text" é o tipo de arquivo
-        3º e 4º argumento refere-se a chave e valor respectivamente.
-        */
-//        MultipleOutputs.addNamedOutput(job, "invertido", TextOutputFormat.class, IntWritable.class, Text.class);
-        
+        String fileCached = "/user/eduardo/outputCached/outputMR"+(Main.countDir);
         job.getConfiguration().set("count", String.valueOf(Main.countDir));
         job.getConfiguration().set("support", String.valueOf(support));
+        job.getConfiguration().set("fileCached", fileCached);
         
         try {
             FileInputFormat.setInputPaths(job, new Path("input"));
@@ -131,7 +127,7 @@ public class Main {
         
         Job job = null;
         try {
-            job = new Job(c);
+            job = Job.getInstance(c);
         } catch (IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -145,15 +141,19 @@ public class Main {
         job.setReducerClass(Reduce2.class);
         
         job.setOutputKeyClass(Text.class);
-        job.setOutputValueClass(Text.class);
+        job.setOutputValueClass(IntWritable.class);
 
+        String fileCachedRead = "/user/eduardo/outputCached/outputMR"+(Main.countDir-1);
+        String fileCachedWrited = "/user/eduardo/outputCached/outputMR"+Main.countDir;
         job.getConfiguration().set("count", String.valueOf(Main.countDir));
         job.getConfiguration().set("support", String.valueOf(support));
+        job.getConfiguration().set("fileCachedRead", fileCachedRead);
+        job.getConfiguration().set("fileCachedWrited", fileCachedWrited);
         
         System.out.println("Job 2 - CountDir: "+Main.countDir);
         
         try {
-           job.addCacheFile(new URI("/user/eduardo/output"+(Main.countDir-1)));
+           job.addCacheFile(new URI(fileCached));
         } catch (URISyntaxException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -189,7 +189,7 @@ public class Main {
         Configuration c = new Configuration();
         Job job = null;
         try {
-            job = new Job(c);
+            job = Job.getInstance(c);
         } catch (IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }

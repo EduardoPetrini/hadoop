@@ -6,26 +6,21 @@
 
 package mapred.map;
 
-import app.ItemTid;
-
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import main.Main;
+import java.net.URI;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.util.ReflectionUtils;
+
+import app.ItemTid;
 
 /**
  * Gerar itemsets de tamanho 2.
@@ -36,23 +31,32 @@ public class Map2  extends Mapper<LongWritable, Text, Text, IntWritable>{
     Log log = LogFactory.getLog(Map2.class);
     
     ItemTid invert;
-    
+    SequenceFile.Reader reader;
     int support;
     
     /**
      * Le o arquivo invertido para a memória.
-     * @param c
+     * @param context
      * @throws IOException 
      */
     @Override
-    public void setup(Mapper.Context c) throws IOException{
-        String count = c.getConfiguration().get("count");
-        support = Integer.parseInt(c.getConfiguration().get("support"));
-        int countInt = Integer.parseInt(count) -1;
-        log.info("Iniciando map 2v2");
+    public void setup(Context context) throws IOException{
+        String count = context.getConfiguration().get("count");
+        String fileCachedRead = context.getConfiguration().get("fileCachedRead");
+        support = Integer.parseInt(context.getConfiguration().get("support"));
+        log.info("Iniciando map 2v2 count = "+count);
         log.info("Map2 support = "+support);
+        log.info("Arquivo Cached = "+fileCachedRead);
+        URI[] patternsFiles = context.getCacheFiles();
         
-        File file = new File("/user/eduardo/output"+countInt);
+        Path path = new Path(patternsFiles[0].toString());
+        
+        reader = new SequenceFile.Reader(context.getConfiguration(), SequenceFile.Reader.file(path));
+        ArrayList<String> fileCached = openFile(fileCachedRead, context);
+        
+        for(String s : fileCached){
+        	log.info(s);
+        }
     }
     
     /**
@@ -63,10 +67,33 @@ public class Map2  extends Mapper<LongWritable, Text, Text, IntWritable>{
      */
     public void gerarKItemSets(String item, int pos, Context context){
         
-            }
+	}
     
     @Override
     public void map(LongWritable key, Text value, Context context){
-        
+    	try {
+			context.write(value, new IntWritable(1));
+		} catch (IOException | InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    }
+    
+    public ArrayList<String> openFile(String path, Context context){
+    	ArrayList<String> fileCached = new ArrayList<String>();
+    	try {
+			
+			Text key = (Text) ReflectionUtils.newInstance(reader.getKeyClass(), context.getConfiguration());
+			IntWritable value = (IntWritable) ReflectionUtils.newInstance(reader.getValueClass(), context.getConfiguration());
+			
+			while (reader.next(key, value)) {
+	            fileCached.add(key+" "+value);
+	        }
+		} catch (IllegalArgumentException | IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    	
+    	return fileCached;
     }
 }
