@@ -45,7 +45,7 @@ public class Main {
     public static int countDir;
     private int timeTotal;
     int support;
-    
+    int k = 2;
     /*
     Valor do suporte para 1.000.000
     7500
@@ -149,11 +149,11 @@ public class Main {
         job.getConfiguration().set("support", String.valueOf(support));
         job.getConfiguration().set("fileCachedRead", fileCachedRead);
         job.getConfiguration().set("fileCachedWrited", fileCachedWrited);
-        
+          
         System.out.println("Job 2 - CountDir: "+Main.countDir);
         
         try {
-           job.addCacheFile(new URI(fileCached));
+           job.addCacheFile(new URI(fileCachedRead));
         } catch (URISyntaxException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -473,7 +473,7 @@ public class Main {
         Main.countDir++;
         m.job2();
         m.checkOutput("output"+Main.countDir);
-//
+        
 //        int l = 0;
 //        while(m.checkOutput("output"+Main.countDir)){
 //            System.out.println("LOOP "+l++);

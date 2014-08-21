@@ -8,6 +8,7 @@ package mapred.map;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.net.URI;
 
 import org.apache.commons.logging.Log;
@@ -29,11 +30,10 @@ import app.ItemTid;
 public class Map2  extends Mapper<LongWritable, Text, Text, IntWritable>{
     
     Log log = LogFactory.getLog(Map2.class);
-    
-    ItemTid invert;
+    IntWritable countOut = new IntWritable(1);
     SequenceFile.Reader reader;
-    int support;
-    
+    HashMap<String, Integer> fileCached;
+    int k = 2;
     /**
      * Le o arquivo invertido para a memória.
      * @param context
@@ -43,20 +43,27 @@ public class Map2  extends Mapper<LongWritable, Text, Text, IntWritable>{
     public void setup(Context context) throws IOException{
         String count = context.getConfiguration().get("count");
         String fileCachedRead = context.getConfiguration().get("fileCachedRead");
-        support = Integer.parseInt(context.getConfiguration().get("support"));
+        k = Integer.parseInt(count);
+        
         log.info("Iniciando map 2v2 count = "+count);
-        log.info("Map2 support = "+support);
         log.info("Arquivo Cached = "+fileCachedRead);
         URI[] patternsFiles = context.getCacheFiles();
         
         Path path = new Path(patternsFiles[0].toString());
         
         reader = new SequenceFile.Reader(context.getConfiguration(), SequenceFile.Reader.file(path));
-        ArrayList<String> fileCached = openFile(fileCachedRead, context);
+        openFile(fileCachedRead, context);
         
-        for(String s : fileCached){
-        	log.info(s);
+        for(String s : fileCached.keySet()){
+        	log.info("Chave: "+s+" value: "+fileCached.get(s));
         }
+    }
+    
+    public boolean isFrequent(String item){
+    	if(fileCached.get(item) != null){
+    		return true;
+    	}
+    	return false;
     }
     
     /**
@@ -65,8 +72,23 @@ public class Map2  extends Mapper<LongWritable, Text, Text, IntWritable>{
      * @param pos
      * @param context 
      */
-    public void gerarKItemSets(String item, int pos, Context context){
-        
+    public void gerarKItemSets(String[] transaction, Context context){
+        /*Verificar se o item é frequente*/
+    	
+    	int i = 0;
+    	int size = transaction.length;
+    	while(i < size){
+    		if(isFrequent(transaction[i]) &&
+    				((i+1) < size) &&
+    				isFrequent(transaction[i+1])){
+    			try {
+					context.write(new Text(transaction[i]+" "+transaction[i+1] ), countOut);
+				} catch (IOException | InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+    		}
+    	}
 	}
     
     @Override
@@ -79,15 +101,15 @@ public class Map2  extends Mapper<LongWritable, Text, Text, IntWritable>{
 		}
     }
     
-    public ArrayList<String> openFile(String path, Context context){
-    	ArrayList<String> fileCached = new ArrayList<String>();
+    public HashMap<String, Integer> openFile(String path, Context context){
+    	fileCached = new HashMap<String, Integer>();
     	try {
 			
 			Text key = (Text) ReflectionUtils.newInstance(reader.getKeyClass(), context.getConfiguration());
 			IntWritable value = (IntWritable) ReflectionUtils.newInstance(reader.getValueClass(), context.getConfiguration());
 			
 			while (reader.next(key, value)) {
-	            fileCached.add(key+" "+value);
+	            fileCached.put(key.toString(), value.get());
 	        }
 		} catch (IllegalArgumentException | IOException e) {
 			// TODO Auto-generated catch block
