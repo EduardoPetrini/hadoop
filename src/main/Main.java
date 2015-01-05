@@ -73,7 +73,7 @@ public class Main {
         } catch (IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
-        job.getConfiguration().set("fs.defaultFS", "hdfs://192.168.1.14:9000");
+        job.getConfiguration().set("fs.defaultFS", "hdfs://192.168.0.103:9000");
         job.setJobName("Fase 1");
         
         job.setJarByClass(Main.class);
@@ -131,7 +131,7 @@ public class Main {
         } catch (IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
-        job.getConfiguration().set("fs.defaultFS", "hdfs://192.168.1.14:9000");
+        job.getConfiguration().set("fs.defaultFS", "hdfs://192.168.0.103:9000");
         job.setJobName("Fase 2");
         
         job.setJarByClass(Main.class);
@@ -194,7 +194,7 @@ public class Main {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
         
-        job.getConfiguration().set("fs.defaultFS", "hdfs://192.168.1.14:9000");
+        job.getConfiguration().set("fs.defaultFS", "hdfs://192.168.0.103:9000");
         job.setJobName("Fase 3");
         
         job.setJarByClass(Main.class);
@@ -281,7 +281,7 @@ public class Main {
         
         log.info("Excluindo diretórios anteriores...");
         Configuration c = new Configuration();
-        c.set("fs.defaultFS", "hdfs://192.168.1.14:9000");
+        c.set("fs.defaultFS", "hdfs://192.168.0.103:9000");
         Path p = new Path(d);
         try {
             FileSystem fs = FileSystem.get(c);
@@ -317,7 +317,7 @@ public class Main {
         
         log.info("Excluindo diretórios anteriores...");
         Configuration c = new Configuration();
-        c.set("fs.defaultFS", "hdfs://192.168.1.14:9000");
+        c.set("fs.defaultFS", "hdfs://192.168.0.103:9000");
         Path p = new Path(d);
         Path aux;
         
@@ -352,7 +352,7 @@ public class Main {
     
     public void createTempDir(String d){
     	 Configuration c = new Configuration();
-         c.set("fs.defaultFS", "hdfs://192.168.1.14:9000");
+         c.set("fs.defaultFS", "hdfs://192.168.0.103:9000");
         try {
             FileSystem fs = FileSystem.get(c);
             
@@ -371,7 +371,7 @@ public class Main {
     public void delContentFiles(String dir){
         Path p = new Path(dir);
         Configuration c = new Configuration();
-        c.set("fs.defaultFS", "hdfs://192.168.1.14:9000");
+        c.set("fs.defaultFS", "hdfs://192.168.0.103:9000");
         try {
             FileSystem fs = FileSystem.get(c);
             
@@ -414,7 +414,7 @@ public class Main {
         Path p = new Path(dir);
         Path aux;
         Configuration c = new Configuration();
-        c.set("fs.defaultFS", "hdfs://192.168.1.14:9000");
+        c.set("fs.defaultFS", "hdfs://192.168.0.103:9000");
         System.out.println("Verificando diretório: "+dir);
         
         try{

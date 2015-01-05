@@ -8,6 +8,8 @@ package mapred.map;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.net.URI;
 
@@ -20,6 +22,8 @@ import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.util.ReflectionUtils;
+
+import com.sun.xml.internal.bind.v2.runtime.unmarshaller.XsiNilLoader.Array;
 
 import app.ItemTid;
 
@@ -59,10 +63,12 @@ public class Map2  extends Mapper<LongWritable, Text, Text, IntWritable>{
         }
     }
     
-    public boolean isFrequent(String item){
+    public boolean isFrequent(String item, int x){
+    	System.out.println(x+" Item : "+item);
     	if(fileCached.get(item) != null){
     		return true;
     	}
+    	System.out.print(" - Não está no cache!");
     	return false;
     }
     
@@ -72,33 +78,37 @@ public class Map2  extends Mapper<LongWritable, Text, Text, IntWritable>{
      * @param pos
      * @param context 
      */
-    public void gerarKItemSets(String[] transaction, Context context){
+    public void generateKItemSets(String[] transaction, Context context){
         /*Verificar se o item é frequente*/
     	
     	int i = 0;
+    	int j;
     	int size = transaction.length;
-    	while(i < size){
-    		if(isFrequent(transaction[i]) &&
-    				((i+1) < size) &&
-    				isFrequent(transaction[i+1])){
-    			try {
-					context.write(new Text(transaction[i]+" "+transaction[i+1] ), countOut);
-				} catch (IOException | InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+    	System.out.println(new ArrayList(Arrays.asList(transaction)));
+    	//if(size <= k){
+    		while(i < size && isFrequent(transaction[i], 1)){//utilizar substring. Se o item não for frequente substituí-lo por -1 para não chamar o 'isFrequent' a partir da segunda iteração.
+	    		j = i+1;
+	    		while(j < size && isFrequent(transaction[j], 2)){
+					
+	    			try {
+						context.write(new Text(transaction[i]+" "+transaction[j] ), countOut);
+					} catch (IOException | InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+	    			j++;
 				}
-    		}
-    	}
+	    		i++;
+	    		if(i == size-1) break;
+	    	}
+    	//}
 	}
     
     @Override
     public void map(LongWritable key, Text value, Context context){
-    	try {
-			context.write(value, new IntWritable(1));
-		} catch (IOException | InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+    	
+		generateKItemSets(value.toString().split(" "), context);
+		
     }
     
     public HashMap<String, Integer> openFile(String path, Context context){
