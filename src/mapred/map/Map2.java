@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Set;
 import java.net.URI;
 
 import org.apache.commons.logging.Log;
@@ -37,7 +38,7 @@ public class Map2  extends Mapper<LongWritable, Text, Text, IntWritable>{
     IntWritable countOut = new IntWritable(1);
     SequenceFile.Reader reader;
     HashMap<String, Integer> fileCached;
-    int k = 2;
+    int k;
     /**
      * Le o arquivo invertido para a memória.
      * @param context
@@ -58,9 +59,31 @@ public class Map2  extends Mapper<LongWritable, Text, Text, IntWritable>{
         reader = new SequenceFile.Reader(context.getConfiguration(), SequenceFile.Reader.file(path));
         openFile(fileCachedRead, context);
         
-        for(String s : fileCached.keySet()){
-        	log.info("Chave: "+s+" value: "+fileCached.get(s));
+        //Gerar combinações dos itens de acordo com k
+        
+        String[] keys = (String[]) fileCached.keySet().toArray();
+        
+        for (int i = 0; i < keys.length; i++){
+        	for (int j = i+1; j < keys.length; j++){
+        		if(isSamePrefix(keys, i, j, k)){
+        			
+        		}
+        	}
         }
+        
+    }
+    
+    public boolean iSamePrefix(String[] items, int i, int j, int k){
+    	if(k == 2) return true;
+    	String[] itemA = items[i].split(" ");
+    	String[] itemB = items[j].split(" ");
+    	for(int a = 0; a < k -2; a++){
+            if(itemA[a] != itemB[a]){
+                return false;
+            }
+        }
+        
+    	return true;
     }
     
     public boolean isFrequent(String item, int x){
@@ -85,7 +108,7 @@ public class Map2  extends Mapper<LongWritable, Text, Text, IntWritable>{
     	int j;
     	int size = transaction.length;
     	System.out.println(new ArrayList(Arrays.asList(transaction)));
-    	//if(size <= k){
+    	if(size >= k){
     		while(i < size && isFrequent(transaction[i], 1)){//utilizar substring. Se o item não for frequente substituí-lo por -1 para não chamar o 'isFrequent' a partir da segunda iteração.
 	    		j = i+1;
 	    		while(j < size && isFrequent(transaction[j], 2)){
@@ -101,7 +124,7 @@ public class Map2  extends Mapper<LongWritable, Text, Text, IntWritable>{
 	    		i++;
 	    		if(i == size-1) break;
 	    	}
-    	//}
+    	}
 	}
     
     @Override

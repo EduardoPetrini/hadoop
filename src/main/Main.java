@@ -45,7 +45,7 @@ public class Main {
     public static int countDir;
     private int timeTotal;
     int support;
-    int k = 2;
+    int k = 1;
     /*
     Valor do suporte para 1.000.000
     7500
@@ -142,11 +142,13 @@ public class Main {
         
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(IntWritable.class);
-
+        
+        k++;
         String fileCachedRead = "/user/eduardo/outputCached/outputMR"+(Main.countDir-1);
         String fileCachedWrited = "/user/eduardo/outputCached/outputMR"+Main.countDir;
         job.getConfiguration().set("count", String.valueOf(Main.countDir));
         job.getConfiguration().set("support", String.valueOf(support));
+        job.getConfiguration().set("k", String.valueOf(k));
         job.getConfiguration().set("fileCachedRead", fileCachedRead);
         job.getConfiguration().set("fileCachedWrited", fileCachedWrited);
           
@@ -212,21 +214,14 @@ public class Main {
         job.getConfiguration().set("support", String.valueOf(support));
         
         System.out.println("Job 3 - CountDir: "+Main.countDir);
+        
         try {
-            Path p = new Path("output"+(Main.countDir-1));
-            
-//            if(increseMapTask(p, c)){
-//                System.out.println("Aumentando o número de task map que está definido como: "+c.get("mapreduce.tasktracker.map.tasks.maximum"));
-//                c.set("mapreduce.tasktracker.map.tasks.maximum","2");
-//            }
-            
-            FileInputFormat.setInputPaths(job, p);
+            FileInputFormat.setInputPaths(job, new Path("output"+(Main.countDir-1)));
         } catch (IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
         
         FileOutputFormat.setOutputPath(job, new Path("output"+(Main.countDir)));
-        
         MultipleOutputs.addNamedOutput(job, "text", TextOutputFormat.class, TextOutputFormat.class, Text.class);
         
         try {
