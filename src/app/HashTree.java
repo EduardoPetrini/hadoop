@@ -10,7 +10,7 @@ public class HashTree {
 	
 	public HashTree(int k) {
 		nodes = new HashTree[9];
-		this.level = 0;
+		this.level = 1;
 		this.k = k;
 	}
 	public int getK() {
@@ -50,6 +50,8 @@ public class HashTree {
 		}
 		if(tmp != this){
 			//Inserir o itemset na folha da hashTree
+			tmp.setLevel(k+1);
+			tmp.setK(k);
 			if(tmp.itemsets != null && 
 					!tmp.itemsets.contains(itemset)){
 				tmp.itemsets.add(itemset);
@@ -60,24 +62,121 @@ public class HashTree {
 		}
 	}
 	
-	public void find(String t){
+	public void find(HashTree hashTree, String[] ts, int i, StringBuilder itemset){
+		if(hashTree == null) return;
+		System.out.println(hashTree.level+" "+hashTree.k+" i: "+i+" itemset "+itemset.toString());
+		
+		if(i >= ts.length){ return; }
+		
+		if(hashTree.level > hashTree.k){
+			//chegou na folha
+			System.out.println("Itemset: "+itemset.toString());
+			//Fazer a busca binária
+			printItemsets(hashTree.itemsets);
+			
+			return ;
+		}
+		
+		int hash = Integer.parseInt(ts[i]) % 9;
+		
+		if(hashTree.nodes[hash] != null){
+			itemset.append(ts[i]).append(" ");
+			while (i < ts.length-1){
+				i++;
+				hash = Integer.parseInt(ts[i]) % 9;
+				find(hashTree.nodes[hash], ts, i, itemset);
+			}
+			
+		}
+//		if(i >= ts.length-1){
+//			return false;
+//		}
+//		find(hashTree, ts, i+1, itemset);
+		return;
+		
+	}
+	
+	public void findOld(String t){
 		String[] ts = t.split(" ");
 		
+		for_ex:
 		for(int i = 0; i < ts.length; i++){
-			int hash = Integer.parseInt(ts[i]) % 9;
-			HashTree tmp = this;
+			int firstHash = Integer.parseInt(ts[i]) % 9;
+			int hash;
+			HashTree firstItem = this;
 			int count = 1;
-			int j = i;
-			while(count <= k){
-				if(tmp.nodes[hash] != null){
-					tmp = nodes[hash];
-					j++;
-					if(j < ts.length){
-						hash = Integer.parseInt(ts[j]) % 9;
+			if(firstItem.nodes[firstHash] != null){
+				System.out.println("Levelex: "+firstItem.level);
+				HashTree tmp = firstItem.nodes[firstHash];
+				for_in:
+				for(int j = i+1; j < ts.length; j++){
+					hash = Integer.parseInt(ts[j]);
+					if(tmp.nodes[hash] != null){
+					System.out.println("********************Testado com "+ts[i]+" "+ts[j]+" em teste");
+						System.out.println("Levelin: "+tmp.level);
+						tmp = tmp.nodes[hash];
+						count++;
+						if(count == k){
+							//Atingiu o limite do k, logo espera-se que tenha chegado em uma folha
+							System.out.println("Achou itemset: "+ts[i]+" "+ts[j]);
+							printItemsets(tmp.itemsets);
+							count--;
+							continue for_in;
+							
+						}
+					}{
+						System.out.println("Node é null");
 					}
-				}else if(!tmp.itemsets.isEmpty()){
-					System.out.println("Tem itemset");
 				}
+			}
+//			while(count <= k+1){
+//				if(j >= ts.length) break;
+//				System.out.println("Count "+k+", level "+tmp.level+", hash "+hash+", item i "+ts[i]+", item j "+ts[j]);
+//				HashTree.printNodes(tmp.nodes);
+//				if(tmp.nodes[hash] != null){
+//					tmp = tmp.nodes[hash];
+//					j++;
+//					count++;
+//					if(j < ts.length){
+//						hash = Integer.parseInt(ts[j]) % 9;
+//					}
+//				}else if(tmp.itemsets != null && !tmp.itemsets.isEmpty()){
+//					System.out.println("Tem itemset: "+ts[i]+" "+ts[j]);
+//					break;
+//				}
+//			}
+//			if(tmp.itemsets != null && !tmp.itemsets.isEmpty()){
+//				System.out.println("Tem itemset");
+//			}
+		}
+	}
+	
+	private void printItemsets(ArrayList<String> itemsets2) {
+		// TODO Auto-generated method stub
+		System.out.println("Items no conjunto:");
+		for(String i: itemsets2){
+			if(i != null && !i.equals("")){
+				System.out.print(i+" ");
+			}
+		}
+		System.out.println("");
+	}
+	public static void printNodes(HashTree[] nodes){
+		for(int i = 0; i < 9; i++){
+			System.out.print(nodes[i]+" ");
+		}
+		System.out.println("");
+	}
+	
+	public void printAllItemsets(HashTree tmp){
+		System.out.println(tmp.level);
+		if(tmp.level == tmp.k+1){
+			//chegou na folha
+			printItemsets(tmp.itemsets);
+		}
+		for(HashTree ht: tmp.nodes){
+			if(ht != null){
+				printAllItemsets(ht);
 			}
 		}
 	}
@@ -90,7 +189,11 @@ public class HashTree {
 		for(String itemset : itemsets){
 			hashTree.add(itemset);
 		}
-		
+//		hashTree.printAllItemsets(hashTree);
+		String[] ts = t.split(" ");
+		for(int i = 0; i < ts.length; i++){
+			hashTree.find(hashTree, t.split(" "), i, new StringBuilder());
+		}
 		
 	}
 }
