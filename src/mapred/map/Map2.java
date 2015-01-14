@@ -65,18 +65,17 @@ public class Map2  extends Mapper<LongWritable, Text, Text, IntWritable>{
         
         for (int i = 0; i < keys.length; i++){
         	for (int j = i+1; j < keys.length; j++){
-        		if(isSamePrefix(keys, i, j, k)){
-        			
+        		String[] itemA = keys[i].split(" ");
+        		String[] itemB = keys[j].split(" ");
+        		if(isSamePrefix(itemA, itemB, i, j)){
+        			System.out.println(combine(itemA, itemB));
         		}
         	}
         }
-        
     }
     
-    public boolean iSamePrefix(String[] items, int i, int j, int k){
+    public boolean isSamePrefix(String[] itemA, String[] itemB, int i, int j){
     	if(k == 2) return true;
-    	String[] itemA = items[i].split(" ");
-    	String[] itemB = items[j].split(" ");
     	for(int a = 0; a < k -2; a++){
             if(itemA[a] != itemB[a]){
                 return false;
@@ -84,6 +83,16 @@ public class Map2  extends Mapper<LongWritable, Text, Text, IntWritable>{
         }
         
     	return true;
+    }
+    
+    public String combine(String[] itemA, String[] itemB){
+        StringBuilder sb = new StringBuilder();
+        
+        for(int i = 0; i < itemA.length; i++){
+            sb.append(itemA[i]).append(" ");
+        }
+        sb.append(itemB[itemB.length-1]);
+        return sb.toString();
     }
     
     public boolean isFrequent(String item, int x){

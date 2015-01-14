@@ -19,6 +19,7 @@ import mapred.reduce.Reduce1;
 import mapred.reduce.Reduce2;
 import mapred.reduce.Reduce3;
 
+import org.apache.commons.collections.functors.MapTransformer;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -485,4 +486,5 @@ public class Main {
         
         System.out.println("Tempo total: "+m.timeTotal+" mile ou "+seg+" segundos! ou "+seg/60+" minutos");
     }
+   
 }
