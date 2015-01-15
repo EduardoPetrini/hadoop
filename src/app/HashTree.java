@@ -62,37 +62,98 @@ public class HashTree {
 		}
 	}
 	
-	public void find(HashTree hashTree, String[] ts, int i, StringBuilder itemset){
-		if(hashTree == null) return;
-		System.out.println(hashTree.level+" "+hashTree.k+" i: "+i+" itemset "+itemset.toString());
+	public boolean find(HashTree hashTree, String[] ts, int i, ArrayList<String> itemset){
+		if(hashTree == null){
+//			System.out.prinCtln("Return 1");
+			return false;
+		}
+//		System.out.println(hashTree.level+" "+hashTree.k+" i: "+i);
 		
-		if(i >= ts.length){ return; }
+		
+		if(hashTree.level > hashTree.k){
+			//Chegou na folha
+			System.out.println("\nAchou -> Itemset: "+itemset.toString());
+//			itemset.remove(itemset.size()-1);
+			return true;
+		}
+		
+		if(i >= ts.length){
+//			System.out.println("Return 2");
+			return false;
+		}
+		
+		while(i < ts.length){
+			int hash = Integer.parseInt(ts[i]) % 9;
+			
+			if(hashTree.nodes[hash] != null){
+//				System.out.println("Add item "+ts[i]);
+				itemset.add(ts[i]);
+				
+				find(hashTree.nodes[hash], ts, i+1, itemset);
+					
+//				System.out.print("I: "+i+" romove item "+ts[i]+" from "+itemset.toString());
+				itemset.remove(itemset.size()-1);
+//				System.out.println(" TO "+itemset.toString());
+			}else{
+//				System.out.println("Sem ramo para "+ts[i]+" i: "+i);
+			}
+			i++;
+//			System.out.println("Increment i to "+i);
+		}
+		
+//		System.out.println("Return 5");
+		return false;
+		
+	}
+	
+	public boolean findOld2(HashTree hashTree, String[] ts, int i, StringBuilder itemset){
+		if(hashTree == null){
+			System.out.println("Return 1");
+			return false;
+		}
+//		System.out.println(hashTree.level+" "+hashTree.k+" i: "+i+" itemset "+itemset.toString());
 		
 		if(hashTree.level > hashTree.k){
 			//chegou na folha
-			System.out.println("Itemset: "+itemset.toString());
+			System.out.println("\nAchou -> Itemset: "+itemset.toString());
 			//Fazer a busca binária
 			printItemsets(hashTree.itemsets);
-			
-			return ;
+			System.out.println("Return 3");
+			return true;
 		}
 		
+		if(i >= ts.length){
+			System.out.println("Return 2");
+			return false;
+		}
 		int hash = Integer.parseInt(ts[i]) % 9;
 		
 		if(hashTree.nodes[hash] != null){
 			itemset.append(ts[i]).append(" ");
-			while (i < ts.length-1){
+			while (i < ts.length){
 				i++;
-				hash = Integer.parseInt(ts[i]) % 9;
-				find(hashTree.nodes[hash], ts, i, itemset);
+				if(findOld2(hashTree.nodes[hash], ts, i, itemset)){
+					return false;
+				}
 			}
 			
+		}else{
+			if(hashTree.level == 1){
+				System.out.println("Return 4");
+				return false;
+			}
+			
+			i++;
+			if(findOld2(hashTree, ts, i, itemset)){
+				return false;
+			}
 		}
 //		if(i >= ts.length-1){
 //			return false;
 //		}
 //		find(hashTree, ts, i+1, itemset);
-		return;
+		System.out.println("Return 5");
+		return false;
 		
 	}
 	
@@ -182,7 +243,7 @@ public class HashTree {
 	}
 	
 	public static void main(String[] args){
-		String[] itemsets = {"1 2", "1 3", "1 4", "2 3", "2 4", "3 4"};
+		String[] itemsets = {"1 2", "1 4", "2 4", "3 4"};
 		String t = "1 2 3 4";
 		HashTree hashTree = new HashTree(2);
 		
@@ -191,9 +252,9 @@ public class HashTree {
 		}
 //		hashTree.printAllItemsets(hashTree);
 		String[] ts = t.split(" ");
-		for(int i = 0; i < ts.length; i++){
-			hashTree.find(hashTree, t.split(" "), i, new StringBuilder());
-		}
+//		for(int i = 0; i < ts.length; i++){
+			hashTree.find(hashTree, t.split(" "), 0, new ArrayList<String>());
+//		}
 		
 	}
 }
