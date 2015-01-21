@@ -64,21 +64,15 @@ public class HashTree {
 	
 	public boolean find(HashTree hashTree, String[] ts, int i, ArrayList<String> itemset){
 		if(hashTree == null){
-//			System.out.prinCtln("Return 1");
 			return false;
 		}
-//		System.out.println(hashTree.level+" "+hashTree.k+" i: "+i);
-		
 		
 		if(hashTree.level > hashTree.k){
-			//Chegou na folha
 			System.out.println("\nAchou -> Itemset: "+itemset.toString());
-//			itemset.remove(itemset.size()-1);
 			return true;
 		}
 		
 		if(i >= ts.length){
-//			System.out.println("Return 2");
 			return false;
 		}
 		
@@ -86,22 +80,13 @@ public class HashTree {
 			int hash = Integer.parseInt(ts[i]) % 9;
 			
 			if(hashTree.nodes[hash] != null){
-//				System.out.println("Add item "+ts[i]);
 				itemset.add(ts[i]);
-				
 				find(hashTree.nodes[hash], ts, i+1, itemset);
-					
-//				System.out.print("I: "+i+" romove item "+ts[i]+" from "+itemset.toString());
 				itemset.remove(itemset.size()-1);
-//				System.out.println(" TO "+itemset.toString());
-			}else{
-//				System.out.println("Sem ramo para "+ts[i]+" i: "+i);
 			}
 			i++;
-//			System.out.println("Increment i to "+i);
 		}
 		
-//		System.out.println("Return 5");
 		return false;
 		
 	}
@@ -243,9 +228,9 @@ public class HashTree {
 	}
 	
 	public static void main(String[] args){
-		String[] itemsets = {"1 2", "1 4", "2 4", "3 4"};
-		String t = "1 2 3 4";
-		HashTree hashTree = new HashTree(2);
+		String[] itemsets = {"1 2 3", "1 3 4", "2 3 4", "3 4 5", "4 5 8"};
+		String t = "1 2 3 4 5 6 7 8";
+		HashTree hashTree = new HashTree(3);
 		
 		for(String itemset : itemsets){
 			hashTree.add(itemset);

@@ -26,6 +26,7 @@ import org.apache.hadoop.util.ReflectionUtils;
 
 import com.sun.xml.internal.bind.v2.runtime.unmarshaller.XsiNilLoader.Array;
 
+import app.HashTree;
 import app.ItemTid;
 
 /**
@@ -37,7 +38,8 @@ public class Map2  extends Mapper<LongWritable, Text, Text, IntWritable>{
     Log log = LogFactory.getLog(Map2.class);
     IntWritable countOut = new IntWritable(1);
     SequenceFile.Reader reader;
-    HashMap<String, Integer> fileCached;
+    ArrayList<String> fileCached;
+    HashTree hashTree;
     int k;
     /**
      * Le o arquivo invertido para a memória.
@@ -48,7 +50,8 @@ public class Map2  extends Mapper<LongWritable, Text, Text, IntWritable>{
     public void setup(Context context) throws IOException{
         String count = context.getConfiguration().get("count");
         String fileCachedRead = context.getConfiguration().get("fileCachedRead");
-        k = Integer.parseInt(count);
+        String kStr = context.getConfiguration().get("k");
+        k = Integer.parseInt(kStr);
         
         log.info("Iniciando map 2v2 count = "+count);
         log.info("Arquivo Cached = "+fileCachedRead);
@@ -61,14 +64,18 @@ public class Map2  extends Mapper<LongWritable, Text, Text, IntWritable>{
         
         //Gerar combinações dos itens de acordo com k
         
-        String[] keys = (String[]) fileCached.keySet().toArray();
-        
-        for (int i = 0; i < keys.length; i++){
-        	for (int j = i+1; j < keys.length; j++){
-        		String[] itemA = keys[i].split(" ");
-        		String[] itemB = keys[j].split(" ");
+        hashTree = new HashTree(k);
+        System.out.println("K is "+k);
+        String itemsetC;
+        for (int i = 0; i < fileCached.size(); i++){
+        	for (int j = i+1; j < fileCached.size(); j++){
+        		String[] itemA = fileCached.get(i).split(" ");
+        		String[] itemB = fileCached.get(j).split(" ");
         		if(isSamePrefix(itemA, itemB, i, j)){
-        			System.out.println(combine(itemA, itemB));
+        			itemsetC = combine(itemA, itemB);
+        			System.out.println(itemsetC);
+        			//Building HashTree
+        			hashTree.add(itemsetC);
         		}
         	}
         }
@@ -77,7 +84,8 @@ public class Map2  extends Mapper<LongWritable, Text, Text, IntWritable>{
     public boolean isSamePrefix(String[] itemA, String[] itemB, int i, int j){
     	if(k == 2) return true;
     	for(int a = 0; a < k -2; a++){
-            if(itemA[a] != itemB[a]){
+            if(!itemA[a].equals(itemB[a])){
+            	System.out.println("Não é o mesmo prefixo: "+itemA[a]+" != "+itemB[a]+"  "+itemA+" "+itemB);
                 return false;
             }
         }
@@ -95,63 +103,57 @@ public class Map2  extends Mapper<LongWritable, Text, Text, IntWritable>{
         return sb.toString();
     }
     
-    public boolean isFrequent(String item, int x){
-    	System.out.println(x+" Item : "+item);
-    	if(fileCached.get(item) != null){
-    		return true;
-    	}
-    	System.out.print(" - Não está no cache!");
-    	return false;
+    public void subset(String[] transaction, HashTree hasht, int i, ArrayList<String> itemset,Context context){
+    	if(hasht == null){
+			return;
+		}
+		
+		if(hasht.getLevel() > hasht.getK()){
+			System.out.println("\nAchou -> Itemset: "+itemset.toString());
+			try{
+				context.write(new Text(itemset.toString()), new IntWritable(1));
+			}catch(IOException | InterruptedException e){
+				e.printStackTrace();
+			}
+			return;
+		}
+		
+		if(i >= transaction.length){
+			return;
+		}
+		
+		while(i < transaction.length){
+			int hash = Integer.parseInt(transaction[i]) % 9;
+			
+			if(hasht.getNodes()[hash] != null){
+				itemset.add(transaction[i]);
+				subset(transaction, hasht.getNodes()[hash], i+1, itemset, context);
+				itemset.remove(itemset.size()-1);
+			}
+			i++;
+		}
+		
+		return;
     }
-    
-    /**
-     * Gera um conjunto de itemsets de tamanho dois a partir do item recebido.
-     * @param item
-     * @param pos
-     * @param context 
-     */
-    public void generateKItemSets(String[] transaction, Context context){
-        /*Verificar se o item é frequente*/
-    	
-    	int i = 0;
-    	int j;
-    	int size = transaction.length;
-    	System.out.println(new ArrayList(Arrays.asList(transaction)));
-    	if(size >= k){
-    		while(i < size && isFrequent(transaction[i], 1)){//utilizar substring. Se o item não for frequente substituí-lo por -1 para não chamar o 'isFrequent' a partir da segunda iteração.
-	    		j = i+1;
-	    		while(j < size && isFrequent(transaction[j], 2)){
-					
-	    			try {
-						context.write(new Text(transaction[i]+" "+transaction[j] ), countOut);
-					} catch (IOException | InterruptedException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-	    			j++;
-				}
-	    		i++;
-	    		if(i == size-1) break;
-	    	}
-    	}
-	}
     
     @Override
     public void map(LongWritable key, Text value, Context context){
     	
-		generateKItemSets(value.toString().split(" "), context);
-		
+		//Aplica a função subset e envia o itemset para o reduce
+    	ArrayList<String> itemset = new ArrayList();
+		subset(value.toString().split(" "), hashTree, 0, itemset, context);
     }
     
-    public HashMap<String, Integer> openFile(String path, Context context){
-    	fileCached = new HashMap<String, Integer>();
+    public ArrayList<String> openFile(String path, Context context){
+    	fileCached = new ArrayList<String>();
     	try {
 			
 			Text key = (Text) ReflectionUtils.newInstance(reader.getKeyClass(), context.getConfiguration());
 			IntWritable value = (IntWritable) ReflectionUtils.newInstance(reader.getValueClass(), context.getConfiguration());
 			
 			while (reader.next(key, value)) {
-	            fileCached.put(key.toString(), value.get());
+				System.out.println("Add Key: "+key.toString());
+	            fileCached.add(key.toString());
 	        }
 		} catch (IllegalArgumentException | IOException e) {
 			// TODO Auto-generated catch block
