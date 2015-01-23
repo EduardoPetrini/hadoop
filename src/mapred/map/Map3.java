@@ -6,212 +6,160 @@
 
 package mapred.map;
 
-import app.ItemTid;
-
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import main.Main;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Set;
+import java.net.URI;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.IOUtils;
+import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.util.ReflectionUtils;
 
+import com.sun.xml.internal.bind.v2.runtime.unmarshaller.XsiNilLoader.Array;
+
+import app.HashTree;
+import app.ItemTid;
+
 /**
- *
+ * Gerar itemsets de tamanho k, k+1 e k+3 em uma única instância Map/Reduce.
  * @author eduardo
  */
-public class Map3 extends Mapper<LongWritable, Text, Text, Text>{
+public class Map3  extends Mapper<LongWritable, Text, Text, IntWritable>{
     
     Log log = LogFactory.getLog(Map3.class);
-    
-    ItemTid invert;
-    ArrayList<String> keys;
+    IntWritable countOut = new IntWritable(1);
     SequenceFile.Reader reader;
-    int support;
+    ArrayList<String> fileCached;
+    HashTree hashTree;
     int k;
-    int loop;
-    
     /**
      * Le o arquivo invertido para a memória.
-     * @param c
-     * @throws IOException 
-     */
-    @Override
-    public void setup(Mapper.Context c) throws IOException{
-        String count = c.getConfiguration().get("count");
-        support = Integer.parseInt(c.getConfiguration().get("support"));
-        
-        log.info("Iniciando map 3v2");
-        log.info("Map3 support = "+support);
-        
-        invert = new ItemTid(); 
-        keys = new ArrayList();
-        
-        reader = new SequenceFile.Reader(c.getConfiguration(), SequenceFile.Reader.file(new Path("/user/eduardo/invert/invertido"+(Integer.parseInt(count)-1))));
-        
-        Text key = (Text) ReflectionUtils.newInstance(reader.getKeyClass(), c.getConfiguration());
-        Text value = (Text) ReflectionUtils.newInstance(reader.getValueClass(), c.getConfiguration());
-        
-        String[] values;
-        ArrayList<LongWritable> tids;
-        
-        while (reader.next(key, value)) {
-           
-            keys.add(key.toString());
-            
-            values = value.toString().split(",");
-            values[0] = values[0].replace("[", "");
-            values[values.length-1] = values[values.length-1].replace("]", "");
-            
-            tids = new ArrayList();
-            
-            for(String v: values){
-                if(!v.isEmpty()){
-                    tids.add(new LongWritable(Integer.parseInt(v.trim())));
-                }
-            }
-            
-            invert.put(key.toString(), tids);
-           
-        }
-        
-        IOUtils.closeStream(reader);
-        
-        log.info("Arquivo invertido carregado na memória! Keys: "+keys.size()+" Invert: "+invert.size());
-        
-    }
-    
-    /**
-     * 
-     * @param kitem
-     * @param v
-     * @param context 
-     */
-    public void sendToReduce(String kitem, ArrayList<LongWritable> v, Context context){
-        
-        Text key = new Text(kitem);
-        Text value = new Text(v.toString());
-        
-        
-        try {
-            context.write(key, value);
-        } catch (IOException | InterruptedException ex) {
-            Logger.getLogger(Map3.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
-    
-    /**
-     * 
-     * @param kitem
-     * @return 
-     */
-    public String getPrefix(String kitem){
-        
-        String[] spkitem = kitem.split("-");
-        StringBuilder sb = new StringBuilder();
-        
-        for (int i = 0; i < spkitem.length-1; i++) {
-            
-            sb.append(spkitem[i]).append("-");
-        }
-        
-        k = spkitem.length;
-        return sb.toString().trim();
-    }
-    
-    /**
-     * 
-     * @param kitem
-     * @param pos
-     * @param localKeys
-     * @param localInvert
-     * @param context 
-     */
-    public void gerarKItemSets(String kitem, int pos, ArrayList<String> localKeys, ItemTid localInvert, Context context){
-  
-        String prefix = getPrefix(kitem);
-//        log.info("Item: "+kitem+" prefix: "+prefix);
-
-        String kitem2;
-        StringBuilder novoItem;
-        ArrayList<LongWritable> aux;
-
-        ArrayList<String> lKeys = new ArrayList();
-        ItemTid arqInv = new ItemTid();
-        
-        int i = pos;
-        
-        kitem2 = localKeys.get(i);
-        
-        while(kitem2.startsWith(prefix)){
-            
-            /*Checa suporte e poda*/
-            /*Efetuar a combinação*/
-            
-//            log.info(kitem+" combina com "+kitem2);
-            
-            if((aux = ItemTid.intersection2(localInvert.get(kitem), localInvert.get(kitem2))).size() > support){
-                novoItem = new StringBuilder();
-
-                novoItem.append(kitem).append("-");
-                novoItem.append(kitem2.split("-")[k-1]);
-
-                arqInv.put(novoItem.toString(), aux);
-                lKeys.add(novoItem.toString());
-                
-                /*Enviar para o reduce*/
-                sendToReduce(novoItem.toString(), aux, context);
-               
-            }
-            
-            i++;
-            if(i < localKeys.size()){
-                
-                kitem2 = localKeys.get(i);
-            }else{
-                break;
-            }
-        }
-        
-        /*Chamar a função novamente para k+1*/
-        
-        if(loop < 2 && !lKeys.isEmpty() && lKeys.size() > 1){
-            loop++;
-            gerarKItemSets(lKeys.get(0), 1, lKeys, arqInv, context);
-        }
-    }
-    
-    /**
-     * Para cada k-itemset obtido do disco, combinar com os itens do arquivo invertido respeitando prefixo.
-     * @param tid
-     * @param value
      * @param context
      * @throws IOException 
      */
     @Override
-    public void map(LongWritable tid, Text value, Context context) throws IOException{
-        String[] input = value.toString().split("\\s+");//Posição 0 item, posição 1 tids
+    public void setup(Context context) throws IOException{
+        String count = context.getConfiguration().get("count");
+        String fileCachedRead = context.getConfiguration().get("fileCachedRead");
+        String kStr = context.getConfiguration().get("k");
+        k = Integer.parseInt(kStr);
         
-        int pos = keys.indexOf(input[0]);
+        log.info("Iniciando map 3 count = "+count);
+        log.info("Arquivo Cached = "+fileCachedRead);
+        URI[] patternsFiles = context.getCacheFiles();
         
-        if(pos < keys.size()-1 && pos >= 0){
-            loop = 1;
-            gerarKItemSets(input[0], pos+1, this.keys, this.invert, context);
+        Path path = new Path(patternsFiles[0].toString());
+        
+        reader = new SequenceFile.Reader(context.getConfiguration(), SequenceFile.Reader.file(path));
+        openFile(fileCachedRead, context);
+        
+        //Gerar combinações dos itens de acordo com k
+        
+        hashTree = new HashTree(k);
+        System.out.println("K is "+k);
+        String itemsetC;
+        for (int i = 0; i < fileCached.size(); i++){
+        	for (int j = i+1; j < fileCached.size(); j++){
+        		String[] itemA = fileCached.get(i).split(" ");
+        		String[] itemB = fileCached.get(j).split(" ");
+        		if(isSamePrefix(itemA, itemB, i, j)){
+        			itemsetC = combine(itemA, itemB);
+        			System.out.println(itemsetC);
+        			//Building HashTree
+        			hashTree.add(itemsetC);
+        		}
+        	}
+        }
+    }
+    
+    public boolean isSamePrefix(String[] itemA, String[] itemB, int i, int j){
+    	if(k == 2) return true;
+    	for(int a = 0; a < k -2; a++){
+            if(!itemA[a].equals(itemB[a])){
+            	System.out.println("Não é o mesmo prefixo: "+itemA[a]+" != "+itemB[a]+"  "+itemA+" "+itemB);
+                return false;
+            }
         }
         
+    	return true;
+    }
+    
+    public String combine(String[] itemA, String[] itemB){
+        StringBuilder sb = new StringBuilder();
+        
+        for(int i = 0; i < itemA.length; i++){
+            sb.append(itemA[i]).append(" ");
+        }
+        sb.append(itemB[itemB.length-1]);
+        return sb.toString();
+    }
+    
+    public void subset(String[] transaction, HashTree hasht, int i, ArrayList<String> itemset,Context context){
+    	if(hasht == null){
+			return;
+		}
+		
+		if(hasht.getLevel() > hasht.getK()){
+			System.out.println("\nAchou -> Itemset: "+itemset.toString());
+			try{
+				context.write(new Text(itemset.toString()), new IntWritable(1));
+			}catch(IOException | InterruptedException e){
+				e.printStackTrace();
+			}
+			return;
+		}
+		
+		if(i >= transaction.length){
+			return;
+		}
+		
+		while(i < transaction.length){
+			int hash = Integer.parseInt(transaction[i]) % 9;
+			
+			if(hasht.getNodes()[hash] != null){
+				itemset.add(transaction[i]);
+				subset(transaction, hasht.getNodes()[hash], i+1, itemset, context);
+				itemset.remove(itemset.size()-1);
+			}
+			i++;
+		}
+		
+		return;
     }
     
     @Override
-    public void cleanup(Context c){
-        log.info("Finalizando o Map3!");
+    public void map(LongWritable key, Text value, Context context){
+    	
+		//Aplica a função subset e envia o itemset para o reduce
+    	ArrayList<String> itemset = new ArrayList();
+		subset(value.toString().split(" "), hashTree, 0, itemset, context);
+    }
+    
+    public ArrayList<String> openFile(String path, Context context){
+    	fileCached = new ArrayList<String>();
+    	try {
+			
+			Text key = (Text) ReflectionUtils.newInstance(reader.getKeyClass(), context.getConfiguration());
+			IntWritable value = (IntWritable) ReflectionUtils.newInstance(reader.getValueClass(), context.getConfiguration());
+			
+			while (reader.next(key, value)) {
+				System.out.println("Add Key: "+key.toString());
+	            fileCached.add(key.toString());
+	        }
+		} catch (IllegalArgumentException | IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    	
+    	return fileCached;
     }
 }

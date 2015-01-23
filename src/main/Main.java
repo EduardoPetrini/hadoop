@@ -185,7 +185,72 @@ public class Main {
         }
     }
     
-   
+    /**
+     * 
+     */
+    public void job3(){
+        
+        Configuration c = new Configuration();
+        
+        Job job = null;
+        try {
+            job = Job.getInstance(c);
+        } catch (IOException ex) {
+            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        job.getConfiguration().set("fs.defaultFS", "hdfs://192.168.0.100:9000");
+        job.setJobName("Fase 3");
+        
+        job.setJarByClass(Main.class);
+        
+        job.setMapperClass(Map3.class);
+//        job.setCombinerClass(Reduce2.class);
+        job.setReducerClass(Reduce3.class);
+        
+        job.setOutputKeyClass(Text.class);
+        job.setOutputValueClass(IntWritable.class);
+        
+        k++;
+        String fileCachedRead = "/user/eduardo/outputCached/outputMR"+(Main.countDir-1);
+        String fileCachedWrited = "/user/eduardo/outputCached/outputMR"+Main.countDir;
+        job.getConfiguration().set("count", String.valueOf(Main.countDir));
+        job.getConfiguration().set("support", String.valueOf(support));
+        job.getConfiguration().set("k", String.valueOf(k));
+        job.getConfiguration().set("fileCachedRead", fileCachedRead);
+        job.getConfiguration().set("fileCachedWrited", fileCachedWrited);
+          
+        System.out.println("Job 3 - CountDir: "+Main.countDir);
+        
+        try {
+           job.addCacheFile(new URI(fileCachedRead));
+        } catch (URISyntaxException ex) {
+            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        try {
+            FileInputFormat.setInputPaths(job, new Path("input"));
+        } catch (IOException ex) {
+            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        FileOutputFormat.setOutputPath(job, new Path("output"+Main.countDir));
+        try {
+            long ini = System.currentTimeMillis();
+            int st = (job.waitForCompletion(true) ? 0 : 1);
+            long fim = System.currentTimeMillis();
+            
+            long t = fim - ini;
+            System.out.println("Tempo da fase 3: "+((double)t/1000));
+            
+            timeTotal += t;
+            if(st == 1){
+                System.exit(st);
+            }
+            
+        } catch (InterruptedException | ClassNotFoundException | IOException ex) {
+            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
     public boolean increseMapTask(Path file, Configuration c){
         try {
             FileSystem fs = FileSystem.get(c);
@@ -402,11 +467,15 @@ public class Main {
         m.job1();
         m.checkOutput("output"+Main.countDir);
         
+        Main.countDir++;
+        m.job2();
+        m.checkOutput("output"+Main.countDir);
+        
         int l = 0;
         while(m.checkOutput("output"+Main.countDir)){
             System.out.println("LOOP "+l++);
-        	Main.countDir++;
-        	m.job2();
+            Main.countDir++;
+            m.job3();
         }
 
         /*Remover os arquivos invertidos anteriores*/
