@@ -5,13 +5,9 @@ import java.util.ArrayList;
 public class PrefixTree {
 	private ArrayList<String> prefix;
 	private ArrayList<PrefixTree> prefixTree;
-	private int k;
 	private int level;
-	private int prefixSize;
-	public PrefixTree(int k, int level, int prefixSize) {
-		this.k = k;
+	public PrefixTree(int level) {
 		this.level = level;
-		this.prefixSize = prefixSize;
 		prefix = new ArrayList<String>();
 		prefixTree = new ArrayList<PrefixTree>();
 	}
@@ -27,23 +23,11 @@ public class PrefixTree {
 	public void setPrefixTree(ArrayList<PrefixTree> prefixTree) {
 		this.prefixTree = prefixTree;
 	}
-	public int getK() {
-		return k;
-	}
-	public void setK(int k) {
-		this.k = k;
-	}
 	public int getLevel() {
 		return level;
 	}
 	public void setLevel(int level) {
 		this.level = level;
-	}
-	public int getPrefixSize() {
-		return prefixSize;
-	}
-	public void setPrefixSize(int prefixSize) {
-		this.prefixSize = prefixSize;
 	}
 	
 	public void add(PrefixTree pt, String[] itemset, int i){
@@ -59,7 +43,7 @@ public class PrefixTree {
 			/*Existe o item, percorrer a árvore de acordo com o index obtido*/
 			i++;
 			if(pt.prefixTree.isEmpty()){
-				pt.prefixTree.add(index, new PrefixTree(this.k, i, this.prefixSize));
+				pt.prefixTree.add(index, new PrefixTree(i));
 				add(pt.prefixTree.get(index), itemset, i);
 			}else{
 				add(pt.prefixTree.get(index), itemset, i);
@@ -73,7 +57,7 @@ public class PrefixTree {
 			if(i >= itemset.length){
 				return;
 			}
-			pt.prefixTree.add(index, new PrefixTree(this.k, i, this.prefixSize));
+			pt.prefixTree.add(index, new PrefixTree(i));
 			add(pt.prefixTree.get(index), itemset, i);
 		}
 	}
@@ -125,7 +109,7 @@ public class PrefixTree {
 	}
 	
 	public static void main(String[] args){
-		PrefixTree pt = new PrefixTree(3, 0, 1);
+		PrefixTree pt = new PrefixTree(0);
 		String[] itemset = {"a","b","c","d"};
 		String[] itemset2 = {"a","b","c","d", "e"};
 		String[] itemset3 = {"k","x","z"};

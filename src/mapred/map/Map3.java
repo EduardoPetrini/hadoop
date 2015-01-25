@@ -21,6 +21,7 @@ import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.util.ReflectionUtils;
 
 import app.HashTree;
+import app.PrefixTree;
 
 /**
  * Gerar itemsets de tamanho k, k+1 e k+3 em uma única instância Map/Reduce.
@@ -32,7 +33,8 @@ public class Map3  extends Mapper<LongWritable, Text, Text, IntWritable>{
     IntWritable countOut = new IntWritable(1);
     SequenceFile.Reader reader;
     ArrayList<String> fileCached;
-    HashTree hashTree;
+    ArrayList<String> itemsetAux;
+    PrefixTree prefixTree;
     int k;
     /**
      * Le o arquivo invertido para a memória.
@@ -55,9 +57,11 @@ public class Map3  extends Mapper<LongWritable, Text, Text, IntWritable>{
         reader = new SequenceFile.Reader(context.getConfiguration(), SequenceFile.Reader.file(path));
         openFile(fileCachedRead, context);
         
-        //Gerar combinações dos itens de acordo com k
+        //Gerar combinações dos itens de acordo com k, k+1 e k+2
         
-        hashTree = new HashTree(k);
+        prefixTree = new PrefixTree(0);
+        itemsetAux = new ArrayList<String>();
+        
         System.out.println("K is "+k);
         String itemsetC;
         for (int i = 0; i < fileCached.size(); i++){
@@ -66,9 +70,38 @@ public class Map3  extends Mapper<LongWritable, Text, Text, IntWritable>{
         		String[] itemB = fileCached.get(j).split(" ");
         		if(isSamePrefix(itemA, itemB, i, j)){
         			itemsetC = combine(itemA, itemB);
+        			itemsetAux.add(itemsetC);
         			System.out.println(itemsetC);
         			//Building HashTree
-        			hashTree.add(itemsetC);
+        			prefixTree.add(prefixTree, itemsetC.split(" "), 0);
+        		}
+        	}
+        }
+        fileCached.clear();
+        for (int i = 0; i < itemsetAux.size(); i++){
+        	for (int j = i+1; j < itemsetAux.size(); j++){
+        		String[] itemA = itemsetAux.get(i).split(" ");
+        		String[] itemB = itemsetAux.get(j).split(" ");
+        		if(isSamePrefix(itemA, itemB, i, j)){
+        			itemsetC = combine(itemA, itemB);
+        			fileCached.add(itemsetC);
+        			System.out.println(itemsetC);
+        			//Building HashTree
+        			prefixTree.add(prefixTree, itemsetC.split(" "), 0);
+        		}
+        	}
+        }
+        
+        itemsetAux.clear();
+        for (int i = 0; i < fileCached.size(); i++){
+        	for (int j = i+1; j < fileCached.size(); j++){
+        		String[] itemA = fileCached.get(i).split(" ");
+        		String[] itemB = fileCached.get(j).split(" ");
+        		if(isSamePrefix(itemA, itemB, i, j)){
+        			itemsetC = combine(itemA, itemB);
+        			System.out.println(itemsetC);
+        			//Building HashTree
+        			prefixTree.add(prefixTree, itemsetC.split(" "), 0);
         		}
         	}
         }
@@ -96,45 +129,47 @@ public class Map3  extends Mapper<LongWritable, Text, Text, IntWritable>{
         return sb.toString();
     }
     
-    public void subset(String[] transaction, HashTree hasht, int i, ArrayList<String> itemset,Context context){
-    	if(hasht == null){
+    public void subset(String[] transaction, PrefixTree pt, int i, StringBuilder sb, Context context){
+    	if(i >= transaction.length){
 			return;
 		}
+		int index = pt.getPrefix().indexOf(transaction[i]);
 		
-		if(hasht.getLevel() > hasht.getK()){
-			System.out.println("\nAchou -> Itemset: "+itemset.toString());
-			try{
-				context.write(new Text(itemset.toString()), new IntWritable(1));
-			}catch(IOException | InterruptedException e){
-				e.printStackTrace();
+		if(index == -1){
+			System.out.println("Não achou :(");
+			return;
+		}else{
+			if(i == transaction.length-1){
+				sb.append(transaction[i]);
+				System.out.println("Achou :) "+sb.toString());
+				
+				//Manda pro reduce
+				try {
+					context.write(new Text(sb.toString()), new IntWritable(1));
+				} catch (IOException | InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				return;
+			}else{
+				sb.append(transaction[i]).append(" ");
+				i++;
+				if(pt.getPrefixTree().isEmpty()){
+					System.out.println("Não achou :'(");
+					return;
+				}else{
+					subset(transaction, pt.getPrefixTree().get(index), i, sb ,context);
+				}
 			}
-			return;
 		}
-		
-		if(i >= transaction.length){
-			return;
-		}
-		
-		while(i < transaction.length){
-			int hash = Integer.parseInt(transaction[i]) % 9;
-			
-			if(hasht.getNodes()[hash] != null){
-				itemset.add(transaction[i]);
-				subset(transaction, hasht.getNodes()[hash], i+1, itemset, context);
-				itemset.remove(itemset.size()-1);
-			}
-			i++;
-		}
-		
-		return;
     }
     
     @Override
     public void map(LongWritable key, Text value, Context context){
     	
 		//Aplica a função subset e envia o itemset para o reduce
-    	ArrayList<String> itemset = new ArrayList();
-		subset(value.toString().split(" "), hashTree, 0, itemset, context);
+    	StringBuilder sb = new StringBuilder();
+		subset(value.toString().split(" "), prefixTree, 0, sb , context);
     }
     
     public ArrayList<String> openFile(String path, Context context){
