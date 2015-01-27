@@ -64,6 +64,8 @@ public class Map3  extends Mapper<LongWritable, Text, Text, IntWritable>{
         
         System.out.println("K is "+k);
         String itemsetC;
+        System.out.println("\nPrimeiro passo!");
+        prefixTree.printStrArray(fileCached);
         for (int i = 0; i < fileCached.size(); i++){
         	for (int j = i+1; j < fileCached.size(); j++){
         		String[] itemA = fileCached.get(i).split(" ");
@@ -71,12 +73,15 @@ public class Map3  extends Mapper<LongWritable, Text, Text, IntWritable>{
         		if(isSamePrefix(itemA, itemB, i, j)){
         			itemsetC = combine(itemA, itemB);
         			itemsetAux.add(itemsetC);
-        			System.out.println(itemsetC);
+        			System.out.println(itemsetC+" no primeiro passo");
         			//Building HashTree
         			prefixTree.add(prefixTree, itemsetC.split(" "), 0);
         		}
         	}
         }
+        prefixTree.printPrefixTree(prefixTree);
+        System.out.println("\nSegundo passo!");
+        prefixTree.printStrArray(itemsetAux);
         fileCached.clear();
         for (int i = 0; i < itemsetAux.size(); i++){
         	for (int j = i+1; j < itemsetAux.size(); j++){
@@ -85,13 +90,15 @@ public class Map3  extends Mapper<LongWritable, Text, Text, IntWritable>{
         		if(isSamePrefix(itemA, itemB, i, j)){
         			itemsetC = combine(itemA, itemB);
         			fileCached.add(itemsetC);
-        			System.out.println(itemsetC);
+        			System.out.println(itemsetC+" no segundo passo");
         			//Building HashTree
         			prefixTree.add(prefixTree, itemsetC.split(" "), 0);
         		}
         	}
         }
-        
+        prefixTree.printPrefixTree(prefixTree);
+        System.out.println("\nTerceiro passo!");
+        prefixTree.printStrArray(fileCached);
         itemsetAux.clear();
         for (int i = 0; i < fileCached.size(); i++){
         	for (int j = i+1; j < fileCached.size(); j++){
@@ -99,19 +106,22 @@ public class Map3  extends Mapper<LongWritable, Text, Text, IntWritable>{
         		String[] itemB = fileCached.get(j).split(" ");
         		if(isSamePrefix(itemA, itemB, i, j)){
         			itemsetC = combine(itemA, itemB);
-        			System.out.println(itemsetC);
+        			System.out.println(itemsetC+" no terceiro passo");
         			//Building HashTree
         			prefixTree.add(prefixTree, itemsetC.split(" "), 0);
         		}
         	}
         }
+        prefixTree.printStrArray(itemsetAux);
+        System.out.println("Fim do setup, inicial função map");
+        prefixTree.printPrefixTree(prefixTree);
     }
     
     public boolean isSamePrefix(String[] itemA, String[] itemB, int i, int j){
     	if(k == 2) return true;
     	for(int a = 0; a < k -2; a++){
             if(!itemA[a].equals(itemB[a])){
-            	System.out.println("Não é o mesmo prefixo: "+itemA[a]+" != "+itemB[a]+"  "+itemA+" "+itemB);
+            	System.out.println("Não é o mesmo prefixo: "+itemA[a]+" != "+itemB[a]);
                 return false;
             }
         }
@@ -136,7 +146,7 @@ public class Map3  extends Mapper<LongWritable, Text, Text, IntWritable>{
 		int index = pt.getPrefix().indexOf(transaction[i]);
 		
 		if(index == -1){
-			System.out.println("Não achou :(");
+			System.out.println("Não achou :( "+sb.toString());
 			return;
 		}else{
 			if(i == transaction.length-1){
@@ -155,7 +165,7 @@ public class Map3  extends Mapper<LongWritable, Text, Text, IntWritable>{
 				sb.append(transaction[i]).append(" ");
 				i++;
 				if(pt.getPrefixTree().isEmpty()){
-					System.out.println("Não achou :'(");
+					System.out.println("Não achou :'( "+sb.toString());
 					return;
 				}else{
 					subset(transaction, pt.getPrefixTree().get(index), i, sb ,context);

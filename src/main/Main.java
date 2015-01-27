@@ -69,7 +69,7 @@ public class Main {
         } catch (IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
-        job.getConfiguration().set("fs.defaultFS", "hdfs://192.168.0.100:9000");
+        job.getConfiguration().set("fs.defaultFS", "hdfs://master:9000");
         job.setJobName("Fase 1");
         
         job.setJarByClass(Main.class);
@@ -127,7 +127,7 @@ public class Main {
         } catch (IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
-        job.getConfiguration().set("fs.defaultFS", "hdfs://192.168.0.100:9000");
+        job.getConfiguration().set("fs.defaultFS", "hdfs://master:9000");
         job.setJobName("Fase 2");
         
         job.setJarByClass(Main.class);
@@ -193,7 +193,7 @@ public class Main {
         } catch (IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
-        job.getConfiguration().set("fs.defaultFS", "hdfs://192.168.0.100:9000");
+        job.getConfiguration().set("fs.defaultFS", "hdfs://master:9000");
         job.setJobName("Fase 3");
         
         job.setJarByClass(Main.class);
@@ -223,7 +223,7 @@ public class Main {
         }
         
         try {
-            FileInputFormat.setInputPaths(job, new Path("input"));
+        	FileInputFormat.setInputPaths(job, new Path("input"));
         } catch (IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -274,7 +274,7 @@ public class Main {
         
         log.info("Excluindo diretórios anteriores...");
         Configuration c = new Configuration();
-        c.set("fs.defaultFS", "hdfs://192.168.0.100:9000");
+        c.set("fs.defaultFS", "hdfs://master:9000");
         Path p = new Path(d);
         try {
             FileSystem fs = FileSystem.get(c);
@@ -310,7 +310,7 @@ public class Main {
         
         log.info("Excluindo diretórios anteriores...");
         Configuration c = new Configuration();
-        c.set("fs.defaultFS", "hdfs://192.168.0.100:9000");
+        c.set("fs.defaultFS", "hdfs://master:9000");
         Path p = new Path(d);
         Path aux;
         
@@ -345,7 +345,7 @@ public class Main {
     
     public void createTempDir(String d){
     	 Configuration c = new Configuration();
-         c.set("fs.defaultFS", "hdfs://192.168.0.100:9000");
+         c.set("fs.defaultFS", "hdfs://master:9000");
         try {
             FileSystem fs = FileSystem.get(c);
             
@@ -364,7 +364,7 @@ public class Main {
     public void delContentFiles(String dir){
         Path p = new Path(dir);
         Configuration c = new Configuration();
-        c.set("fs.defaultFS", "hdfs://192.168.0.100:9000");
+        c.set("fs.defaultFS", "hdfs://master:9000");
         try {
             FileSystem fs = FileSystem.get(c);
             
@@ -407,7 +407,7 @@ public class Main {
         Path p = new Path(dir);
         Path aux;
         Configuration c = new Configuration();
-        c.set("fs.defaultFS", "hdfs://192.168.0.100:9000");
+        c.set("fs.defaultFS", "hdfs://master:9000");
         System.out.println("Verificando diretório: "+dir);
         
         try{
@@ -447,7 +447,8 @@ public class Main {
         Main m = new Main();
 //        System.out.println(m.checkOutput("output1"));
         m.delOutDirs("/user/eduardo/");
-        m.delContentFiles("invert");
+//        System.exit(0);
+//        m.delContentFiles("outputCached");
 
         if(args.length > 0){
             m.support = Integer.parseInt(args[0]);
@@ -468,7 +469,7 @@ public class Main {
         
         int l = 0;
         while(m.checkOutput("output"+Main.countDir)){
-            System.out.println("LOOP "+l++);
+            System.out.println("LOOP "+ ++l);
             Main.countDir++;
             m.job3();
         }

@@ -29,13 +29,17 @@ public class Reduce3 extends Reducer<Text, IntWritable, Text, IntWritable> {
     Log log = LogFactory.getLog(Reduce3.class);
     SequenceFile.Writer writer;
     String count;
+    int k;
     
     @Override
-    public void setup(Context c) throws IOException{
-        count = c.getConfiguration().get("count");
+    public void setup(Context context) throws IOException{
+        count = context.getConfiguration().get("count");
         log.info("Iniciando o REDUCE 3. Count dir: "+count);
+        String kStr = context.getConfiguration().get("k");
+        k = Integer.parseInt(kStr);
+        String fileCachedPath = context.getConfiguration().get("fileCachedWrited");
         
-        writer = SequenceFile.createWriter(c.getConfiguration(), SequenceFile.Writer.file(new Path("/user/eduardo/invert/invertido"+count)),
+        writer = SequenceFile.createWriter(context.getConfiguration(), SequenceFile.Writer.file(new Path(fileCachedPath)),
                SequenceFile.Writer.keyClass(Text.class), SequenceFile.Writer.valueClass(IntWritable.class));
     }
     
@@ -48,8 +52,12 @@ public class Reduce3 extends Reducer<Text, IntWritable, Text, IntWritable> {
         }
     	
         try {
-            context.write(key, new IntWritable(count));
-            save(key, new IntWritable(count));
+        	/*Divide as saídas pelo k. k e k+1 para a saída default*/
+        	if(key.toString().split(" ").length < (k+2)){
+        		context.write(key, new IntWritable(count));
+        	}else{
+        		save(key, new IntWritable(count));
+        	}
         } catch (IOException | InterruptedException ex) {
             Logger.getLogger(Reduce3.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -73,7 +81,7 @@ public class Reduce3 extends Reducer<Text, IntWritable, Text, IntWritable> {
         log.info("Finalizando o REDUCE 3.");
         try {
             writer.close();
-        } catch (IOException | InterruptedException ex) {
+        } catch (IOException ex) {
             Logger.getLogger(Reduce3.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
