@@ -62,10 +62,22 @@ public class Map3  extends Mapper<LongWritable, Text, Text, IntWritable>{
         prefixTree = new PrefixTree(0);
         itemsetAux = new ArrayList<String>();
         
-        System.out.println("K is "+k);
+        log.info("K is "+k);
         String itemsetC;
         System.out.println("\nPrimeiro passo!");
         prefixTree.printStrArray(fileCached);
+        
+        log.info(context.getStatus());
+        if(fileCachedRead != null && fileCached.size() > 0){
+        	if(fileCached.get(fileCached.size()-1).split(" ").length < k-1){
+	        	log.info("Itemsets é menor do que k");
+	        	prefixTree.printStrArray(fileCached);
+	        	System.exit(0);
+        	}
+        }else{
+        	log.info("Arquivo do cache distribuído é vazio!");
+        	System.exit(0);
+        }
         for (int i = 0; i < fileCached.size(); i++){
         	for (int j = i+1; j < fileCached.size(); j++){
         		String[] itemA = fileCached.get(i).split(" ");
@@ -82,6 +94,10 @@ public class Map3  extends Mapper<LongWritable, Text, Text, IntWritable>{
         prefixTree.printPrefixTree(prefixTree);
         System.out.println("\nSegundo passo!");
         prefixTree.printStrArray(itemsetAux);
+        
+        log.info(context.getStatus());
+        k++;
+        log.info("K is "+k);
         fileCached.clear();
         for (int i = 0; i < itemsetAux.size(); i++){
         	for (int j = i+1; j < itemsetAux.size(); j++){
@@ -99,6 +115,10 @@ public class Map3  extends Mapper<LongWritable, Text, Text, IntWritable>{
         prefixTree.printPrefixTree(prefixTree);
         System.out.println("\nTerceiro passo!");
         prefixTree.printStrArray(fileCached);
+        
+        log.info(context.getStatus());
+        k++;
+        log.info("K is "+k);
         itemsetAux.clear();
         for (int i = 0; i < fileCached.size(); i++){
         	for (int j = i+1; j < fileCached.size(); j++){
@@ -113,8 +133,10 @@ public class Map3  extends Mapper<LongWritable, Text, Text, IntWritable>{
         	}
         }
         prefixTree.printStrArray(itemsetAux);
-        System.out.println("Fim do setup, inicial função map");
+        System.out.println("Fim do setup, inicia função map");
         prefixTree.printPrefixTree(prefixTree);
+        
+        log.info(context.getStatus());
     }
     
     public boolean isSamePrefix(String[] itemA, String[] itemB, int i, int j){
@@ -179,7 +201,10 @@ public class Map3  extends Mapper<LongWritable, Text, Text, IntWritable>{
     	
 		//Aplica a função subset e envia o itemset para o reduce
     	StringBuilder sb = new StringBuilder();
-		subset(value.toString().split(" "), prefixTree, 0, sb , context);
+    	String[] transaction = value.toString().split(" ");
+    	if(transaction.length >= k-2){
+    		subset(transaction, prefixTree, 0, sb , context);
+    	}
     }
     
     public ArrayList<String> openFile(String path, Context context){

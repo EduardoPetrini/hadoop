@@ -213,7 +213,7 @@ public class Main {
         job.getConfiguration().set("k", String.valueOf(k));
         job.getConfiguration().set("fileCachedRead", fileCachedRead);
         job.getConfiguration().set("fileCachedWrited", fileCachedWrited);
-          
+         this.k += 2;
         System.out.println("Job 3 - CountDir: "+Main.countDir);
         
         try {
@@ -443,6 +443,30 @@ public class Main {
         return false;
     }
     
+public boolean checkOutputMR(){
+        String dir = "/user/eduardo/outputCached/outputMR"+Main.countDir;
+        Path p = new Path(dir);
+        
+        Configuration c = new Configuration();
+        c.set("fs.defaultFS", "hdfs://master:9000");
+        System.out.println("Verificando diretório: "+dir);
+        
+        try {
+			FileSystem fs = FileSystem.get(c);
+			
+			if(fs.getLength(p) > 0){
+				System.out.println("O arquivo "+dir+" não é vazio! "+fs.getLength(p));
+				return true;
+			}
+			System.out.println("O arquivo "+dir+" é vazio! "+fs.getLength(p));
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        
+        return false;
+    }
+    
     public static void main(String[] args) throws IOException {
         Main m = new Main();
 //        System.out.println(m.checkOutput("output1"));
@@ -461,14 +485,14 @@ public class Main {
         
         Main.countDir++;
         m.job1();
-        m.checkOutput("output"+Main.countDir);
+        m.checkOutputMR();
         
         Main.countDir++;
         m.job2();
-        m.checkOutput("output"+Main.countDir);
+        m.checkOutputMR();
         
         int l = 0;
-        while(m.checkOutput("output"+Main.countDir)){
+        while(m.checkOutputMR()){
             System.out.println("LOOP "+ ++l);
             Main.countDir++;
             m.job3();

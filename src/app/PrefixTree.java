@@ -91,9 +91,9 @@ public class PrefixTree {
 	}
 	
 	public void printStrArray(ArrayList<String> str){
-		
+		System.out.println("Itemsets...");
 		for(String s: str){
-			System.out.print(s+" ");
+			System.out.println(s);
 		}
 		System.out.println();
 	}
