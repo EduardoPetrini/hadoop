@@ -56,17 +56,15 @@ public class Map3  extends Mapper<LongWritable, Text, Text, IntWritable>{
         reader = new SequenceFile.Reader(context.getConfiguration(), SequenceFile.Reader.file(path));
         openFile(fileCachedRead, context);
         
-        //Gerar combinações dos itens de acordo com k, k+1 e k+2
+        //Gerar combinações dos itens de acordo com o tamanho de lk e do tempo gasto da fase anterior
         
         prefixTree = new PrefixTree(0);
         itemsetAux = new ArrayList<String>();
         
         log.info("K is "+k);
         String itemsetC;
-        System.out.println("\nPrimeiro passo!");
         prefixTree.printStrArray(fileCached);
         
-        log.info(context.getStatus());
         if(fileCachedRead != null && fileCached.size() > 0){
         	if(fileCached.get(fileCached.size()-1).split(" ").length < k-1){
 	        	log.info("Itemsets é menor do que k");
@@ -77,10 +75,16 @@ public class Map3  extends Mapper<LongWritable, Text, Text, IntWritable>{
         	log.info("Arquivo do cache distribuído é vazio!");
         	System.exit(0);
         }
+        
+        int lkSize = fileCached.size();
+        int ct = lkSize*1;
+        String[] itemA;
+        String[] itemB;
+        
         for (int i = 0; i < fileCached.size(); i++){
         	for (int j = i+1; j < fileCached.size(); j++){
-        		String[] itemA = fileCached.get(i).split(" ");
-        		String[] itemB = fileCached.get(j).split(" ");
+        		itemA = fileCached.get(i).split(" ");
+        		itemB = fileCached.get(j).split(" ");
         		if(isSamePrefix(itemA, itemB, i, j)){
         			itemsetC = combine(itemA, itemB);
         			itemsetAux.add(itemsetC);
@@ -90,52 +94,47 @@ public class Map3  extends Mapper<LongWritable, Text, Text, IntWritable>{
         		}
         	}
         }
-        prefixTree.printPrefixTree(prefixTree);
-        System.out.println("\nSegundo passo!");
-        prefixTree.printStrArray(itemsetAux);
         
-        log.info(context.getStatus());
-        k++;
-        log.info("K is "+k);
-        fileCached.clear();
-        for (int i = 0; i < itemsetAux.size(); i++){
-        	for (int j = i+1; j < itemsetAux.size(); j++){
-        		String[] itemA = itemsetAux.get(i).split(" ");
-        		String[] itemB = itemsetAux.get(j).split(" ");
-        		if(isSamePrefix(itemA, itemB, i, j)){
-        			itemsetC = combine(itemA, itemB);
-        			fileCached.add(itemsetC);
-        			System.out.println(itemsetC+" no segundo passo");
-        			//Building HashTree
-        			prefixTree.add(prefixTree, itemsetC.split(" "), 0);
-        		}
-        	}
+        log.info("Inicia o loop dinamico");
+        
+        int cSetSize = itemsetAux.size();
+        while( cSetSize <= ct){
+        	fileCached.clear();
+        	k++;
+	        for (int i = 0; i < itemsetAux.size(); i++){
+	        	for (int j = i+1; j < itemsetAux.size(); j++){
+	        		itemA = itemsetAux.get(i).split(" ");
+	        		itemB = itemsetAux.get(j).split(" ");
+	        		if(isSamePrefix(itemA, itemB, i, j)){
+	        			itemsetC = combine(itemA, itemB);
+	        			fileCached.add(itemsetC);
+	        			System.out.println(itemsetC+" no primeiro passo");
+	        			//Building HashTree
+	        			prefixTree.add(prefixTree, itemsetC.split(" "), 0);
+	        		}
+	        	}
+	        }
+	        k++;
+	        itemsetAux.clear();
+	        for (int i = 0; i < fileCached.size(); i++){
+	        	for (int j = i+1; j < fileCached.size(); j++){
+	        		itemA = fileCached.get(i).split(" ");
+	        		itemB = fileCached.get(j).split(" ");
+	        		if(isSamePrefix(itemA, itemB, i, j)){
+	        			itemsetC = combine(itemA, itemB);
+	        			itemsetAux.add(itemsetC);
+	        			System.out.println(itemsetC+" no segundp passo");
+	        			//Building HashTree
+	        			prefixTree.add(prefixTree, itemsetC.split(" "), 0);
+	        		}
+	        	}
+	        }
+	        cSetSize += itemsetAux.size();
         }
-        prefixTree.printPrefixTree(prefixTree);
-        System.out.println("\nTerceiro passo!");
-        prefixTree.printStrArray(fileCached);
-        
-        log.info(context.getStatus());
-        k++;
-        log.info("K is "+k);
-        itemsetAux.clear();
-        for (int i = 0; i < fileCached.size(); i++){
-        	for (int j = i+1; j < fileCached.size(); j++){
-        		String[] itemA = fileCached.get(i).split(" ");
-        		String[] itemB = fileCached.get(j).split(" ");
-        		if(isSamePrefix(itemA, itemB, i, j)){
-        			itemsetC = combine(itemA, itemB);
-        			System.out.println(itemsetC+" no terceiro passo");
-        			//Building HashTree
-        			prefixTree.add(prefixTree, itemsetC.split(" "), 0);
-        		}
-        	}
-        }
+       
         prefixTree.printStrArray(itemsetAux);
-        System.out.println("Fim do setup, inicia função map");
         prefixTree.printPrefixTree(prefixTree);
-        
-        log.info(context.getStatus());
+        System.out.println("Fim do setup, inicia função map para o k = "+k);
     }
     
     public boolean isSamePrefix(String[] itemA, String[] itemB, int i, int j){
