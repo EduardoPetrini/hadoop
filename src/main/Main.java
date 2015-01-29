@@ -40,8 +40,9 @@ public class Main {
     private Log log = LogFactory.getLog(Main.class);
     public static int countDir;
     private int timeTotal;
-    int support;
+    int support = 1;
     int k = 1;
+    String user = "/user/eduardo/";
     /*
     Valor do suporte para 1.000.000
     7500
@@ -69,7 +70,7 @@ public class Main {
         } catch (IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
-        job.getConfiguration().set("fs.defaultFS", "hdfs://master:9000");
+        job.getConfiguration().set("fs.defaultFS", "hdfs://177.105.51.143:9000");
         job.setJobName("Fase 1");
         
         job.setJarByClass(Main.class);
@@ -81,20 +82,20 @@ public class Main {
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(IntWritable.class);
         
-        String fileCached = "/user/eduardo/outputCached/outputMR"+(Main.countDir);
+        String fileCached = user+"outputCached/outputMR"+(Main.countDir);
         job.getConfiguration().set("count", String.valueOf(Main.countDir));
         job.getConfiguration().set("support", String.valueOf(support));
         job.getConfiguration().set("fileCached", fileCached);
         
         try {
-            FileInputFormat.setInputPaths(job, new Path("input"));
+            FileInputFormat.setInputPaths(job, new Path(user+"input"));
         } catch (IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
         
         System.out.println("Job 1 - CountDir: "+Main.countDir);
         
-        FileOutputFormat.setOutputPath(job, new Path("output"+Main.countDir));
+        FileOutputFormat.setOutputPath(job, new Path(user+"output"+Main.countDir));
         
         try {
             long ini = System.currentTimeMillis();
@@ -127,7 +128,7 @@ public class Main {
         } catch (IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
-        job.getConfiguration().set("fs.defaultFS", "hdfs://master:9000");
+        job.getConfiguration().set("fs.defaultFS", "hdfs://177.105.51.143:9000");
         job.setJobName("Fase 2");
         
         job.setJarByClass(Main.class);
@@ -140,8 +141,8 @@ public class Main {
         job.setOutputValueClass(IntWritable.class);
         
         k++;
-        String fileCachedRead = "/user/eduardo/outputCached/outputMR"+(Main.countDir-1);
-        String fileCachedWrited = "/user/eduardo/outputCached/outputMR"+Main.countDir;
+        String fileCachedRead = user+"outputCached/outputMR"+(Main.countDir-1);
+        String fileCachedWrited = user+"outputCached/outputMR"+Main.countDir;
         job.getConfiguration().set("count", String.valueOf(Main.countDir));
         job.getConfiguration().set("support", String.valueOf(support));
         job.getConfiguration().set("k", String.valueOf(k));
@@ -157,11 +158,11 @@ public class Main {
         }
         
         try {
-            FileInputFormat.setInputPaths(job, new Path("input"));
+            FileInputFormat.setInputPaths(job, new Path(user+"input"));
         } catch (IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
-        FileOutputFormat.setOutputPath(job, new Path("output"+Main.countDir));
+        FileOutputFormat.setOutputPath(job, new Path(user+"output"+Main.countDir));
         try {
             long ini = System.currentTimeMillis();
             int st = (job.waitForCompletion(true) ? 0 : 1);
@@ -193,7 +194,7 @@ public class Main {
         } catch (IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
-        job.getConfiguration().set("fs.defaultFS", "hdfs://master:9000");
+        job.getConfiguration().set("fs.defaultFS", "hdfs://177.105.51.143:9000");
         job.setJobName("Fase 3");
         
         job.setJarByClass(Main.class);
@@ -206,8 +207,8 @@ public class Main {
         job.setOutputValueClass(IntWritable.class);
         
         k++;
-        String fileCachedRead = "/user/eduardo/outputCached/outputMR"+(Main.countDir-1);
-        String fileCachedWrited = "/user/eduardo/outputCached/outputMR"+Main.countDir;
+        String fileCachedRead = user+"outputCached/outputMR"+(Main.countDir-1);
+        String fileCachedWrited = user+"outputCached/outputMR"+Main.countDir;
         job.getConfiguration().set("count", String.valueOf(Main.countDir));
         job.getConfiguration().set("support", String.valueOf(support));
         job.getConfiguration().set("k", String.valueOf(k));
@@ -223,11 +224,11 @@ public class Main {
         }
         
         try {
-        	FileInputFormat.setInputPaths(job, new Path("input"));
+        	FileInputFormat.setInputPaths(job, new Path(user+"input"));
         } catch (IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
-        FileOutputFormat.setOutputPath(job, new Path("output"+Main.countDir));
+        FileOutputFormat.setOutputPath(job, new Path(user+"output"+Main.countDir));
         try {
             long ini = System.currentTimeMillis();
             int st = (job.waitForCompletion(true) ? 0 : 1);
@@ -274,7 +275,7 @@ public class Main {
         
         log.info("Excluindo diretórios anteriores...");
         Configuration c = new Configuration();
-        c.set("fs.defaultFS", "hdfs://master:9000");
+        c.set("fs.defaultFS", "hdfs://177.105.51.143:9000");
         Path p = new Path(d);
         try {
             FileSystem fs = FileSystem.get(c);
@@ -310,7 +311,7 @@ public class Main {
         
         log.info("Excluindo diretórios anteriores...");
         Configuration c = new Configuration();
-        c.set("fs.defaultFS", "hdfs://master:9000");
+        c.set("fs.defaultFS", "hdfs://177.105.51.143:9000");
         Path p = new Path(d);
         Path aux;
         
@@ -345,7 +346,7 @@ public class Main {
     
     public void createTempDir(String d){
     	 Configuration c = new Configuration();
-         c.set("fs.defaultFS", "hdfs://master:9000");
+         c.set("fs.defaultFS", "hdfs://177.105.51.143:9000");
         try {
             FileSystem fs = FileSystem.get(c);
             
@@ -364,7 +365,7 @@ public class Main {
     public void delContentFiles(String dir){
         Path p = new Path(dir);
         Configuration c = new Configuration();
-        c.set("fs.defaultFS", "hdfs://master:9000");
+        c.set("fs.defaultFS", "hdfs://177.105.51.143:9000");
         try {
             FileSystem fs = FileSystem.get(c);
             
@@ -407,7 +408,7 @@ public class Main {
         Path p = new Path(dir);
         Path aux;
         Configuration c = new Configuration();
-        c.set("fs.defaultFS", "hdfs://master:9000");
+        c.set("fs.defaultFS", "hdfs://177.105.51.143:9000");
         System.out.println("Verificando diretório: "+dir);
         
         try{
@@ -470,17 +471,18 @@ public boolean checkOutputMR(){
     public static void main(String[] args) throws IOException {
         Main m = new Main();
 //        System.out.println(m.checkOutput("output1"));
-        m.delOutDirs("/user/eduardo/");
+        m.delOutDirs(m.user);
+//        System.exit(0);
 //        System.exit(0);
 //        m.delContentFiles("outputCached");
 
-        if(args.length > 0){
-            m.support = Integer.parseInt(args[0]);
-            System.out.println("Valor de suporte: "+m.support);
-        }else{
-            System.out.println("Erro com o argumento!");
-            System.exit(-1);
-        }
+//        if(args.length > 0){
+//            m.support = Integer.parseInt(args[0]);
+//            System.out.println("Valor de suporte: "+m.support);
+//        }else{
+//            System.out.println("Erro com o argumento!");
+//            System.exit(-1);
+//        }
         
         
         Main.countDir++;
@@ -499,7 +501,7 @@ public boolean checkOutputMR(){
         }
 
         /*Remover os arquivos invertidos anteriores*/
-//        m.delOutDirs("/user/eduardo/");
+//        m.delOutDirs(user);
 //        m.delContentFiles("invert");
         
         double seg = ((double)m.timeTotal/1000);

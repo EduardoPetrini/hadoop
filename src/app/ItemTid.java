@@ -9,7 +9,7 @@ package app;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.concurrent.Callable;
+
 import org.apache.hadoop.io.LongWritable;
 
 /**

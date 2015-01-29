@@ -20,7 +20,6 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.util.ReflectionUtils;
 
-import app.HashTree;
 import app.PrefixTree;
 
 /**
