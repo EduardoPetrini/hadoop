@@ -99,7 +99,11 @@ public class Map3  extends Mapper<LongWritable, Text, Text, IntWritable>{
         
         int cSetSize = itemsetAux.size();
         while( cSetSize <= ct){
+        	System.out.println("Cset size "+cSetSize);
         	fileCached.clear();
+        	if(itemsetAux.isEmpty()){
+        		break;
+        	}
         	k++;
 	        for (int i = 0; i < itemsetAux.size(); i++){
 	        	for (int j = i+1; j < itemsetAux.size(); j++){
@@ -114,6 +118,9 @@ public class Map3  extends Mapper<LongWritable, Text, Text, IntWritable>{
 	        		}
 	        	}
 	        }
+	        if(fileCached.isEmpty()){
+        		break;
+        	}
 	        k++;
 	        itemsetAux.clear();
 	        for (int i = 0; i < fileCached.size(); i++){
@@ -200,7 +207,9 @@ public class Map3  extends Mapper<LongWritable, Text, Text, IntWritable>{
 		//Aplica a função subset e envia o itemset para o reduce
     	StringBuilder sb = new StringBuilder();
     	String[] transaction = value.toString().split(" ");
+    	System.out.println("In transaction "+value.toString());
     	if(transaction.length >= k-2){
+    		System.out.println("Subset...");
     		subset(transaction, prefixTree, 0, sb , context);
     	}
     }
