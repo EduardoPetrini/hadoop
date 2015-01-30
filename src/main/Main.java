@@ -14,12 +14,9 @@ import java.util.logging.Logger;
 
 import mapred.map.Map1;
 import mapred.map.Map2;
-import mapred.map.Map3;
 import mapred.reduce.Reduce1;
 import mapred.reduce.Reduce2;
-import mapred.reduce.Reduce3;
 
-import org.apache.commons.collections.functors.MapTransformer;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -30,11 +27,7 @@ import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
-import org.apache.hadoop.mapreduce.lib.jobcontrol.ControlledJob;
-import org.apache.hadoop.mapreduce.lib.jobcontrol.JobControl;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
-import org.apache.hadoop.mapreduce.lib.output.MultipleOutputs;
-import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 
 /**
  *
@@ -47,6 +40,7 @@ public class Main {
     private int timeTotal;
     int support;
     int k = 1;
+    String user = "/user/eduardo/";
     /*
     Valor do suporte para 1.000.000
     7500
@@ -74,7 +68,7 @@ public class Main {
         } catch (IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
-        job.getConfiguration().set("fs.defaultFS", "hdfs://192.168.0.100:9000");
+        job.getConfiguration().set("fs.defaultFS", "hdfs://master");
         job.setJobName("Fase 1");
         
         job.setJarByClass(Main.class);
@@ -86,20 +80,20 @@ public class Main {
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(IntWritable.class);
         
-        String fileCached = "/user/eduardo/outputCached/outputMR"+(Main.countDir);
+        String fileCached = user+"outputCached/outputMR"+(Main.countDir);
         job.getConfiguration().set("count", String.valueOf(Main.countDir));
         job.getConfiguration().set("support", String.valueOf(support));
         job.getConfiguration().set("fileCached", fileCached);
         
         try {
-            FileInputFormat.setInputPaths(job, new Path("input"));
+            FileInputFormat.setInputPaths(job, new Path(user+"input"));
         } catch (IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
         
         System.out.println("Job 1 - CountDir: "+Main.countDir);
         
-        FileOutputFormat.setOutputPath(job, new Path("output"+Main.countDir));
+        FileOutputFormat.setOutputPath(job, new Path(user+"output"+Main.countDir));
         
         try {
             long ini = System.currentTimeMillis();
@@ -132,7 +126,7 @@ public class Main {
         } catch (IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
-        job.getConfiguration().set("fs.defaultFS", "hdfs://192.168.0.100:9000");
+        job.getConfiguration().set("fs.defaultFS", "hdfs://master");
         job.setJobName("Fase 2");
         
         job.setJarByClass(Main.class);
@@ -145,8 +139,8 @@ public class Main {
         job.setOutputValueClass(IntWritable.class);
         
         k++;
-        String fileCachedRead = "/user/eduardo/outputCached/outputMR"+(Main.countDir-1);
-        String fileCachedWrited = "/user/eduardo/outputCached/outputMR"+Main.countDir;
+        String fileCachedRead = user+"outputCached/outputMR"+(Main.countDir-1);
+        String fileCachedWrited = user+"outputCached/outputMR"+Main.countDir;
         job.getConfiguration().set("count", String.valueOf(Main.countDir));
         job.getConfiguration().set("support", String.valueOf(support));
         job.getConfiguration().set("k", String.valueOf(k));
@@ -162,11 +156,11 @@ public class Main {
         }
         
         try {
-            FileInputFormat.setInputPaths(job, new Path("input"));
+            FileInputFormat.setInputPaths(job, new Path(user+"input"));
         } catch (IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
-        FileOutputFormat.setOutputPath(job, new Path("output"+Main.countDir));
+        FileOutputFormat.setOutputPath(job, new Path(user+"output"+Main.countDir));
         try {
             long ini = System.currentTimeMillis();
             int st = (job.waitForCompletion(true) ? 0 : 1);
@@ -214,7 +208,7 @@ public class Main {
         
         log.info("Excluindo diretórios anteriores...");
         Configuration c = new Configuration();
-        c.set("fs.defaultFS", "hdfs://192.168.0.100:9000");
+        c.set("fs.defaultFS", "hdfs://master");
         Path p = new Path(d);
         try {
             FileSystem fs = FileSystem.get(c);
@@ -250,7 +244,7 @@ public class Main {
         
         log.info("Excluindo diretórios anteriores...");
         Configuration c = new Configuration();
-        c.set("fs.defaultFS", "hdfs://192.168.0.100:9000");
+        c.set("fs.defaultFS", "hdfs://master");
         Path p = new Path(d);
         Path aux;
         
@@ -264,7 +258,7 @@ public class Main {
                 for(FileStatus f: ff){
                     aux = f.getPath();
                     
-                    if(aux.getName().contains("output")){
+                    if(aux.getName().contains(user+"output")){
                         
                         if(fs.delete(aux, true)){
                             log.info("Excluido diretório -> "+aux.getName());
@@ -285,7 +279,7 @@ public class Main {
     
     public void createTempDir(String d){
     	 Configuration c = new Configuration();
-         c.set("fs.defaultFS", "hdfs://192.168.0.100:9000");
+         c.set("fs.defaultFS", "hdfs://master");
         try {
             FileSystem fs = FileSystem.get(c);
             
@@ -304,7 +298,7 @@ public class Main {
     public void delContentFiles(String dir){
         Path p = new Path(dir);
         Configuration c = new Configuration();
-        c.set("fs.defaultFS", "hdfs://192.168.0.100:9000");
+        c.set("fs.defaultFS", "hdfs://master");
         try {
             FileSystem fs = FileSystem.get(c);
             
@@ -347,7 +341,7 @@ public class Main {
         Path p = new Path(dir);
         Path aux;
         Configuration c = new Configuration();
-        c.set("fs.defaultFS", "hdfs://192.168.0.100:9000");
+        c.set("fs.defaultFS", "hdfs://master");
         System.out.println("Verificando diretório: "+dir);
         
         try{
@@ -383,34 +377,48 @@ public class Main {
         return false;
     }
     
-    public static void main(String[] args) throws IOException {
-        Main m = new Main();
-//        System.out.println(m.checkOutput("output1"));
-        m.delOutDirs("/user/eduardo/");
-        m.delContentFiles("invert");
-
-        if(args.length > 0){
-            m.support = Integer.parseInt(args[0]);
-            System.out.println("Valor de suporte: "+m.support);
-        }else{
-            System.out.println("Erro com o argumento!");
-            System.exit(-1);
+    public boolean checkOutputMR(){
+        String dir = user+"outputCached/outputMR"+Main.countDir;
+        Path p = new Path(dir);
+        
+        Configuration c = new Configuration();
+        c.set("fs.defaultFS", "hdfs://master");
+        System.out.println("Verificando diretório: "+dir);
+        
+        try {
+            FileSystem fs = FileSystem.get(c);
+            
+            if(fs.getLength(p) > 0){
+                System.out.println("O arquivo "+dir+" não é vazio! "+fs.getLength(p));
+                return true;
+            }
+            System.out.println("O arquivo "+dir+" é vazio! "+fs.getLength(p));
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
         }
         
-        
+        return false;
+    }
+
+    public static void main(String[] args) throws IOException {
+        Main m = new Main();
+//        System.out.println(m.checkOutput(user+"output1"));
+        m.delOutDirs(m.user);
+               
         Main.countDir++;
         m.job1();
-        m.checkOutput("output"+Main.countDir);
+        m.checkOutputMR();
         
         int l = 0;
-        while(m.checkOutput("output"+Main.countDir)){
+        while(m.checkOutputMR()){
             System.out.println("LOOP "+l++);
         	Main.countDir++;
         	m.job2();
         }
 
         /*Remover os arquivos invertidos anteriores*/
-//        m.delOutDirs("/user/eduardo/");
+//        m.delOutDirs(user+"");
 //        m.delContentFiles("invert");
         
         double seg = ((double)m.timeTotal/1000);
