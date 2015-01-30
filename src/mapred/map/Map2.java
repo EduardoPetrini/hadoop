@@ -56,7 +56,10 @@ public class Map2  extends Mapper<LongWritable, Text, Text, IntWritable>{
         openFile(fileCachedRead, context);
         
         //Gerar combinações dos itens de acordo com k
-        
+        if(fileCached.isEmpty()){
+        	log.info("Arquivo no cache é vazio. Finalizando aplicação!");
+        	System.exit(0);
+        }
         hashTree = new HashTree(k);
         System.out.println("K is "+k);
         String itemsetC;

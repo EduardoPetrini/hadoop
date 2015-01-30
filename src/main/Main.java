@@ -68,7 +68,7 @@ public class Main {
         } catch (IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
-        job.getConfiguration().set("fs.defaultFS", "hdfs://master");
+        job.getConfiguration().set("fs.defaultFS", "hdfs://master/");
         job.setJobName("Fase 1");
         
         job.setJarByClass(Main.class);
@@ -126,7 +126,7 @@ public class Main {
         } catch (IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
-        job.getConfiguration().set("fs.defaultFS", "hdfs://master");
+        job.getConfiguration().set("fs.defaultFS", "hdfs://master/");
         job.setJobName("Fase 2");
         
         job.setJarByClass(Main.class);
@@ -208,7 +208,7 @@ public class Main {
         
         log.info("Excluindo diretórios anteriores...");
         Configuration c = new Configuration();
-        c.set("fs.defaultFS", "hdfs://master");
+        c.set("fs.defaultFS", "hdfs://master/");
         Path p = new Path(d);
         try {
             FileSystem fs = FileSystem.get(c);
@@ -244,7 +244,7 @@ public class Main {
         
         log.info("Excluindo diretórios anteriores...");
         Configuration c = new Configuration();
-        c.set("fs.defaultFS", "hdfs://master");
+        c.set("fs.defaultFS", "hdfs://master/");
         Path p = new Path(d);
         Path aux;
         
@@ -258,7 +258,7 @@ public class Main {
                 for(FileStatus f: ff){
                     aux = f.getPath();
                     
-                    if(aux.getName().contains(user+"output")){
+                    if(aux.getName().contains("output")){
                         
                         if(fs.delete(aux, true)){
                             log.info("Excluido diretório -> "+aux.getName());
@@ -279,7 +279,7 @@ public class Main {
     
     public void createTempDir(String d){
     	 Configuration c = new Configuration();
-         c.set("fs.defaultFS", "hdfs://master");
+         c.set("fs.defaultFS", "hdfs://master/");
         try {
             FileSystem fs = FileSystem.get(c);
             
@@ -298,7 +298,7 @@ public class Main {
     public void delContentFiles(String dir){
         Path p = new Path(dir);
         Configuration c = new Configuration();
-        c.set("fs.defaultFS", "hdfs://master");
+        c.set("fs.defaultFS", "hdfs://master/");
         try {
             FileSystem fs = FileSystem.get(c);
             
@@ -341,7 +341,7 @@ public class Main {
         Path p = new Path(dir);
         Path aux;
         Configuration c = new Configuration();
-        c.set("fs.defaultFS", "hdfs://master");
+        c.set("fs.defaultFS", "hdfs://master/");
         System.out.println("Verificando diretório: "+dir);
         
         try{
@@ -382,7 +382,7 @@ public class Main {
         Path p = new Path(dir);
         
         Configuration c = new Configuration();
-        c.set("fs.defaultFS", "hdfs://master");
+        c.set("fs.defaultFS", "hdfs://master/");
         System.out.println("Verificando diretório: "+dir);
         
         try {
@@ -408,10 +408,9 @@ public class Main {
                
         Main.countDir++;
         m.job1();
-        m.checkOutputMR();
         
         int l = 0;
-        while(m.checkOutputMR()){
+        while(m.checkOutput(m.user+"output"+Main.countDir)){
             System.out.println("LOOP "+l++);
         	Main.countDir++;
         	m.job2();
