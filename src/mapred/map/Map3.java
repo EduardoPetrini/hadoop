@@ -46,9 +46,14 @@ public class Map3  extends Mapper<LongWritable, Text, Text, IntWritable>{
         String fileCachedRead = context.getConfiguration().get("fileCachedRead");
         String kStr = context.getConfiguration().get("k");
         k = Integer.parseInt(kStr);
+        double earlierTime = Double.parseDouble(context.getConfiguration().get("earlierTime"));
+        
         
         log.info("Iniciando map 3 count = "+count);
         log.info("Arquivo Cached = "+fileCachedRead);
+        
+        log.info("Tempo da fase anterior é "+earlierTime);
+        
         URI[] patternsFiles = context.getCacheFiles();
         
         Path path = new Path(patternsFiles[0].toString());
@@ -77,9 +82,18 @@ public class Map3  extends Mapper<LongWritable, Text, Text, IntWritable>{
         }
         
         int lkSize = fileCached.size();
-        int ct = lkSize*1;
+        
+        int ct;
+        
+        if(earlierTime >= 60){
+        	ct = lkSize * 1;
+        }else{
+        	ct = (int)Math.round(lkSize * 1.2);
+        }
         String[] itemA;
         String[] itemB;
+        
+        log.info("O valor de ct é "+ct);
         
         for (int i = 0; i < fileCached.size(); i++){
         	for (int j = i+1; j < fileCached.size(); j++){

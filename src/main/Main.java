@@ -43,6 +43,7 @@ public class Main {
     int support = 1;
     int k = 1;
     String user = "/user/eduardo/";
+    double earlierTime;
     /*
     Valor do suporte para 1.000.000
     7500
@@ -169,7 +170,8 @@ public class Main {
             long fim = System.currentTimeMillis();
             
             long t = fim - ini;
-            System.out.println("Tempo da fase 2: "+((double)t/1000));
+            earlierTime = ((double)t/1000);
+            System.out.println("Tempo da fase 2: "+earlierTime);
             
             timeTotal += t;
             if(st == 1){
@@ -214,6 +216,7 @@ public class Main {
         job.getConfiguration().set("k", String.valueOf(k));
         job.getConfiguration().set("fileCachedRead", fileCachedRead);
         job.getConfiguration().set("fileCachedWrited", fileCachedWrited);
+        job.getConfiguration().set("earlierTime", String.valueOf(earlierTime));
          this.k += 2;
         System.out.println("Job 3 - CountDir: "+Main.countDir);
         
@@ -235,7 +238,8 @@ public class Main {
             long fim = System.currentTimeMillis();
             
             long t = fim - ini;
-            System.out.println("Tempo da fase 3: "+((double)t/1000));
+            earlierTime = ((double)t/1000);
+            System.out.println("Tempo da fase 3: "+earlierTime);
             
             timeTotal += t;
             if(st == 1){
