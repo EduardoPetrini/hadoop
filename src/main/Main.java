@@ -409,12 +409,13 @@ public class Main {
         Main.countDir++;
         m.job1();
         
-        int l = 0;
+/*        int l = 0;
         while(m.checkOutput(m.user+"output"+Main.countDir)){
             System.out.println("LOOP "+l++);
         	Main.countDir++;
         	m.job2();
         }
+*/
 
         /*Remover os arquivos invertidos anteriores*/
 //        m.delOutDirs(user+"");

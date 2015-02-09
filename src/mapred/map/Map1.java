@@ -29,8 +29,13 @@ public class Map1 extends Mapper<LongWritable, Text, Text, IntWritable>{
     Text keyOut = new Text();
     
     @Override
+    public void setup(Context context){
+    	log.info("Iniciando Map 1...");
+    }
+    @Override
     public void map(LongWritable key, Text value, Context context) throws IOException{
-        
+    	System.out.println("Print value:");
+        System.out.println(value.toString());
         StringTokenizer token = new StringTokenizer(value.toString());
         while(token.hasMoreTokens()){
         	keyOut.set(token.nextToken());
