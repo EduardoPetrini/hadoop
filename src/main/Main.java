@@ -6,6 +6,8 @@
 
 package main;
 
+import hadoop.inputformat.WholeSplitInputFormat;
+
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -86,7 +88,7 @@ public class Main {
         job.getConfiguration().set("fileCached", fileCached);
         
         try {
-            FileInputFormat.setInputPaths(job, new Path(user+"input"));
+            WholeSplitInputFormat.setInputPaths(job, new Path(user+"input"));
         } catch (IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
