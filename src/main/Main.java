@@ -6,6 +6,7 @@
 
 package main;
 
+import hadoop.inputformat.WholeInputFormat;
 import hadoop.inputformat.WholeSplitInputFormat;
 
 import java.io.IOException;
@@ -81,14 +82,14 @@ public class Main {
         
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(IntWritable.class);
+        job.setInputFormatClass(WholeInputFormat.class);
         
         String fileCached = user+"outputCached/outputMR"+(Main.countDir);
         job.getConfiguration().set("count", String.valueOf(Main.countDir));
         job.getConfiguration().set("support", String.valueOf(support));
         job.getConfiguration().set("fileCached", fileCached);
-        
         try {
-            WholeSplitInputFormat.setInputPaths(job, new Path(user+"input"));
+        	FileInputFormat.setInputPaths(job, new Path(user+"input"));
         } catch (IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }

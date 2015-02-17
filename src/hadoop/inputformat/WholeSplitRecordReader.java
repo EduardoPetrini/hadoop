@@ -10,7 +10,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapred.FileSplit;
+import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
@@ -66,7 +66,7 @@ public class WholeSplitRecordReader extends RecordReader<LongWritable, Text>{
 		
 		// This InputSplit is a FileInputSplit
         FileSplit split = (FileSplit) genericSplit;
- 
+        
         // Retrieve configuration, and Max allowed
         // bytes for a single record
         Configuration job = context.getConfiguration();
@@ -116,55 +116,36 @@ public class WholeSplitRecordReader extends RecordReader<LongWritable, Text>{
 
 	@Override
 	public boolean nextKeyValue() throws IOException, InterruptedException {
-		// TODO Auto-generated method stub
-		 // Current offset is the key
+		if (key == null) {
+            key = new LongWritable();
+        }
         key.set(pos);
- 
+        if (value == null) {
+            value = new Text();
+        }
+        value.clear();
+        final Text endline = new Text("\n");
         int newSize = 0;
- 
-        // Make sure we get at least one record that starts in this Split
+
+        Text v = new Text();
+        
+        /*Ler toda a entrada de uma vez*/
+        LOG.info("Lendo toda a entrada do map de uma vez... size: "+end);
         while (pos < end) {
- 
-            // Read first line and store its content to "value"
-            newSize = in.readLine(value, maxLineLength,
-                    Math.max((int) Math.min(
-                            Integer.MAX_VALUE, end - pos),
-                            maxLineLength));
- 
-            // No byte read, seems that we reached end of Split
-            // Break and return false (no key / value)
+            newSize = in.readLine(v, maxLineLength,Math.max((int)Math.min(Integer.MAX_VALUE, end-pos),maxLineLength));
+            value.append(v.getBytes(),0, v.getLength());
+            value.append(endline.getBytes(),0, endline.getLength());
             if (newSize == 0) {
                 break;
             }
- 
-            // Line is read, new position is set
             pos += newSize;
- 
-            // Line is lower than Maximum record line size
-            // break and return true (found key / value)
-            if (newSize < maxLineLength) {
-                break;
-            }
- 
-            // Line is too long
-            // Try again with position = position + line offset,
-            // i.e. ignore line and go to next one
-            // TODO: Shouldn't it be LOG.error instead ??
-            LOG.info("Skipped line of size " + 
-                    newSize + " at pos "
-                    + (pos - newSize));
         }
- 
-         
+        
         if (newSize == 0) {
-            // We've reached end of Split
             key = null;
             value = null;
             return false;
         } else {
-            // Tell Hadoop a new line has been found
-            // key / value will be retrieved by
-            // getCurrentKey getCurrentValue methods
             return true;
         }
 	}
