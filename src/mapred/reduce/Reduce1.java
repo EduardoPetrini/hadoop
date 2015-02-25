@@ -30,31 +30,41 @@ public class Reduce1 extends Reducer<Text, IntWritable, Text, IntWritable>{
     SequenceFile.Writer writer;
     double support;
     IntWritable valueOut = new IntWritable();
+    int totalMaps;
+    int totalTransactions;
     
     @Override
     public void setup(Context context) throws IOException{
         String count = context.getConfiguration().get("count");
         support = Integer.parseInt(context.getConfiguration().get("support"));
         String fileCachedPath = context.getConfiguration().get("fileCached");
+        totalMaps = Integer.parseInt(context.getConfiguration().get("totalMaps"));
+        //totalTransactions = Integer.parseInt(context.getConfiguration().get("totalTransactions"));
+        
         Path path = new Path(fileCachedPath);
         log.info("Iniciando o REDUCE 1. Count Dir: "+count);
         log.info("Reduce1 support = "+support);
         
-        writer = SequenceFile.createWriter(context.getConfiguration(), SequenceFile.Writer.file(path),
-                SequenceFile.Writer.keyClass(Text.class), SequenceFile.Writer.valueClass(IntWritable.class));
+        log.info("Total Maps = "+totalMaps);
+        log.info("Total Transactions = "+context.getConfiguration().get("totalTransactions"));
+        
+  /*      writer = SequenceFile.createWriter(context.getConfiguration(), SequenceFile.Writer.file(path),
+                SequenceFile.Writer.keyClass(Text.class), SequenceFile.Writer.valueClass(IntWritable.class));*/
     }
     
     @Override
     public void reduce(Text key, Iterable<IntWritable> values, Context context){
         int count = 0;
+        int numMaps = 0;
     	for (Iterator<IntWritable> it = values.iterator(); it.hasNext();) {
             count += it.next().get();
+            numMaps++;
         }
     	
         if(count >= support){
         	valueOut.set(count);
             try {
-            	saveInCache(key, valueOut);
+//            	saveInCache(key, valueOut);
                 context.write(key, valueOut);
             } catch (IOException | InterruptedException ex) {
                 Logger.getLogger(Reduce1.class.getName()).log(Level.SEVERE, null, ex);
@@ -73,11 +83,11 @@ public class Reduce1 extends Reducer<Text, IntWritable, Text, IntWritable>{
     @Override
     public void cleanup(Context c){
         log.info("Finalizando o REDUCE 1.");
-        try {
-			writer.close();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+//        try {
+//			writer.close();
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
     }
 }

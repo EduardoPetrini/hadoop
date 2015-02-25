@@ -26,6 +26,11 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hdfs.DistributedFileSystem;
+import org.apache.hadoop.hdfs.protocol.Block;
+import org.apache.hadoop.hdfs.server.balancer.Balancer;
+import org.apache.hadoop.hdfs.server.namenode.NameNode;
+import org.apache.hadoop.hdfs.server.protocol.BalancerBandwidthCommand;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
@@ -41,8 +46,9 @@ public class Main {
     private Log log = LogFactory.getLog(Main.class);
     public static int countDir;
     private int timeTotal;
-    int support;
+    int support = 1;
     int k = 1;
+    int totalBlocks;
     String user = "/user/eduardo/";
     /*
     Valor do suporte para 1.000.000
@@ -88,6 +94,7 @@ public class Main {
         job.getConfiguration().set("count", String.valueOf(Main.countDir));
         job.getConfiguration().set("support", String.valueOf(support));
         job.getConfiguration().set("fileCached", fileCached);
+        job.getConfiguration().set("totalMaps", String.valueOf(this.totalBlocks));
         try {
         	FileInputFormat.setInputPaths(job, new Path(user+"input"));
         } catch (IOException ex) {
@@ -403,10 +410,41 @@ public class Main {
         
         return false;
     }
+    
+    public void initialConfig(){
+    	String inputPathUri = user+"input/input-file";
+    	
+    	Path inputPath = new Path(inputPathUri);
+    	Configuration c = new Configuration();
+        c.set("fs.defaultFS", "hdfs://master/");
+        
+        try {
+        	
+			FileSystem fs = inputPath.getFileSystem(c);
+			FileStatus conf = fs.getFileStatus(inputPath);
+			
+			long blockSize = conf.getLen();
+			long defaultSize = conf.getBlockSize();
+			
+			double bs = (double)blockSize;
+			double ds = (double)defaultSize;
+			double numBlock = bs/ds;
+			
+			int totalBlocks = (int)Math.ceil(numBlock);
+			
+			log.info("Total blocks: "+totalBlocks);
+			this.totalBlocks = totalBlocks;
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        
+    }
 
     public static void main(String[] args) throws IOException {
         Main m = new Main();
 //        System.out.println(m.checkOutput(user+"output1"));
+        m.initialConfig();
         m.delOutDirs(m.user);
                
         Main.countDir++;
