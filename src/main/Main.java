@@ -412,7 +412,7 @@ public class Main {
     }
     
     public void initialConfig(){
-    	String inputPathUri = user+"input/input-file";
+    	String inputPathUri = user+"input/T2.5I10D10KN10K";
     	
     	Path inputPath = new Path(inputPathUri);
     	Configuration c = new Configuration();

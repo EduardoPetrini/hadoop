@@ -228,27 +228,32 @@ public class Map1 extends Mapper<LongWritable, Text, Text, IntWritable>{
     	}else{
     		/*É preciso verificar o prefixo, isso não está sendo feito!!*/
     		for(int i=0; i<candidates.size(); i++){
-
+    			System.out.println("Progress: "+context.getProgress());
     			for(int j=i+1; j<candidates.size(); j++){
 
     				str1 = new String();
     				str2 = new String();
+    				
+    				String prefix = getPrefix(candidates.get(i));
+    				
+    				if(candidates.get(j).startsWith(prefix)){
 
-    				st1 = new StringTokenizer(candidates.get(i));
-    				st2 = new StringTokenizer(candidates.get(j));
-
-    				for(int s=0; s<n-2; s++){
-    					str1 = str1 + " " + st1.nextToken();
-    					str2 = str2 + " " + st2.nextToken();
-    				}
-
-    				if(str2.compareToIgnoreCase(str1)==0){
-    					tmpItem = (str1 + " " + st1.nextToken() + " " + st2.nextToken()).trim();
-    					tempCandidates.add(tmpItem);
-    					//add to prefixTree
-    					System.out.println("Adicionando na hash "+tmpItem);
-    					
-    					prefixTree.add(prefixTree,tmpItem.split(" "),0);
+	    				st1 = new StringTokenizer(candidates.get(i));
+	    				st2 = new StringTokenizer(candidates.get(j));
+	
+	    				for(int s=0; s<n-2; s++){
+	    					str1 = str1 + " " + st1.nextToken();
+	    					str2 = str2 + " " + st2.nextToken();
+	    				}
+	
+	    				if(str2.compareToIgnoreCase(str1)==0){
+	    					tmpItem = (str1 + " " + st1.nextToken() + " " + st2.nextToken()).trim();
+	    					tempCandidates.add(tmpItem);
+	    					//add to prefixTree
+	    					System.out.println("Adicionando na hash "+tmpItem);
+	    					
+	    					prefixTree.add(prefixTree,tmpItem.split(" "),0);
+	    				}
     				}
     			}
     		}
@@ -292,6 +297,20 @@ public class Map1 extends Mapper<LongWritable, Text, Text, IntWritable>{
     		}else break;
     	}
     	tempCandidates.clear();
+    }
+	
+	public String getPrefix(String kitem){
+        
+        String[] spkitem = kitem.split(" ");
+        StringBuilder sb = new StringBuilder();
+        
+        for (int i = 0; i < spkitem.length-1; i++) {
+            
+            sb.append(spkitem[i]).append(" ");
+        }
+        
+        //k = spkitem.length;
+        return sb.toString().trim();
     }
 	
 	/**
