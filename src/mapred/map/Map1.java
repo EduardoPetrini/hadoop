@@ -55,7 +55,7 @@ public class Map1 extends Mapper<LongWritable, Text, Text, IntWritable>{
     public void setup(Context context){
     	String sup = context.getConfiguration().get("support");
     	
-    	support = Double.parseDouble(sup);
+    	support = Double.parseDouble(sup)/100;
     	log.info("Iniciando Map 1...");
     	
     }
@@ -69,8 +69,11 @@ public class Map1 extends Mapper<LongWritable, Text, Text, IntWritable>{
     	prefixTree = new PrefixTree(0);
     	transactions = new ArrayList<String[]>();
     	buildTransactionsArraySet(value.toString());
-    	
+    	System.out.println("Procentagem do suporte: "+support+"%");
+    	System.out.println("Quantidade de transações: "+transactions.size());
+    	support = Math.ceil(support * transactions.size());
     	setSplitName(context, value);
+    	System.out.println("Valor o suporte: "+support);
     	
     	int k = 1;
     	String[] itemset;
@@ -191,7 +194,7 @@ public class Map1 extends Mapper<LongWritable, Text, Text, IntWritable>{
     	
     	String str1, str2; 
     	StringTokenizer st1, st2;
-    	String tmpItem;
+    	StringBuilder tmpItem;
     	String[] tmpItemsets;
     			
     	if(n==1){
@@ -214,19 +217,18 @@ public class Map1 extends Mapper<LongWritable, Text, Text, IntWritable>{
     	}
     	else if(n==2) {
     		for(int i=0; i<candidates.size(); i++){
-    			st1 = new StringTokenizer(candidates.get(i));
-    			str1 = st1.nextToken();
+    			tmpItem = new StringBuilder();
+    			tmpItem.append(candidates.get(i).trim()).append(" ");
     			for(int j=i+1; j<candidates.size(); j++)		{
-    				st2 = new StringTokenizer(candidates.get(j));
-    				str2 = st2.nextToken();
-    				tmpItem = str1+" "+str2;
-    				tempCandidates.add(tmpItem);
-//    				System.out.println("Adicionando na hash "+tmpItem);
-    				prefixTree.add(prefixTree,tmpItem.split(" "),0);
+    				tempCandidates.add(tmpItem.toString()+""+candidates.get(j).trim());
+    				System.out.println("tmpSize in 2: "+tempCandidates.size()+", Adicionando na hash "+tempCandidates.get(tempCandidates.size()-1));
+    				prefixTree.add(prefixTree,tempCandidates.get(tempCandidates.size()-1).split(" "),0);
     			}
     		}
     	}else{
     		/*É preciso verificar o prefixo, isso não está sendo feito!!*/
+    		String prefix;
+    		String sufix;
     		for(int i=0; i<candidates.size(); i++){
     			System.out.println("Progress: "+context.getProgress());
     			for(int j=i+1; j<candidates.size(); j++){
@@ -234,32 +236,28 @@ public class Map1 extends Mapper<LongWritable, Text, Text, IntWritable>{
     				str1 = new String();
     				str2 = new String();
     				
-    				String prefix = getPrefix(candidates.get(i));
+    				prefix = getPrefix(candidates.get(i));
     				
     				if(candidates.get(j).startsWith(prefix)){
-
-	    				st1 = new StringTokenizer(candidates.get(i));
-	    				st2 = new StringTokenizer(candidates.get(j));
-	
-	    				for(int s=0; s<n-2; s++){
-	    					str1 = str1 + " " + st1.nextToken();
-	    					str2 = str2 + " " + st2.nextToken();
-	    				}
-	
-	    				if(str2.compareToIgnoreCase(str1)==0){
-	    					tmpItem = (str1 + " " + st1.nextToken() + " " + st2.nextToken()).trim();
-	    					tempCandidates.add(tmpItem);
-	    					//add to prefixTree
-	    					System.out.println("Adicionando na hash "+tmpItem);
-	    					
-	    					prefixTree.add(prefixTree,tmpItem.split(" "),0);
-	    				}
+    					/*Se o próximo elemento já possui o mesmo prefixo, basta concatenar o sufixo do segundo item.*/
+    					sufix = getSufix(candidates.get(j));
+    					
+						tmpItem = new StringBuilder();
+    					tmpItem.append(prefix).append(" ").append(sufix);
+    					
+    					tempCandidates.add(tmpItem.toString().trim());
+    					//add to prefixTree
+    					System.out.println("tmpSize in K: "+tempCandidates.size()+", Adicionando na hash "+tempCandidates.get(tempCandidates.size()-1));
+    					
+    					prefixTree.add(prefixTree,tempCandidates.get(tempCandidates.size()-1).split(" "),0);
     				}
     			}
     		}
     	}
     	candidates.clear();
     	candidates = new ArrayList<String>(tempCandidates);
+    	System.out.println("Quantidade de candidatos de tamanho 1: "+candidates.size());
+    	System.exit(0);
     	for(int i = 0; i < candidates.size(); i++){
     		if(i < candidates.size()){
     			System.out.print(candidates.get(i)+", ");
@@ -298,6 +296,11 @@ public class Map1 extends Mapper<LongWritable, Text, Text, IntWritable>{
     	}
     	tempCandidates.clear();
     }
+	
+	public String getSufix(String kitem){
+		String[] spkitem = kitem.split(" ");
+		return spkitem[spkitem.length-1].trim();
+	}
 	
 	public String getPrefix(String kitem){
         

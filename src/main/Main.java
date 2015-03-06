@@ -46,7 +46,7 @@ public class Main {
     private Log log = LogFactory.getLog(Main.class);
     public static int countDir;
     private int timeTotal;
-    int support = 1;
+    String support = "0.8";
     int k = 1;
     int totalBlocks;
     String user = "/user/eduardo/";
@@ -92,7 +92,7 @@ public class Main {
         
         String fileCached = user+"outputCached/outputMR"+(Main.countDir);
         job.getConfiguration().set("count", String.valueOf(Main.countDir));
-        job.getConfiguration().set("support", String.valueOf(support));
+        job.getConfiguration().set("support", support);
         job.getConfiguration().set("fileCached", fileCached);
         job.getConfiguration().set("totalMaps", String.valueOf(this.totalBlocks));
         try {
@@ -152,7 +152,7 @@ public class Main {
         String fileCachedRead = user+"outputCached/outputMR"+(Main.countDir-1);
         String fileCachedWrited = user+"outputCached/outputMR"+Main.countDir;
         job.getConfiguration().set("count", String.valueOf(Main.countDir));
-        job.getConfiguration().set("support", String.valueOf(support));
+        job.getConfiguration().set("support", support);
         job.getConfiguration().set("k", String.valueOf(k));
         job.getConfiguration().set("fileCachedRead", fileCachedRead);
         job.getConfiguration().set("fileCachedWrited", fileCachedWrited);
@@ -412,7 +412,7 @@ public class Main {
     }
     
     public void initialConfig(){
-    	String inputPathUri = user+"input/T2.5I10D10KN10K";
+    	String inputPathUri = user+"input/T2.5I10D10KN10K.ok";
     	
     	Path inputPath = new Path(inputPathUri);
     	Configuration c = new Configuration();
