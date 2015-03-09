@@ -36,7 +36,7 @@ public class Reduce1 extends Reducer<Text, IntWritable, Text, IntWritable>{
     @Override
     public void setup(Context context) throws IOException{
         String count = context.getConfiguration().get("count");
-        support = Integer.parseInt(context.getConfiguration().get("support"));
+        support = Double.parseDouble(context.getConfiguration().get("support"));
         String fileCachedPath = context.getConfiguration().get("fileCached");
         totalMaps = Integer.parseInt(context.getConfiguration().get("totalMaps"));
         //totalTransactions = Integer.parseInt(context.getConfiguration().get("totalTransactions"));

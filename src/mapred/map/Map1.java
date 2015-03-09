@@ -94,6 +94,9 @@ public class Map1 extends Mapper<LongWritable, Text, Text, IntWritable>{
 	    				}
     				}
     			}
+    			
+    			/*Remover os itemsets não frequentes*/
+    			candidates.removeAll(removeUnFrequentItems(candidates));
     		}
     		
     		k++;
@@ -122,8 +125,9 @@ public class Map1 extends Mapper<LongWritable, Text, Text, IntWritable>{
     
     public void setSplitName(Context context, Text value){
     	System.out.println("SPLIT_RAW_BYTES: " +context.getCounter(TaskCounter.SPLIT_RAW_BYTES).getValue());
-    	System.out.println("SPLIT_RAW_BYTES name: " +context.getCounter(TaskCounter.SPLIT_RAW_BYTES).getName());
-    	System.out.println("SPLIT_RAW_BYTES under: " +context.getCounter(TaskCounter.SPLIT_RAW_BYTES).getUnderlyingCounter());
+    	System.out.println("SPLIT_RAW_BYTES under: " +context.getCounter(TaskCounter.SPLIT_RAW_BYTES).getUnderlyingCounter().getValue());
+    	System.out.println("Tamanho da entrada em bytes: " +value.getLength());
+    	
     	
     	StringBuilder sb = new StringBuilder();
     	sb.append(":").append(value.getLength()).append(":").append(transactions.size());
@@ -146,7 +150,14 @@ public class Map1 extends Mapper<LongWritable, Text, Text, IntWritable>{
     	if(i >= transaction.length){
 			return;
 		}
-		int index = pt.getPrefix().indexOf(transaction[i]);
+		int index = -1;
+		
+		try{
+			index = pt.getPrefix().indexOf(transaction[i]);
+		}catch(Exception e){
+			e.printStackTrace();
+			System.out.println("Error");
+		}
 		
 		if(index == -1){
 			return;
@@ -213,24 +224,27 @@ public class Map1 extends Mapper<LongWritable, Text, Text, IntWritable>{
     		
     		//envia para o reduce
     		outputToReduce(tempCandidates, context);
-    		itemSup.clear();
+    		
     	}
     	else if(n==2) {
+    		itemSup.clear();
     		for(int i=0; i<candidates.size(); i++){
     			tmpItem = new StringBuilder();
     			tmpItem.append(candidates.get(i).trim()).append(" ");
-    			for(int j=i+1; j<candidates.size(); j++)		{
+    			for(int j=i+1; j<candidates.size(); j++){
     				tempCandidates.add(tmpItem.toString()+""+candidates.get(j).trim());
-    				System.out.println("tmpSize in 2: "+tempCandidates.size()+", Adicionando na hash "+tempCandidates.get(tempCandidates.size()-1));
+    				
+//    				System.out.println("tmpSize in 2: "+tempCandidates.size()+", Adicionando na hash "+tempCandidates.get(tempCandidates.size()-1));
     				prefixTree.add(prefixTree,tempCandidates.get(tempCandidates.size()-1).split(" "),0);
     			}
     		}
+    		
     	}else{
     		/*É preciso verificar o prefixo, isso não está sendo feito!!*/
     		String prefix;
     		String sufix;
     		for(int i=0; i<candidates.size(); i++){
-    			System.out.println("Progress: "+context.getProgress());
+//    			System.out.println("Progress: "+context.getProgress());
     			for(int j=i+1; j<candidates.size(); j++){
 
     				str1 = new String();
@@ -243,22 +257,27 @@ public class Map1 extends Mapper<LongWritable, Text, Text, IntWritable>{
     					sufix = getSufix(candidates.get(j));
     					
 						tmpItem = new StringBuilder();
-    					tmpItem.append(prefix).append(" ").append(sufix);
+    					tmpItem.append(candidates.get(i)).append(" ").append(sufix);
     					
     					tempCandidates.add(tmpItem.toString().trim());
+    		
     					//add to prefixTree
-    					System.out.println("tmpSize in K: "+tempCandidates.size()+", Adicionando na hash "+tempCandidates.get(tempCandidates.size()-1));
-    					
-    					prefixTree.add(prefixTree,tempCandidates.get(tempCandidates.size()-1).split(" "),0);
+    					//System.out.println("tmpSize in K = "+n+": ccandidate size "+tempCandidates.size()+", Adicionando na hash "+tempCandidates.get(tempCandidates.size()-1));
+    					try{
+    						prefixTree.add(prefixTree,tempCandidates.get(tempCandidates.size()-1).split(" "),0);
+    					}catch(Exception e){
+    						e.printStackTrace();
+    					}
     				}
     			}
     		}
+    		
     	}
     	candidates.clear();
     	candidates = new ArrayList<String>(tempCandidates);
-    	System.out.println("Quantidade de candidatos de tamanho 1: "+candidates.size());
-    	System.exit(0);
-    	for(int i = 0; i < candidates.size(); i++){
+    	System.out.println("Quantidade de candidatos de tamanho "+n+": "+candidates.size());
+    	
+    	/*for(int i = 0; i < candidates.size(); i++){
     		if(i < candidates.size()){
     			System.out.print(candidates.get(i)+", ");
     			i++;
@@ -293,7 +312,7 @@ public class Map1 extends Mapper<LongWritable, Text, Text, IntWritable>{
     				System.out.print(candidates.get(i)+", ");
     			System.out.println();
     		}else break;
-    	}
+    	}*/
     	tempCandidates.clear();
     }
 	
@@ -313,7 +332,7 @@ public class Map1 extends Mapper<LongWritable, Text, Text, IntWritable>{
         }
         
         //k = spkitem.length;
-        return sb.toString().trim();
+        return sb.toString();
     }
 	
 	/**
@@ -367,6 +386,7 @@ public class Map1 extends Mapper<LongWritable, Text, Text, IntWritable>{
     			rmItems.add(item);
     		}
     	}
+    	System.out.println("\nRemovendo "+rmItems.size()+" não frequentes.\n");
     	
     	return rmItems;
     }

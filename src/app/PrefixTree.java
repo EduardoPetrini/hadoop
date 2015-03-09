@@ -45,12 +45,22 @@ public class PrefixTree {
 		/*Verificar se o item está na lista da tree*/
 		
 		int index = pt.prefix.indexOf(itemset[i]);
+//		System.out.println(pt.prefix+", itemset "+new ArrayList(Arrays.asList(itemset))+", i = "+i+", index = "+index);
 		if(index != -1){
 			
 			/*Existe o item, percorrer a árvore de acordo com o index obtido*/
 			i++;
 			if(pt.prefixTree.size() <= index){
+//				if(pt.prefixTree.size() == 0){
+//					for(int x = 0; x <= index; x++){
+//						if(pt.prefixTree.size() <= x){
+//							pt.prefixTree.add(x, null);
+//						}
+//					}
+//				}
+				
 				pt.prefixTree.add(index, new PrefixTree(i));
+				
 				add(pt.prefixTree.get(index), itemset, i);
 			}else{
 				add(pt.prefixTree.get(index), itemset, i);
