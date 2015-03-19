@@ -12,6 +12,7 @@ import hadoop.inputformat.WholeSplitInputFormat;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -48,12 +49,14 @@ public class Main {
     private Log log = LogFactory.getLog(Main.class);
     public static int countDir;
     private int timeTotal;
-    String support = "0.5";
-    int k = 1;
-    public static int totalBlocks;
+    private String support = "0.5";
+    private int k = 1;
+    public static int totalBlockCount;
     public static String user = "/user/eduardo/";
-    public static String inputEntry = "input/T2.5I2D10N10K.ok";
+    public static String inputEntry = "input/T2.5I2D10N1500K.dobro";
     public static String clusterUrl = "hdfs://master/";
+    public static long totalTransactionCount;
+    public ArrayList<String> blocksIds;
     /*
     Valor do suporte para 1.000.000
     7500
@@ -98,7 +101,12 @@ public class Main {
         job.getConfiguration().set("count", String.valueOf(Main.countDir));
         job.getConfiguration().set("support", support);
         job.getConfiguration().set("fileCached", fileCached);
-        job.getConfiguration().set("totalMaps", String.valueOf(this.totalBlocks));
+        job.getConfiguration().set("totalMaps", String.valueOf(this.totalBlockCount));
+        job.getConfiguration().set("totalTransactions", String.valueOf(this.totalTransactionCount));
+        for(int i = 1; i <= this.blocksIds.size(); i++){
+        	job.getConfiguration().set("blockId"+i, this.blocksIds.get(i-1));
+        }
+        
         try {
         	FileInputFormat.setInputPaths(job, new Path(user+"input"));
         } catch (IOException ex) {
@@ -199,9 +207,12 @@ public class Main {
     public static void main(String[] args) throws IOException {
         Main m = new Main();
 //        System.out.println(m.checkOutput(user+"output1"));
+      
         MrUtils.initialConfig();
+        m.blocksIds = MrUtils.extractBlocksIds();
+        
+        
         MrUtils.delOutDirs(m.user);
-               
         Main.countDir++;
         m.job1();
         

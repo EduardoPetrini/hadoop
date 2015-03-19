@@ -1,6 +1,9 @@
 package utils;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -10,14 +13,21 @@ import mapred.reduce.Reduce1;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hdfs.DFSUtil;
+import org.apache.hadoop.hdfs.DistributedFileSystem;
+import org.apache.hadoop.hdfs.ExtendedBlockId;
+import org.apache.hadoop.hdfs.protocol.Block;
+import org.apache.hadoop.hdfs.protocol.BlockStoragePolicy;
+import org.apache.hadoop.hdfs.protocol.HdfsBlocksMetadata;
+import org.apache.hadoop.hdfs.protocol.LocatedBlock;
+import org.apache.hadoop.hdfs.server.namenode.FSImage;
+import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 
 public class MrUtils {
-	
-	
-	
 	private Log log = LogFactory.getLog(MrUtils.class);
 	
     public boolean increseMapTask(Path file, Configuration c){
@@ -266,11 +276,74 @@ public class MrUtils {
 			int totalBlocks = (int)Math.ceil(numBlock);
 			
 			System.out.println("Total blocks: "+totalBlocks);
-			Main.totalBlocks = totalBlocks;
+			Main.totalBlockCount = totalBlocks;
+			
+//             FileSystem fs = FileSystem.get(new Configuration());
+			BufferedReader br=new BufferedReader(new InputStreamReader(fs.open(inputPath)));
+			String line;
+			Main.totalTransactionCount = 0;
+			while (br.readLine() != null){
+				Main.totalTransactionCount++;
+			}
+			System.out.println("Total de transações: "+Main.totalTransactionCount);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
         
     }
+    
+    public static ArrayList<String> extractBlocksIds(){
+    	String inputPathUri = Main.user+Main.inputEntry;
+        Path inputPath = new Path(inputPathUri);
+    	Configuration c = new Configuration();
+        c.set("fs.defaultFS", Main.clusterUrl);
+        ArrayList<String> blocksIds = new ArrayList<String>();
+        
+        try{
+        	FileSystem fs = inputPath.getFileSystem(c);
+        	
+        	BlockLocation[] bl = fs.getFileBlockLocations(fs.getFileStatus(inputPath),0,Long.MAX_VALUE);
+        	for(BlockLocation b: bl){
+        		FileSplit fSplit = new FileSplit(inputPath,0, Long.MAX_VALUE,b.getHosts());
+        		blocksIds.add(String.valueOf(b.getLength()));
+        		System.out.println("Lenght: "+b.getLength()+" offset: "+b.getOffset()+" fLenght: "+fSplit.getLength()+" fStart: "+fSplit.getStart()+" hash code: "+fSplit.hashCode());
+        		
+        	}
+        	
+        	FileStatus[] fss = fs.listStatus(inputPath);
+        	for(FileStatus ss: fss){
+        		
+        		System.out.println("FSS block size: "+ss.getBlockSize()+" len: "+ss.getLen());
+        	}
+        	
+        }catch(IOException e){
+        	e.printStackTrace();
+        }
+        
+        return blocksIds;
+        
+    }
+    
+    public static void test(){
+    	String inputPathUri = Main.user+Main.inputEntry;
+        Path inputPath = new Path(inputPathUri);
+    	Configuration c = new Configuration();
+        c.set("fs.defaultFS", Main.clusterUrl);
+        
+        try{
+        	FileSystem fs = FileSystem.get(c);
+        	
+        	FileStatus[] splitFiles = fs.listStatus(inputPath);
+        	
+        	for(FileStatus f: splitFiles){
+        		System.out.println("Split Name: "+f.getPath().getName());
+        		
+        	}
+        }catch(IOException e){
+        	e.printStackTrace();
+        }
+    }
+
+
 }

@@ -21,6 +21,9 @@ import java.util.logging.Logger;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
@@ -58,6 +61,8 @@ public class Map1 extends Mapper<LongWritable, Text, Text, IntWritable>{
     	support = Double.parseDouble(sup)/100;
     	log.info("Iniciando Map 1...");
     	
+    	System.out.println("Input Split HashCode: "+context.getInputSplit().hashCode());
+    	
     }
     @Override
     public void map(LongWritable key, Text value, Context context) throws IOException{
@@ -70,10 +75,11 @@ public class Map1 extends Mapper<LongWritable, Text, Text, IntWritable>{
     	transactions = new ArrayList<String[]>();
     	buildTransactionsArraySet(value.toString());
     	System.out.println("Procentagem do suporte: "+support+"%");
-    	System.out.println("Quantidade de transações: "+transactions.size());
     	support = Math.ceil(support * transactions.size());
-    	setSplitName(context, value);
     	System.out.println("Valor o suporte: "+support);
+    	
+    	/*Obtendo um id para o Map*/
+    	setSplitName(context, value);
     	
     	int k = 1;
     	String[] itemset;
@@ -124,15 +130,29 @@ public class Map1 extends Mapper<LongWritable, Text, Text, IntWritable>{
     }
     
     public void setSplitName(Context context, Text value){
+    	System.out.println("|************************************************************|");
     	System.out.println("SPLIT_RAW_BYTES: " +context.getCounter(TaskCounter.SPLIT_RAW_BYTES).getValue());
-    	System.out.println("SPLIT_RAW_BYTES under: " +context.getCounter(TaskCounter.SPLIT_RAW_BYTES).getUnderlyingCounter().getValue());
+    	System.out.println("JOB_SPLIT_METAINFO: " +context.getConfiguration().get(context.JOB_SPLIT_METAINFO));
+    	System.out.println("MAP_INPUT_RECORDS: " +context.getCounter(TaskCounter.MAP_INPUT_RECORDS).getValue());
     	System.out.println("Tamanho da entrada em bytes: " +value.getLength());
-    	
+    	System.out.println("Quantidade de transações no split: "+transactions.size());
     	
     	StringBuilder sb = new StringBuilder();
+    	/*Concatena o tamanho em bytes da entrada e a quantidade transações da entrada. Probabilidade de ter tamnhos iguais em blocos/Maps diferentes??*/
     	sb.append(":").append(value.getLength()).append(":").append(transactions.size());
     	splitName = sb.toString();
     	System.out.println("Split Name: "+splitName);
+    	
+    	try {
+			FileSystem fs = FileSystem.getLocal(context.getConfiguration());
+			FileStatus file = fs.getFileStatus(new Path("/user/eduardo/input/T2.5I2D10N1500K.dobro"));
+			
+			
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    	System.out.println("|************************************************************|");
     	
     }
     
@@ -156,6 +176,7 @@ public class Map1 extends Mapper<LongWritable, Text, Text, IntWritable>{
 			index = pt.getPrefix().indexOf(transaction[i]);
 		}catch(Exception e){
 			e.printStackTrace();
+			System.out.println("Prefix: "+pt.getPrefix()+" item: "+transaction[i]);
 			System.out.println("Error");
 		}
 		
@@ -187,7 +208,8 @@ public class Map1 extends Mapper<LongWritable, Text, Text, IntWritable>{
 					itemset[itemsetIndex] = "";
 					return;
 				}
-				if(pt.getPrefixTree().isEmpty()){
+				
+				if(pt.getPrefixTree().isEmpty() || pt.getPrefixTree().size() <= index || pt.getPrefixTree().get(index) == null){
 					itemset[itemsetIndex] = "";
 					return;
 				}else{
@@ -197,6 +219,7 @@ public class Map1 extends Mapper<LongWritable, Text, Text, IntWritable>{
 						i++;
 					}
 				}
+				
 //			}
 		}
 	}
@@ -219,6 +242,8 @@ public class Map1 extends Mapper<LongWritable, Text, Text, IntWritable>{
 					}
     			}
     		}
+    		
+    		System.out.println("Quantidade de itens de tamanho 1: "+tempCandidates.size());
     		tempCandidates.removeAll(removeUnFrequentItems(tempCandidates));
     		Collections.sort(tempCandidates, NUMERICAL_ORDER);
     		
@@ -262,7 +287,7 @@ public class Map1 extends Mapper<LongWritable, Text, Text, IntWritable>{
     					tempCandidates.add(tmpItem.toString().trim());
     		
     					//add to prefixTree
-    					//System.out.println("tmpSize in K = "+n+": ccandidate size "+tempCandidates.size()+", Adicionando na hash "+tempCandidates.get(tempCandidates.size()-1));
+    					//System.out.println("tmpSize in K = "+n+": candidate size "+tempCandidates.size()+", Adicionando na hash "+tempCandidates.get(tempCandidates.size()-1));
     					try{
     						prefixTree.add(prefixTree,tempCandidates.get(tempCandidates.size()-1).split(" "),0);
     					}catch(Exception e){
@@ -277,42 +302,6 @@ public class Map1 extends Mapper<LongWritable, Text, Text, IntWritable>{
     	candidates = new ArrayList<String>(tempCandidates);
     	System.out.println("Quantidade de candidatos de tamanho "+n+": "+candidates.size());
     	
-    	/*for(int i = 0; i < candidates.size(); i++){
-    		if(i < candidates.size()){
-    			System.out.print(candidates.get(i)+", ");
-    			i++;
-    			if(i < candidates.size())
-    				System.out.print(candidates.get(i)+", ");
-    			i++;
-    			if(i < candidates.size())
-    				System.out.print(candidates.get(i)+", ");
-    			i++;
-    			if(i < candidates.size())
-    				System.out.print(candidates.get(i)+", ");
-    			i++;
-    			if(i < candidates.size())
-    				System.out.print(candidates.get(i)+", ");
-    			i++;
-    			if(i < candidates.size())
-    				System.out.print(candidates.get(i)+", ");
-    			i++;
-    			if(i < candidates.size())
-    				System.out.print(candidates.get(i)+", ");
-    			i++;
-    			if(i < candidates.size())
-    				System.out.print(candidates.get(i)+", ");
-    			i++;
-    			if(i < candidates.size())
-    				System.out.print(candidates.get(i)+", ");
-    			i++;
-    			if(i < candidates.size())
-    				System.out.print(candidates.get(i)+", ");
-    			i++;
-    			if(i < candidates.size())
-    				System.out.print(candidates.get(i)+", ");
-    			System.out.println();
-    		}else break;
-    	}*/
     	tempCandidates.clear();
     }
 	
