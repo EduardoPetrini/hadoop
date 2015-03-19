@@ -293,6 +293,10 @@ public class MrUtils {
         
     }
     
+    /**
+     * Obtem a lista de blocos ids (offset+length)
+     * @return
+     */
     public static ArrayList<String> extractBlocksIds(){
     	String inputPathUri = Main.user+Main.inputEntry;
         Path inputPath = new Path(inputPathUri);
@@ -305,16 +309,9 @@ public class MrUtils {
         	
         	BlockLocation[] bl = fs.getFileBlockLocations(fs.getFileStatus(inputPath),0,Long.MAX_VALUE);
         	for(BlockLocation b: bl){
-        		FileSplit fSplit = new FileSplit(inputPath,0, Long.MAX_VALUE,b.getHosts());
-        		blocksIds.add(String.valueOf(b.getLength()));
-        		System.out.println("Lenght: "+b.getLength()+" offset: "+b.getOffset()+" fLenght: "+fSplit.getLength()+" fStart: "+fSplit.getStart()+" hash code: "+fSplit.hashCode());
+        		System.out.println("Lenght: "+b.getLength()+" offset: "+b.getOffset());
+        		blocksIds.add(b.getOffset()+"+"+b.getLength());
         		
-        	}
-        	
-        	FileStatus[] fss = fs.listStatus(inputPath);
-        	for(FileStatus ss: fss){
-        		
-        		System.out.println("FSS block size: "+ss.getBlockSize()+" len: "+ss.getLen());
         	}
         	
         }catch(IOException e){

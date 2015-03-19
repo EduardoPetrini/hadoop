@@ -7,6 +7,7 @@
 package mapred.map;
 
 import java.io.IOException;
+import java.net.URI;
 import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -21,14 +22,21 @@ import java.util.logging.Logger;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Cluster.JobTrackerStatus;
+import org.apache.hadoop.mapreduce.FileSystemCounter;
+import org.apache.hadoop.mapreduce.Job.JobState;
+import org.apache.hadoop.mapreduce.JobACL;
+import org.apache.hadoop.mapreduce.JobCounter;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.TaskCounter;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormatCounter;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 
 import app.PrefixTree;
@@ -44,7 +52,7 @@ public class Map1 extends Mapper<LongWritable, Text, Text, IntWritable>{
     IntWritable count = new IntWritable(1);
     Text keyOut = new Text();
     double support;
-    
+    int totalBlockCount;
     ArrayList<String> candidates;
     ArrayList<String> tempCandidates;
     HashMap<String, Integer> itemSup;
@@ -52,23 +60,28 @@ public class Map1 extends Mapper<LongWritable, Text, Text, IntWritable>{
     ArrayList<String[]> transactions;
     PrefixTree prefixTree;
     
+    ArrayList<String> blocksIds;
+    
     String splitName;
     
     @Override
     public void setup(Context context){
     	String sup = context.getConfiguration().get("support");
+    	totalBlockCount = Integer.parseInt(context.getConfiguration().get("totalMaps"));
+    	blocksIds = new ArrayList<String>();
+    	for(int i = 1; i <= totalBlockCount; i++){
+    		blocksIds.add(context.getConfiguration().get("blockId"+i));
+    	}
     	
     	support = Double.parseDouble(sup)/100;
     	log.info("Iniciando Map 1...");
-    	
-    	System.out.println("Input Split HashCode: "+context.getInputSplit().hashCode());
-    	
+    	    	
     }
     @Override
     public void map(LongWritable key, Text value, Context context) throws IOException{
     	//Recebe todo o bloco de transações de uma vez
     	//Aplica-se o algoritmo Apriori
-    	
+    	System.out.println("\n*****************/////// KEY: "+key);
     	//buildTransactionsArraySet
     	candidates = new ArrayList<String>();
     	prefixTree = new PrefixTree(0);
@@ -79,7 +92,7 @@ public class Map1 extends Mapper<LongWritable, Text, Text, IntWritable>{
     	System.out.println("Valor o suporte: "+support);
     	
     	/*Obtendo um id para o Map*/
-    	setSplitName(context, value);
+    	setSplitName(context, key);
     	
     	int k = 1;
     	String[] itemset;
@@ -129,29 +142,11 @@ public class Map1 extends Mapper<LongWritable, Text, Text, IntWritable>{
     	
     }
     
-    public void setSplitName(Context context, Text value){
+    public void setSplitName(Context context, LongWritable offset){
+    	
+    	splitName = offset+":"+transactions.size();
     	System.out.println("|************************************************************|");
-    	System.out.println("SPLIT_RAW_BYTES: " +context.getCounter(TaskCounter.SPLIT_RAW_BYTES).getValue());
-    	System.out.println("JOB_SPLIT_METAINFO: " +context.getConfiguration().get(context.JOB_SPLIT_METAINFO));
-    	System.out.println("MAP_INPUT_RECORDS: " +context.getCounter(TaskCounter.MAP_INPUT_RECORDS).getValue());
-    	System.out.println("Tamanho da entrada em bytes: " +value.getLength());
-    	System.out.println("Quantidade de transações no split: "+transactions.size());
-    	
-    	StringBuilder sb = new StringBuilder();
-    	/*Concatena o tamanho em bytes da entrada e a quantidade transações da entrada. Probabilidade de ter tamnhos iguais em blocos/Maps diferentes??*/
-    	sb.append(":").append(value.getLength()).append(":").append(transactions.size());
-    	splitName = sb.toString();
     	System.out.println("Split Name: "+splitName);
-    	
-    	try {
-			FileSystem fs = FileSystem.getLocal(context.getConfiguration());
-			FileStatus file = fs.getFileStatus(new Path("/user/eduardo/input/T2.5I2D10N1500K.dobro"));
-			
-			
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
     	System.out.println("|************************************************************|");
     	
     }

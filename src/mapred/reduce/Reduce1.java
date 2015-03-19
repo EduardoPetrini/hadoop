@@ -8,6 +8,7 @@ package mapred.reduce;
 
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -32,6 +33,7 @@ public class Reduce1 extends Reducer<Text, IntWritable, Text, IntWritable>{
     IntWritable valueOut = new IntWritable();
     int totalMaps;
     int totalTransactions;
+    ArrayList<String> blocksIds;
     
     @Override
     public void setup(Context context) throws IOException{
@@ -39,7 +41,8 @@ public class Reduce1 extends Reducer<Text, IntWritable, Text, IntWritable>{
         support = Double.parseDouble(context.getConfiguration().get("support"));
         String fileCachedPath = context.getConfiguration().get("fileCached");
         totalMaps = Integer.parseInt(context.getConfiguration().get("totalMaps"));
-        //totalTransactions = Integer.parseInt(context.getConfiguration().get("totalTransactions"));
+        totalTransactions = Integer.parseInt(context.getConfiguration().get("totalTransactions"));
+        
         
         Path path = new Path(fileCachedPath);
         log.info("Iniciando o REDUCE 1. Count Dir: "+count);
