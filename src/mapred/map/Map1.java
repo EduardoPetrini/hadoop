@@ -46,7 +46,7 @@ import app.PrefixTree;
  *
  * @author eduardo
  */
-public class Map1 extends Mapper<LongWritable, Text, Text, IntWritable>{
+public class Map1 extends Mapper<LongWritable, Text, Text, Text>{
     
     Log log = LogFactory.getLog(Map1.class);
     IntWritable count = new IntWritable(1);
@@ -124,13 +124,13 @@ public class Map1 extends Mapper<LongWritable, Text, Text, IntWritable>{
     	//Envia os elementos da hashMap para o reduce com seu respectivo suporte parcial
     	Set<String> keys = itemSup.keySet();
     	Text keyOut = new Text();
-    	IntWritable valueOut = new IntWritable();
+    	Text valueOut = new Text();
     	Integer v;
     	for(String localKeys: keys){
     		v = itemSup.get(localKeys);
     		if(v != null){
     			keyOut.set(localKeys);
-    			valueOut.set(v);
+    			valueOut.set(String.valueOf(v+":"+splitName));
     			try {
 					context.write(keyOut, valueOut);
 				} catch (InterruptedException e) {
@@ -327,12 +327,12 @@ public class Map1 extends Mapper<LongWritable, Text, Text, IntWritable>{
 	private void outputToReduce(ArrayList<String> arrayCandidates, Context context) {
 		Integer value;
 		Text key = new Text();
-		IntWritable val = new IntWritable();
+		Text val = new Text();
 		
 		for(String item: arrayCandidates){
 			value = itemSup.get(item);
 			key.set(item);
-			val.set(value);
+			val.set(String.valueOf(value)+":"+splitName);
 			try {
 				context.write(key , val);
 			} catch (IOException | InterruptedException e) {

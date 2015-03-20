@@ -94,7 +94,7 @@ public class Main {
         job.setReducerClass(Reduce1.class);
         
         job.setOutputKeyClass(Text.class);
-        job.setOutputValueClass(IntWritable.class);
+        job.setOutputValueClass(Text.class);
         job.setInputFormatClass(WholeInputFormat.class);
         
         String fileCached = user+"outputCached/outputMR"+(Main.countDir);

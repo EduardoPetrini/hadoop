@@ -310,7 +310,7 @@ public class MrUtils {
         	BlockLocation[] bl = fs.getFileBlockLocations(fs.getFileStatus(inputPath),0,Long.MAX_VALUE);
         	for(BlockLocation b: bl){
         		System.out.println("Lenght: "+b.getLength()+" offset: "+b.getOffset());
-        		blocksIds.add(b.getOffset()+"+"+b.getLength());
+        		blocksIds.add(String.valueOf(b.getOffset()));
         		
         	}
         	
