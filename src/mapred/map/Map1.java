@@ -7,6 +7,7 @@
 package mapred.map;
 
 import java.io.IOException;
+import java.net.URI;
 import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -21,17 +22,22 @@ import java.util.logging.Logger;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.fs.BlockLocation;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapred.Task.Counter;
+import org.apache.hadoop.mapreduce.Cluster.JobTrackerStatus;
 import org.apache.hadoop.mapreduce.FileSystemCounter;
+import org.apache.hadoop.mapreduce.Job.JobState;
+import org.apache.hadoop.mapreduce.JobACL;
 import org.apache.hadoop.mapreduce.JobCounter;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.TaskCounter;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormatCounter;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
-import org.apache.hadoop.mapreduce.task.MapContextImpl;
 
 import app.PrefixTree;
 
@@ -40,50 +46,62 @@ import app.PrefixTree;
  *
  * @author eduardo
  */
-public class Map1 extends Mapper<LongWritable, Text, Text, IntWritable>{
+public class Map1 extends Mapper<LongWritable, Text, Text, Text>{
     
     Log log = LogFactory.getLog(Map1.class);
     IntWritable count = new IntWritable(1);
     Text keyOut = new Text();
     double support;
-    
+    int totalBlockCount;
     ArrayList<String> candidates;
     ArrayList<String> tempCandidates;
     HashMap<String, Integer> itemSup;
     
     ArrayList<String[]> transactions;
     PrefixTree prefixTree;
+    ArrayList<String> blocksIds;
     
-    String splitId;
+    String splitName;
     
     @Override
     public void setup(Context context){
     	String sup = context.getConfiguration().get("support");
+    	totalBlockCount = Integer.parseInt(context.getConfiguration().get("totalMaps"));
+    	blocksIds = new ArrayList<String>();
+    	for(int i = 1; i <= totalBlockCount; i++){
+    		blocksIds.add(context.getConfiguration().get("blockId"+i));
+    	}
     	
-    	support = Double.parseDouble(sup);
+    	support = Double.parseDouble(sup)/100;
     	log.info("Iniciando Map 1...");
-    	
+    	    	
     }
     @Override
     public void map(LongWritable key, Text value, Context context) throws IOException{
     	//Recebe todo o bloco de transações de uma vez
     	//Aplica-se o algoritmo Apriori
-    	
+    	System.out.println("\n*****************/////// KEY: "+key);
     	//buildTransactionsArraySet
     	candidates = new ArrayList<String>();
     	prefixTree = new PrefixTree(0);
     	transactions = new ArrayList<String[]>();
     	buildTransactionsArraySet(value.toString());
+    	System.out.println("Procentagem do suporte: "+support+"%");
+    	support = Math.ceil(support * transactions.size());
+    	System.out.println("Valor o suporte: "+support);
     	
-    	/*Obter o id do split para ser usado na equação da função Reduce*/
-    	setSplitId(context);
+    	/*Obtendo um id para o Map*/
+    	setSplitName(key);
     	
     	int k = 1;
     	String[] itemset;
     	int itemsetIndex;
     	do{
+    		System.out.println("Gerando itens de tamanho "+k);
     		generateCandidates(k, context);
     		//Verificar existência e contar o support de cada itemset
+    		
+    		System.out.println("Verificando a existência "+candidates.size());
     		if(k > 1){
     			for(String[] transaction: transactions){
     				if(transaction.length >= k){
@@ -94,6 +112,9 @@ public class Map1 extends Mapper<LongWritable, Text, Text, IntWritable>{
 	    				}
     				}
     			}
+    			
+    			/*Remover os itemsets não frequentes*/
+    			candidates.removeAll(removeUnFrequentItems(candidates));
     		}
     		
     		k++;
@@ -102,13 +123,13 @@ public class Map1 extends Mapper<LongWritable, Text, Text, IntWritable>{
     	//Envia os elementos da hashMap para o reduce com seu respectivo suporte parcial
     	Set<String> keys = itemSup.keySet();
     	Text keyOut = new Text();
-    	IntWritable valueOut = new IntWritable();
+    	Text valueOut = new Text();
     	Integer v;
     	for(String localKeys: keys){
     		v = itemSup.get(localKeys);
     		if(v != null){
     			keyOut.set(localKeys);
-    			valueOut.set(v);
+    			valueOut.set(String.valueOf(v+":"+splitName));
     			try {
 					context.write(keyOut, valueOut);
 				} catch (InterruptedException e) {
@@ -120,16 +141,13 @@ public class Map1 extends Mapper<LongWritable, Text, Text, IntWritable>{
     	
     }
     
-    public void setSplitId(Context context){
-    	//context.getCounter(MapContextImpl.SPLIT_FILE);
-    	System.out.println("MAP_INPUT_RECORDS: "+context.getCounter(TaskCounter.MAP_INPUT_RECORDS).getValue());
-    	System.out.println("TOTAL_LAUNCHED_MAPS: "+context.getCounter(JobCounter.TOTAL_LAUNCHED_MAPS).getValue());
-    	System.out.println("SPLIT_RAW_BYTES: "+context.getCounter(TaskCounter.SPLIT_RAW_BYTES).getValue());
-//    	System.out.println("BYTES_READ: "+context.getCounter(FileSystemCounter.BYTES_READ).getValue());
-    	FileSplit fs = new FileSplit();
-    	System.out.println("File Split len: "+fs.getLength());
-    	System.out.println("File Split start: "+fs.getStart());
-    	System.out.println("File Split path: "+fs.getPath());
+    public void setSplitName(LongWritable offset){
+    	
+    	splitName = offset+":"+transactions.size();
+    	System.out.println("|************************************************************|");
+    	System.out.println("Split Name: "+splitName);
+    	System.out.println("|************************************************************|");
+    	
     }
     
     /**
@@ -146,7 +164,15 @@ public class Map1 extends Mapper<LongWritable, Text, Text, IntWritable>{
     	if(i >= transaction.length){
 			return;
 		}
-		int index = pt.getPrefix().indexOf(transaction[i]);
+		int index = -1;
+		
+		try{
+			index = pt.getPrefix().indexOf(transaction[i]);
+		}catch(Exception e){
+			e.printStackTrace();
+			System.out.println("Prefix: "+pt.getPrefix()+" item: "+transaction[i]);
+			System.out.println("Error");
+		}
 		
 		if(index == -1){
 			return;
@@ -167,7 +193,7 @@ public class Map1 extends Mapper<LongWritable, Text, Text, IntWritable>{
 				i++;
 				if(pt.getLevel() == k-1){
 					StringBuilder sb = new StringBuilder();
-					System.out.println("Achou2 "+Arrays.asList(itemset));
+//					System.out.println("Achou2 "+Arrays.asList(itemset));
 					for(String s: itemset){
 						if(s != null)
 							sb.append(s).append(" ");
@@ -176,7 +202,8 @@ public class Map1 extends Mapper<LongWritable, Text, Text, IntWritable>{
 					itemset[itemsetIndex] = "";
 					return;
 				}
-				if(pt.getPrefixTree().isEmpty()){
+				
+				if(pt.getPrefixTree().isEmpty() || pt.getPrefixTree().size() <= index || pt.getPrefixTree().get(index) == null){
 					itemset[itemsetIndex] = "";
 					return;
 				}else{
@@ -186,6 +213,7 @@ public class Map1 extends Mapper<LongWritable, Text, Text, IntWritable>{
 						i++;
 					}
 				}
+				
 //			}
 		}
 	}
@@ -194,7 +222,7 @@ public class Map1 extends Mapper<LongWritable, Text, Text, IntWritable>{
     	
     	String str1, str2; 
     	StringTokenizer st1, st2;
-    	String tmpItem;
+    	StringBuilder tmpItem;
     	String[] tmpItemsets;
     			
     	if(n==1){
@@ -208,56 +236,86 @@ public class Map1 extends Mapper<LongWritable, Text, Text, IntWritable>{
 					}
     			}
     		}
+    		
+    		System.out.println("Quantidade de itens de tamanho 1: "+tempCandidates.size());
     		tempCandidates.removeAll(removeUnFrequentItems(tempCandidates));
-    		Collections.sort(tempCandidates, ALPHABETICAL_ORDER);
+    		Collections.sort(tempCandidates, NUMERICAL_ORDER);
     		
     		//envia para o reduce
     		outputToReduce(tempCandidates, context);
-    		itemSup.clear();
+    		
     	}
     	else if(n==2) {
+    		itemSup.clear();
     		for(int i=0; i<candidates.size(); i++){
-    			st1 = new StringTokenizer(candidates.get(i));
-    			str1 = st1.nextToken();
-    			for(int j=i+1; j<candidates.size(); j++)		{
-    				st2 = new StringTokenizer(candidates.get(j));
-    				str2 = st2.nextToken();
-    				tmpItem = str1+" "+str2;
-    				tempCandidates.add(tmpItem);
-    				System.out.println("Adicionando na hash "+tmpItem);
-    				prefixTree.add(prefixTree,tmpItem.split(" "),0);
+    			tmpItem = new StringBuilder();
+    			tmpItem.append(candidates.get(i).trim()).append(" ");
+    			for(int j=i+1; j<candidates.size(); j++){
+    				tempCandidates.add(tmpItem.toString()+""+candidates.get(j).trim());
+    				
+//    				System.out.println("tmpSize in 2: "+tempCandidates.size()+", Adicionando na hash "+tempCandidates.get(tempCandidates.size()-1));
+    				prefixTree.add(prefixTree,tempCandidates.get(tempCandidates.size()-1).split(" "),0);
     			}
     		}
+    		
     	}else{
-
+    		/*É preciso verificar o prefixo, isso não está sendo feito!!*/
+    		String prefix;
+    		String sufix;
     		for(int i=0; i<candidates.size(); i++){
-
+//    			System.out.println("Progress: "+context.getProgress());
     			for(int j=i+1; j<candidates.size(); j++){
 
     				str1 = new String();
     				str2 = new String();
-
-    				st1 = new StringTokenizer(candidates.get(i));
-    				st2 = new StringTokenizer(candidates.get(j));
-
-    				for(int s=0; s<n-2; s++){
-    					str1 = str1 + " " + st1.nextToken();
-    					str2 = str2 + " " + st2.nextToken();
-    				}
-
-    				if(str2.compareToIgnoreCase(str1)==0){
-    					tmpItem = (str1 + " " + st1.nextToken() + " " + st2.nextToken()).trim();
-    					tempCandidates.add(tmpItem);
+    				
+    				prefix = getPrefix(candidates.get(i));
+    				
+    				if(candidates.get(j).startsWith(prefix)){
+    					/*Se o próximo elemento já possui o mesmo prefixo, basta concatenar o sufixo do segundo item.*/
+    					sufix = getSufix(candidates.get(j));
+    					
+						tmpItem = new StringBuilder();
+    					tmpItem.append(candidates.get(i)).append(" ").append(sufix);
+    					
+    					tempCandidates.add(tmpItem.toString().trim());
+    		
     					//add to prefixTree
-    					System.out.println("Adicionando na hash "+tmpItem);
-    					prefixTree.add(prefixTree,tmpItem.split(" "),0);
+    					//System.out.println("tmpSize in K = "+n+": candidate size "+tempCandidates.size()+", Adicionando na hash "+tempCandidates.get(tempCandidates.size()-1));
+    					try{
+    						prefixTree.add(prefixTree,tempCandidates.get(tempCandidates.size()-1).split(" "),0);
+    					}catch(Exception e){
+    						e.printStackTrace();
+    					}
     				}
     			}
     		}
+    		
     	}
     	candidates.clear();
     	candidates = new ArrayList<String>(tempCandidates);
+    	System.out.println("Quantidade de candidatos de tamanho "+n+": "+candidates.size());
+    	
     	tempCandidates.clear();
+    }
+	
+	public String getSufix(String kitem){
+		String[] spkitem = kitem.split(" ");
+		return spkitem[spkitem.length-1].trim();
+	}
+	
+	public String getPrefix(String kitem){
+        
+        String[] spkitem = kitem.split(" ");
+        StringBuilder sb = new StringBuilder();
+        
+        for (int i = 0; i < spkitem.length-1; i++) {
+            
+            sb.append(spkitem[i]).append(" ");
+        }
+        
+        //k = spkitem.length;
+        return sb.toString();
     }
 	
 	/**
@@ -268,12 +326,12 @@ public class Map1 extends Mapper<LongWritable, Text, Text, IntWritable>{
 	private void outputToReduce(ArrayList<String> arrayCandidates, Context context) {
 		Integer value;
 		Text key = new Text();
-		IntWritable val = new IntWritable();
+		Text val = new Text();
 		
 		for(String item: arrayCandidates){
 			value = itemSup.get(item);
 			key.set(item);
-			val.set(value);
+			val.set(String.valueOf(value)+":"+splitName);
 			try {
 				context.write(key , val);
 			} catch (IOException | InterruptedException e) {
@@ -311,6 +369,7 @@ public class Map1 extends Mapper<LongWritable, Text, Text, IntWritable>{
     			rmItems.add(item);
     		}
     	}
+    	System.out.println("\nRemovendo "+rmItems.size()+" não frequentes.\n");
     	
     	return rmItems;
     }
@@ -328,6 +387,16 @@ public class Map1 extends Mapper<LongWritable, Text, Text, IntWritable>{
 	        collator.setStrength(Collator.PRIMARY);
 			
 			return collator.compare(name1, name2);
+		}
+	};
+	
+	private static Comparator<Object> NUMERICAL_ORDER = new Comparator<Object>()  {
+		public int compare(Object ob1, Object ob2) {
+			int val1 = Integer.parseInt((String)ob1);
+			int val2 = Integer.parseInt((String)ob2);
+			
+			return val1 > val2? 1: val1 < val2? -1 : 0;
+			 
 		}
 	};
 }
