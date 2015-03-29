@@ -24,7 +24,14 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapred.Task.Counter;
+import org.apache.hadoop.mapreduce.FileSystemCounter;
+import org.apache.hadoop.mapreduce.JobCounter;
 import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.TaskCounter;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormatCounter;
+import org.apache.hadoop.mapreduce.lib.input.FileSplit;
+import org.apache.hadoop.mapreduce.task.MapContextImpl;
 
 import app.PrefixTree;
 
@@ -47,6 +54,8 @@ public class Map1 extends Mapper<LongWritable, Text, Text, IntWritable>{
     ArrayList<String[]> transactions;
     PrefixTree prefixTree;
     
+    String splitId;
+    
     @Override
     public void setup(Context context){
     	String sup = context.getConfiguration().get("support");
@@ -65,6 +74,9 @@ public class Map1 extends Mapper<LongWritable, Text, Text, IntWritable>{
     	prefixTree = new PrefixTree(0);
     	transactions = new ArrayList<String[]>();
     	buildTransactionsArraySet(value.toString());
+    	
+    	/*Obter o id do split para ser usado na equação da função Reduce*/
+    	setSplitId(context);
     	
     	int k = 1;
     	String[] itemset;
@@ -106,6 +118,18 @@ public class Map1 extends Mapper<LongWritable, Text, Text, IntWritable>{
     		}
     	}
     	
+    }
+    
+    public void setSplitId(Context context){
+    	//context.getCounter(MapContextImpl.SPLIT_FILE);
+    	System.out.println("MAP_INPUT_RECORDS: "+context.getCounter(TaskCounter.MAP_INPUT_RECORDS).getValue());
+    	System.out.println("TOTAL_LAUNCHED_MAPS: "+context.getCounter(JobCounter.TOTAL_LAUNCHED_MAPS).getValue());
+    	System.out.println("SPLIT_RAW_BYTES: "+context.getCounter(TaskCounter.SPLIT_RAW_BYTES).getValue());
+//    	System.out.println("BYTES_READ: "+context.getCounter(FileSystemCounter.BYTES_READ).getValue());
+    	FileSplit fs = new FileSplit();
+    	System.out.println("File Split len: "+fs.getLength());
+    	System.out.println("File Split start: "+fs.getStart());
+    	System.out.println("File Split path: "+fs.getPath());
     }
     
     /**
