@@ -59,7 +59,6 @@ public class Map1 extends Mapper<LongWritable, Text, Text, Text>{
     
     ArrayList<String[]> transactions;
     PrefixTree prefixTree;
-    
     ArrayList<String> blocksIds;
     
     String splitName;
@@ -92,7 +91,7 @@ public class Map1 extends Mapper<LongWritable, Text, Text, Text>{
     	System.out.println("Valor o suporte: "+support);
     	
     	/*Obtendo um id para o Map*/
-    	setSplitName(context, key);
+    	setSplitName(key);
     	
     	int k = 1;
     	String[] itemset;
@@ -142,7 +141,7 @@ public class Map1 extends Mapper<LongWritable, Text, Text, Text>{
     	
     }
     
-    public void setSplitName(Context context, LongWritable offset){
+    public void setSplitName(LongWritable offset){
     	
     	splitName = offset+":"+transactions.size();
     	System.out.println("|************************************************************|");
