@@ -28,7 +28,7 @@ import org.apache.hadoop.mapreduce.Reducer;
 public class Reduce1 extends Reducer<Text, Text, Text, IntWritable>{
     
     Log log = LogFactory.getLog(Reduce1.class);
-    SequenceFile.Writer writer;
+    SequenceFile.Writer[] writers;
     double support; //s
     IntWritable valueOut = new IntWritable();
     int totalMaps; //M
@@ -36,18 +36,26 @@ public class Reduce1 extends Reducer<Text, Text, Text, IntWritable>{
     ArrayList<String> blocksIds; //Partial
     
     @Override
+    /**
+     * Antes de inicializar o Reduce
+     */
     public void setup(Context context) throws IOException{
         String count = context.getConfiguration().get("count");
         support = Double.parseDouble(context.getConfiguration().get("support"));
-        String fileCachedPath = context.getConfiguration().get("fileCached");
+        String writersFileName = context.getConfiguration().get("outputPartialName");
         totalMaps = Integer.parseInt(context.getConfiguration().get("totalMaps"));
         totalTransactions = Integer.parseInt(context.getConfiguration().get("totalTransactions"));
         blocksIds = new ArrayList<String>();
+        writers = new SequenceFile.Writer[totalMaps];
+        String partitionFileName;
+        
         for(int i = 1; i <= totalMaps; i++){
-    		blocksIds.add(context.getConfiguration().get("blockId"+i));
+        	partitionFileName = writersFileName+context.getConfiguration().get("blockId"+i);
+			blocksIds.add(context.getConfiguration().get("blockId"+i));
+    		writers[i-1] = SequenceFile.createWriter(context.getConfiguration(), SequenceFile.Writer.file(new Path(partitionFileName)),
+    	               SequenceFile.Writer.keyClass(Text.class), SequenceFile.Writer.valueClass(Text.class));
     	}
         
-        Path path = new Path(fileCachedPath);
         log.info("Iniciando o REDUCE 1. Count Dir: "+count);
         log.info("Reduce1 support = "+support);
         
@@ -56,11 +64,10 @@ public class Reduce1 extends Reducer<Text, Text, Text, IntWritable>{
         support = (support/100);
     }
     
-    
-    @Override
     /**
-     * @param values suport:offsset:Di
+     * 
      */
+    @Override
     public void reduce(Text key, Iterable<Text> values, Context context){
         int partialSupport = 0;
         int numMapsOfX = 0; //Nx
@@ -89,20 +96,39 @@ public class Reduce1 extends Reducer<Text, Text, Text, IntWritable>{
     	
     	if(numMapsOfX == totalMaps){
     		System.out.println("Item processado em todos os Maps, enviar para a partição global de itens frequentes");
+    		valueOut.set(partialSupport);
+    		try {
+                context.write(key, valueOut);
+            } catch (IOException | InterruptedException ex) {
+                Logger.getLogger(Reduce1.class.getName()).log(Level.SEVERE, null, ex);
+            }
     	}else{
 	    	partialGlobalSupport = calcPartialGlobalSupport(di,numMapsOfX, partialSupport);
 	    	System.out.println("Suporte Parcialmente Global: "+partialGlobalSupport);
 	    	System.out.println("Mínimo suporte global: "+support*totalTransactions);
 	        if(partialGlobalSupport >= (support*totalTransactions)){
+	        
 	        	//Item parcialmente frequente, enviá-lo para partições em que não foi frequente]
+	        	
 	        	System.out.println("IEM parcialmente FREQUENTE---|");
 	        	valueOut.set(partialGlobalSupport.intValue());
-	            try {
-	//            	saveInCache(key, valueOut);
-	                context.write(key, valueOut);
-	            } catch (IOException | InterruptedException ex) {
-	                Logger.getLogger(Reduce1.class.getName()).log(Level.SEVERE, null, ex);
-	            }
+	        	
+	        	boolean cameFromThePartition;
+	        	
+	        	for_ext:
+	        	for(int i = 0; i < blocksIds.size(); i++){
+	        		cameFromThePartition = false;
+	        		for(int j = 0; j < diList.size(); j++){
+	        			if(blocksIds.get(i).equalsIgnoreCase(diList.get(j))){
+	        				cameFromThePartition = true;
+	        				continue for_ext;
+	        			}
+	        		}
+	        		if(!cameFromThePartition){
+	        			saveInCache(key, valueOut, i);
+	        		}
+	        	}
+	        
 	        }else{
 	        	System.out.println("IEM NÃO FREQUENTE---|");
 	        }
@@ -110,26 +136,44 @@ public class Reduce1 extends Reducer<Text, Text, Text, IntWritable>{
         System.out.println("\n*********-**********-************-*****************-**********");
     }
     
+    /**
+     * 
+     * @param di
+     * @param nx
+     * @param partialSuport
+     * @return
+     */
     public double calcPartialGlobalSupport(int di, int nx, int partialSuport){
     	return partialSuport + (((support * di)-1)*(totalMaps-nx));
     }
        
-    public void saveInCache(Text key, IntWritable value){
+    /***
+     * 
+     * @param key
+     * @param value
+     * @param index
+     */
+    public void saveInCache(Text key, IntWritable value, int index){
     	try {
-            writer.append(key, value);
+            writers[index].append(key, value);
         } catch (IOException ex) {
             Logger.getLogger(Reduce1.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
     
+    /**
+     * Ao finalizar o Reduce
+     */
     @Override
     public void cleanup(Context c){
         log.info("Finalizando o REDUCE 1.");
-//        try {
-//			writer.close();
-//		} catch (IOException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
+        try {
+        	for(SequenceFile.Writer writer: writers){
+        		writer.close();
+        	}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
     }
 }

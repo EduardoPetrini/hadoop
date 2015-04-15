@@ -57,6 +57,7 @@ public class Main {
     public static String clusterUrl = "hdfs://master/";
     public static long totalTransactionCount;
     public ArrayList<String> blocksIds;
+    private String outputPartialName = user+"output-fase-1/partition";
     /*
     Valor do suporte para 1.000.000
     7500
@@ -97,10 +98,9 @@ public class Main {
         job.setOutputValueClass(Text.class);
         job.setInputFormatClass(WholeInputFormat.class);
         
-        String fileCached = user+"outputCached/outputMR"+(Main.countDir);
         job.getConfiguration().set("count", String.valueOf(Main.countDir));
         job.getConfiguration().set("support", support);
-        job.getConfiguration().set("fileCached", fileCached);
+        job.getConfiguration().set("outputPartialName", outputPartialName);
         job.getConfiguration().set("totalMaps", String.valueOf(this.totalBlockCount));
         job.getConfiguration().set("totalTransactions", String.valueOf(this.totalTransactionCount));
         for(int i = 1; i <= this.blocksIds.size(); i++){
@@ -210,11 +210,11 @@ public class Main {
       
         MrUtils.initialConfig();
         m.blocksIds = MrUtils.extractBlocksIds();
+        MrUtils.createIfNotExistOrClean(m.outputPartialName);
         
-        
-        MrUtils.delOutDirs(m.user);
-        Main.countDir++;
-        m.job1();
+//        MrUtils.delOutDirs(m.user);
+//        Main.countDir++;
+//        m.job1();
         
 /*        int l = 0;
         while(m.checkOutput(m.user+"output"+Main.countDir)){

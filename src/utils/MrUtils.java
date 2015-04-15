@@ -342,5 +342,31 @@ public class MrUtils {
         }
     }
 
-
+    /**
+     * 
+     * @param pathName
+     */
+    public static void createIfNotExistOrClean(String pathName){
+    	Path path = new Path(pathName);
+    	Configuration c = new Configuration();
+        c.set("fs.defaultFS", Main.clusterUrl);
+    	
+        try{
+        	FileSystem fs = FileSystem.get(c);
+        	
+        	if(fs.exists(path)){
+        		FileStatus[] fileStatus = fs.listStatus(path);
+        		
+        		for(FileStatus individualFileStatus: fileStatus){
+        			fs.delete(individualFileStatus.getPath(), true);
+        		}
+        	}else{
+        		fs.mkdirs(path);
+        	}
+        	
+        	
+        }catch(IOException e){
+        	e.printStackTrace();
+        }
+    }
 }
