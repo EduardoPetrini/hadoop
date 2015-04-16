@@ -58,15 +58,6 @@ public class Main {
     public static long totalTransactionCount;
     public ArrayList<String> blocksIds;
     private String outputPartialName = user+"output-fase-1/partition";
-    /*
-    Valor do suporte para 1.000.000
-    7500
-    10.000
-    12.500
-    15.000
-    17.500
-    20.000
-    */
     
     public Main() {
         countDir = 0;
@@ -101,10 +92,11 @@ public class Main {
         job.getConfiguration().set("count", String.valueOf(Main.countDir));
         job.getConfiguration().set("support", support);
         job.getConfiguration().set("outputPartialName", outputPartialName);
-        job.getConfiguration().set("totalMaps", String.valueOf(this.totalBlockCount));
-        job.getConfiguration().set("totalTransactions", String.valueOf(this.totalTransactionCount));
+        job.getConfiguration().set("totalMaps", String.valueOf(totalBlockCount));
+        job.getConfiguration().set("totalTransactions", String.valueOf(totalTransactionCount));
+       
         for(int i = 1; i <= this.blocksIds.size(); i++){
-        	job.getConfiguration().set("blockId"+i, this.blocksIds.get(i-1));
+        	job.getConfiguration().set("blockId"+i, this.blocksIds.get(i-1).replace("partition", ""));
         }
         
         try {
@@ -160,19 +152,21 @@ public class Main {
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(IntWritable.class);
         
-        k++;
-        String fileCachedRead = user+"outputCached/outputMR"+(Main.countDir-1);
-        String fileCachedWrited = user+"outputCached/outputMR"+Main.countDir;
         job.getConfiguration().set("count", String.valueOf(Main.countDir));
         job.getConfiguration().set("support", support);
-        job.getConfiguration().set("k", String.valueOf(k));
-        job.getConfiguration().set("fileCachedRead", fileCachedRead);
-        job.getConfiguration().set("fileCachedWrited", fileCachedWrited);
+        job.getConfiguration().set("totalPartitions", String.valueOf(blocksIds.size()));
+        job.getConfiguration().set("outputPartialName", outputPartialName);
+        
+        for(int i = 1; i <= this.blocksIds.size(); i++){
+        	job.getConfiguration().set("blockId"+i, this.blocksIds.get(i-1));
+        }
           
         System.out.println("Job 2 - CountDir: "+Main.countDir);
         
         try {
-           job.addCacheFile(new URI(fileCachedRead));
+            for(int i = 1; i <= this.blocksIds.size(); i++){
+            	job.addCacheFile(new URI(user+"output-fase-1/"+this.blocksIds.get(i-1)));
+            }
         } catch (URISyntaxException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -216,18 +210,12 @@ public class Main {
 //        Main.countDir++;
 //        m.job1();
         
-/*        int l = 0;
-        while(m.checkOutput(m.user+"output"+Main.countDir)){
-            System.out.println("LOOP "+l++);
-        	Main.countDir++;
-        	m.job2();
-        }
-*/
-
-        /*Remover os arquivos invertidos anteriores*/
-//        m.delOutDirs(user+"");
-//        m.delContentFiles("invert");
+        m.blocksIds = MrUtils.getPartitions(m.outputPartialName);
         
+//		MrUtils.delOutDirs(m.user);
+//		Main.countDir++;
+//		m.job1();
+		
         double seg = ((double)m.timeTotal/1000);
         
         System.out.println("Tempo total: "+m.timeTotal+" mile ou "+seg+" segundos! ou "+seg/60+" minutos");

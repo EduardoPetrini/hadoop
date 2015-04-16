@@ -369,4 +369,38 @@ public class MrUtils {
         	e.printStackTrace();
         }
     }
+    
+    /**
+     * Obtém as partições criadas na fase 1
+     * @param pathName
+     * @return
+     */
+    public static ArrayList<String> getPartitions(String pathName){
+    	ArrayList<String> partitions = new ArrayList<String>();
+    	
+    	Path path = new Path(pathName);
+    	Configuration c = new Configuration();
+        c.set("fs.defaultFS", Main.clusterUrl);
+        
+        try{
+        	FileSystem fs = FileSystem.get(c);
+        	
+        	if(fs.exists(path)){
+        		FileStatus[] fileStatus = fs.listStatus(path);
+        		
+        		for(FileStatus individualFileStatus: fileStatus){
+        			if(individualFileStatus.getLen() > 0){
+        				partitions.add(individualFileStatus.getPath().getName());
+        			}
+        		}
+        	}else{
+        		fs.mkdirs(path);
+        	}
+        	        	
+        }catch(IOException e){
+        	e.printStackTrace();
+        }
+    	
+    	return partitions;
+    }
 }
