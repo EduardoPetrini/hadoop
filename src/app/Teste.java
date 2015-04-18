@@ -255,16 +255,7 @@ public class Teste {
         
     }
      
-    public static void main(String[] args) throws Exception {
-        
-        Teste t = new Teste();
-        
-//        t.processIbmData("/home/hadoop/inputLocal/peq500");
-        t.analiseBase2("/home/eduardo/Documentos/T10I4D100KN1000K");
-        
-//        t.processIbmData("/home/eduardo/Downloads/ibm-datagen/T10I4D100KN1000K.data");
-        
-    }
+    
     
     public void analiseBase2(String fileName){
         
@@ -567,4 +558,197 @@ public void loadFileBinaryFormat(String path) throws IOException {
         
         return sb.toString().trim();
     }
+    
+    /**
+     * 
+     * @param itemset
+     * @param transactions
+     * @return
+     */
+    public int countByMatches(String itemset, ArrayList<String> transactions){
+    	int count = 0;
+    	String[] itemsetSplit = itemset.split(" ");
+    	String pattern = "";
+
+    	for(String item: itemsetSplit){
+    		pattern += ".*"+item;
+    	}
+
+    	pattern += ".*";
+
+    	for(String t: transactions){
+    		if(t.matches(pattern)){
+    			count ++;
+    		}
+    	}
+    	return count;
+    }
+    
+    /**
+     * 
+     * @param itemset
+     * @param transactions
+     * @return
+     */
+    public int countByEquals(String itemset, ArrayList<String> transactions){
+    	int count = 0;
+    	
+    	String[] itemsetSplit = itemset.split(" ");
+    			
+		boolean itemCombina = false;
+		
+		for(String t: transactions){
+			String[] transSplit = t.split(" ");
+			int index = 0;
+			
+			for_item:
+			for(int j = 0; j < itemsetSplit.length; j++){
+				itemCombina = false;
+				for(int x = index; x < transSplit.length; x++){
+					if(itemsetSplit[j].equals(transSplit[x])){
+						index = x+1;
+						itemCombina = true;
+						continue for_item;
+					}
+				}
+				if(!itemCombina){
+					break for_item;
+				}
+			}
+			if(itemCombina){
+				count++;
+			}
+		}
+    	
+    	return count;
+    }
+    
+    /**
+     * 
+     * @param itemset
+     * @param transactions
+     * @return
+     */
+    public int countByEquals2(String itemset, ArrayList<String> transactions){
+    	int count = 0;
+    	
+    	String[] itemsetSplit = itemset.split(" ");
+    			
+		boolean itemCombina;
+		String[] tSplit;
+		int j,i;
+		
+		for_t:
+		for(String t: transactions){
+			itemCombina = true;
+			tSplit = t.split(" ");
+			j = 0;i = 0;
+			while(itemCombina){
+				if(itemsetSplit[i].equals(tSplit[j])){
+					if(++i == itemsetSplit.length || 
+							++j == tSplit.length){
+						count++;
+						continue for_t;
+					}
+					
+				}else{
+					if(++j == tSplit.length){
+						continue for_t;
+					}
+				}
+			}
+		}
+		
+    	
+    	return count;
+    }
+    
+    public static void main(String[] args) throws Exception {
+        
+        final Teste t = new Teste();
+        long timeBegin = 0;
+        long timeEnd = 0;
+        long totalEquals2 = 0;
+        long totalEquals = 0;
+        int countEquals2 = 0;
+        int countEquals = 0;
+        final String itemset = "4 5";
+        final ArrayList<String> transactions = getTransactions();
+        
+//        /************************************/
+//        timeBegin = System.currentTimeMillis();
+//        for(int i = 0; i < 100; i++){
+//        	countEquals = t.execEquals(itemset, transactions);
+//        }
+//        timeEnd = System.currentTimeMillis();
+//        
+//        totalEquals = timeEnd - timeBegin;
+//        /************************************/
+//        
+//        
+//        /************************************/
+//        timeBegin = System.currentTimeMillis();
+//        for(int i = 0; i < 100; i++){
+//        	countEquals2 = t.execEquals2(itemset, transactions);
+//        }
+//        timeEnd = System.currentTimeMillis();
+//        
+//        totalEquals2 = timeEnd - timeBegin;
+        /************************************/
+        
+        Evaluator.evaluator(new Callable() {
+
+            public Integer call() {
+            	t.execEquals(itemset, transactions);
+                    return 0;
+            }
+        }, new Callable() {
+
+            public Integer call() {
+            	t.execEquals2(itemset, transactions);
+                    return 0;
+            }
+    }, 30, 20);//vezes
+        
+//        System.out.println("Count equals2: "+countEquals2+" time: "+totalEquals2/2);
+//        System.out.println("Count equals: "+countEquals+" time: "+totalEquals/2);
+    }
+    
+    public int execEquals(String itemset, ArrayList<String> transactions){
+    	//Equals
+        for(int i = 0; i < 10000; i++){
+        	count = countByEquals(itemset, transactions);
+        }
+        return countByEquals(itemset, transactions);
+    }
+    
+    public int execEquals2(String itemset, ArrayList<String> transactions){
+    	//Equals
+        for(int i = 0; i < 10000; i++){
+        	countByEquals2(itemset, transactions);
+        }
+        
+        return countByEquals2(itemset, transactions);
+    }
+    
+    public int execMatches(String itemset, ArrayList<String> transactions){
+    	//Matches
+        for(int i = 0; i < 10000; i++){
+        	countByMatches(itemset, transactions);
+        }
+        
+        return countByMatches(itemset, transactions);
+    }
+
+	private static ArrayList<String> getTransactions() {
+		// TODO Auto-generated method stub
+		
+		ArrayList<String> t = new ArrayList<String>();
+		t.add("1 2 3 4 5");
+		t.add("1 2");
+		t.add("2 3 4 5");
+		t.add("1 5 6");
+		t.add("1 3 4 5");
+		return t;
+	}
 }

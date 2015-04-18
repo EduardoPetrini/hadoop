@@ -23,10 +23,9 @@ import org.apache.hadoop.mapreduce.Reducer;
  * Salva o conjunto de 2itemsets e seus respectivos tids.
  * @author eduardo
  */
-public class Reduce2 extends Reducer<Text, IntWritable, Text, IntWritable> {
+public class Reduce2 extends Reducer<Text, Text, Text, IntWritable> {
     
     Log log = LogFactory.getLog(Reduce2.class);
-    SequenceFile.Writer writer;
     double support;
     IntWritable valueOut = new IntWritable();
     
@@ -34,42 +33,35 @@ public class Reduce2 extends Reducer<Text, IntWritable, Text, IntWritable> {
     public void setup(Context context) throws IOException{
         String count = context.getConfiguration().get("count");
         String fileCachedPath = context.getConfiguration().get("fileCachedWrited");
-        support = Double.parseDouble(context.getConfiguration().get("support"));
+        support = Double.parseDouble(context.getConfiguration().get("support"));//Definido no initial config
         
         Path path = new Path(fileCachedPath);
         log.info("Iniciando o REDUCE 2. Count dir: "+count);
         
-         writer = SequenceFile.createWriter(context.getConfiguration(), SequenceFile.Writer.file(path),
-               SequenceFile.Writer.keyClass(Text.class), SequenceFile.Writer.valueClass(IntWritable.class));
     }
     
     @Override
-    public void reduce(Text key, Iterable<IntWritable> values, Context context){
-    	Text keyOut = new Text(key.toString().replaceAll("\\[+|\\]+|,+", ""));
-    	log.info("Key at Reduce 2: "+keyOut.toString());
+    public void reduce(Text key, Iterable<Text> values, Context context){
+    	
     	int count = 0;
-    	for (Iterator<IntWritable> it = values.iterator(); it.hasNext();) {
-            count += it.next().get();
+    	int supportTotal = Integer.parseInt(values.iterator().next().toString().split("+")[0]);
+    	
+    	for (Iterator<Text> it = values.iterator(); it.hasNext();) {
+            count += Integer.parseInt(it.next().toString().split("+")[1]);
         }
     	
-        if(count >= support){
-        	valueOut.set(count);
+    	supportTotal += count;
+    	
+        if(supportTotal >= support){
+        	valueOut.set(supportTotal);
             try {
-            	saveInCache(keyOut, valueOut);
-                context.write(keyOut, valueOut);
+                context.write(key, valueOut);
             } catch (IOException | InterruptedException ex) {
                 Logger.getLogger(Reduce1.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
     }
-    
-    public void saveInCache(Text key, IntWritable value){
-    	try {
-            writer.append(key, value);
-        } catch (IOException ex) {
-            Logger.getLogger(Reduce1.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
+   
     
     @Override
     public void cleanup(Context c){

@@ -286,6 +286,7 @@ public class MrUtils {
 				Main.totalTransactionCount++;
 			}
 			System.out.println("Total de transações: "+Main.totalTransactionCount);
+			Main.support = String.valueOf((Main.totalTransactionCount*Main.supportPercentage)/100);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

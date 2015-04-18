@@ -1,36 +1,34 @@
 package app;
 
-import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.io.Text;
 
 /**
  * @author eduardo
  *
  */
 public class ItemSup {
-	private Text itemset;
-	private IntWritable support;
+	private String itemset;
+	private int support;
 	
 	public ItemSup(){
-		itemset = new Text();
-		support = new IntWritable();
+		itemset = new String();
+		support = 0;
 	}
 	
-	public ItemSup(Text itemset, IntWritable support) {
+	public ItemSup(String itemset, int support) {
 		super();
 		this.itemset = itemset;
 		this.support = support;
 	}
-	public Text getItemset() {
+	public String getItemset() {
 		return itemset;
 	}
-	public void setItemset(Text itemset) {
+	public void setItemset(String itemset) {
 		this.itemset = itemset;
 	}
-	public IntWritable getSupport() {
+	public int getSupport() {
 		return support;
 	}
-	public void setSupport(IntWritable support) {
+	public void setSupport(int support) {
 		this.support = support;
 	}
 }

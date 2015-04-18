@@ -41,7 +41,7 @@ public class Reduce1 extends Reducer<Text, Text, Text, IntWritable>{
      */
     public void setup(Context context) throws IOException{
         String count = context.getConfiguration().get("count");
-        support = Double.parseDouble(context.getConfiguration().get("support"));
+        support = Double.parseDouble(context.getConfiguration().get("support"));//Definido no initial config
         String writersFileName = context.getConfiguration().get("outputPartialName");
         totalMaps = Integer.parseInt(context.getConfiguration().get("totalMaps"));
         totalTransactions = Integer.parseInt(context.getConfiguration().get("totalTransactions"));
@@ -61,7 +61,7 @@ public class Reduce1 extends Reducer<Text, Text, Text, IntWritable>{
         
         log.info("Total Maps = "+totalMaps);
         System.out.println("\n*********-**********-************-*****************-**********");
-        support = (support/100);
+        
     }
     
     /**
@@ -105,8 +105,8 @@ public class Reduce1 extends Reducer<Text, Text, Text, IntWritable>{
     	}else{
 	    	partialGlobalSupport = calcPartialGlobalSupport(di,numMapsOfX, partialSupport);
 	    	System.out.println("Suporte Parcialmente Global: "+partialGlobalSupport);
-	    	System.out.println("Mínimo suporte global: "+support*totalTransactions);
-	        if(partialGlobalSupport >= (support*totalTransactions)){
+	    	System.out.println("Mínimo suporte global: "+support);
+	        if(partialGlobalSupport >= (support)){
 	        
 	        	//Item parcialmente frequente, enviá-lo para partições em que não foi frequente]
 	        	

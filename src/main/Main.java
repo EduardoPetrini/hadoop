@@ -49,7 +49,8 @@ public class Main {
     private Log log = LogFactory.getLog(Main.class);
     public static int countDir;
     private int timeTotal;
-    private String support = "0.5";
+    public static double supportPercentage = 0.01;
+    public static String support;
     private int k = 1;
     public static int totalBlockCount;
     public static String user = "/user/eduardo/";
@@ -151,6 +152,7 @@ public class Main {
         
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(IntWritable.class);
+        job.setInputFormatClass(WholeInputFormat.class);
         
         job.getConfiguration().set("count", String.valueOf(Main.countDir));
         job.getConfiguration().set("support", support);
@@ -202,7 +204,7 @@ public class Main {
         Main m = new Main();
 //        System.out.println(m.checkOutput(user+"output1"));
       
-        MrUtils.initialConfig();
+        MrUtils.initialConfig();//Dentre outras coisas, define a quantidade total de transações
         m.blocksIds = MrUtils.extractBlocksIds();
         MrUtils.createIfNotExistOrClean(m.outputPartialName);
         

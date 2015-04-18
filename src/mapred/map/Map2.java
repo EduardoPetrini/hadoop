@@ -7,7 +7,6 @@
 package mapred.map;
 
 import java.io.IOException;
-import java.net.URI;
 import java.util.ArrayList;
 
 import org.apache.commons.logging.Log;
@@ -22,15 +21,17 @@ import org.apache.hadoop.util.ReflectionUtils;
 
 import app.HashTree;
 import app.ItemSup;
+import app.PrefixTree;
 
 /**
  * Gerar itemsets de tamanho 2.
  * @author eduardo
  */
-public class Map2  extends Mapper<LongWritable, Text, Text, IntWritable>{
+public class Map2  extends Mapper<LongWritable, Text, Text, Text>{
     
     Log log = LogFactory.getLog(Map2.class);
-    IntWritable countOut = new IntWritable(1);
+    Text valueOut;
+    Text keyOut;
     SequenceFile.Reader reader;
     ArrayList<String> blocksIds;
     HashTree hashTree;
@@ -38,6 +39,7 @@ public class Map2  extends Mapper<LongWritable, Text, Text, IntWritable>{
     String splitName;
     String inputPartialName;
     ArrayList<ItemSup> lPartialItemsets;
+    
     /**
      * Le o arquivo invertido para a memória.
      * @param context
@@ -88,13 +90,58 @@ public class Map2  extends Mapper<LongWritable, Text, Text, IntWritable>{
     		//Executar o map da fase 2
     		
     		openFile(context);//Ler o arquivo da partição para a memória
-    		//Para cada lPartialItemset, contar o suporte em Di (value) -- usar prefixTree
+    		//Para cada lPartialItemset, contar o suporte em Di (value)
+    		int supportLocal;
+    		valueOut = new Text();
+    		keyOut = new Text();
+    		for(ItemSup item: lPartialItemsets){
+    			supportLocal = count(value.toString().split("\n"), item.getItemset().toString());
+    			
+    			try{
+    				valueOut.set(String.valueOf(item.getSupport())+"+"+supportLocal);
+    				keyOut.set(item.getItemset());
+    				context.write(keyOut, valueOut);
+    			}catch(IOException | InterruptedException e){
+    				e.printStackTrace();
+    			}
+    		}
     	}
     	
     }
     
+    public int count(String[] transactions, String itemset){
+    	int count = 0;
+    	int i,j;
+    	String[] tSplit;
+    	String[] itemsetSplit = itemset.split(" ");
+    	for_trans:
+    	for(String transaction: transactions){
+    		i = 0;
+    		j = 0;
+    		tSplit = transaction.split(" ");
+    		
+    		while(true){
+    			if(itemsetSplit[i].equals(tSplit[j])){
+					if(++i == itemsetSplit.length || 
+							++j == tSplit.length){
+						count++;
+						continue for_trans;
+					}
+					
+				}else{
+					if(++j == tSplit.length){
+						continue for_trans;
+					}
+				}
+    		}
+    	}
+    	
+    	return count;
+    }
+    
     public void openFile(Context context){
     	Path path = new Path(inputPartialName+splitName); 
+
     	try {
     		System.out.println("Lendo a partição '"+path.getName()+"' para a memória!");
     		reader = new SequenceFile.Reader(context.getConfiguration(), SequenceFile.Reader.file(path));
@@ -105,7 +152,7 @@ public class Map2  extends Mapper<LongWritable, Text, Text, IntWritable>{
 			
 			while (reader.next(key, value)) {
 				System.out.println("Add Key: "+key.toString());
-				lPartialItemsets.add(new ItemSup(key, value));//Adicionar direto na prefix tree
+				lPartialItemsets.add(new ItemSup(key.toString(), value.get()));//Adicionar direto na prefix tree
 			}
  
 		} catch (IllegalArgumentException | IOException e) {

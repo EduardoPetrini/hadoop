@@ -251,7 +251,7 @@ public class Map1 extends Mapper<LongWritable, Text, Text, Text>{
     			tmpItem = new StringBuilder();
     			tmpItem.append(candidates.get(i).trim()).append(" ");
     			for(int j=i+1; j<candidates.size(); j++){
-    				tempCandidates.add(tmpItem.toString()+""+candidates.get(j).trim());
+    				tempCandidates.add(tmpItem.toString()+candidates.get(j).trim());
     				
 //    				System.out.println("tmpSize in 2: "+tempCandidates.size()+", Adicionando na hash "+tempCandidates.get(tempCandidates.size()-1));
     				prefixTree.add(prefixTree,tempCandidates.get(tempCandidates.size()-1).split(" "),0);
