@@ -58,7 +58,7 @@ public class Map2  extends Mapper<LongWritable, Text, Text, IntWritable>{
         //Gerar combinações dos itens de acordo com k
         
         hashTree = new HashTree(k);
-        System.out.println("K is "+k);
+        //System.out.println("K is "+k);
         String itemsetC;
         for (int i = 0; i < fileCached.size(); i++){
         	for (int j = i+1; j < fileCached.size(); j++){
@@ -66,19 +66,28 @@ public class Map2  extends Mapper<LongWritable, Text, Text, IntWritable>{
         		String[] itemB = fileCached.get(j).split(" ");
         		if(isSamePrefix(itemA, itemB, i, j)){
         			itemsetC = combine(itemA, itemB);
-        			System.out.println(itemsetC);
+        			//System.out.println(itemsetC);
         			//Building HashTree
         			hashTree.add(itemsetC);
         		}
         	}
         }
+        System.out.println();
     }
     
+    /**
+     * 
+     * @param itemA
+     * @param itemB
+     * @param i
+     * @param j
+     * @return
+     */
     public boolean isSamePrefix(String[] itemA, String[] itemB, int i, int j){
     	if(k == 2) return true;
     	for(int a = 0; a < k -2; a++){
             if(!itemA[a].equals(itemB[a])){
-            	System.out.println("Não é o mesmo prefixo: "+itemA[a]+" != "+itemB[a]+"  "+itemA+" "+itemB);
+            	//System.out.println("Não é o mesmo prefixo: "+itemA[a]+" != "+itemB[a]+"  "+itemA+" "+itemB);
                 return false;
             }
         }
@@ -86,6 +95,12 @@ public class Map2  extends Mapper<LongWritable, Text, Text, IntWritable>{
     	return true;
     }
     
+    /**
+     * 
+     * @param itemA
+     * @param itemB
+     * @return
+     */
     public String combine(String[] itemA, String[] itemB){
         StringBuilder sb = new StringBuilder();
         
@@ -96,13 +111,21 @@ public class Map2  extends Mapper<LongWritable, Text, Text, IntWritable>{
         return sb.toString();
     }
     
+    /**
+     * 
+     * @param transaction
+     * @param hasht
+     * @param i
+     * @param itemset
+     * @param context
+     */
     public void subset(String[] transaction, HashTree hasht, int i, ArrayList<String> itemset,Context context){
     	if(hasht == null){
 			return;
 		}
 		
 		if(hasht.getLevel() > hasht.getK()){
-			System.out.println("\nAchou -> Itemset: "+itemset.toString());
+//			System.out.println("\nAchou -> Itemset: "+itemset.toString());
 			try{
 				context.write(new Text(itemset.toString()), new IntWritable(1));
 			}catch(IOException | InterruptedException e){
@@ -137,6 +160,12 @@ public class Map2  extends Mapper<LongWritable, Text, Text, IntWritable>{
 		subset(value.toString().split(" "), hashTree, 0, itemset, context);
     }
     
+    /**
+     * 
+     * @param path
+     * @param context
+     * @return
+     */
     public ArrayList<String> openFile(String path, Context context){
     	fileCached = new ArrayList<String>();
     	try {
@@ -145,7 +174,7 @@ public class Map2  extends Mapper<LongWritable, Text, Text, IntWritable>{
 			IntWritable value = (IntWritable) ReflectionUtils.newInstance(reader.getValueClass(), context.getConfiguration());
 			
 			while (reader.next(key, value)) {
-				System.out.println("Add Key: "+key.toString());
+				//System.out.println("Add Key: "+key.toString());
 	            fileCached.add(key.toString());
 	        }
 		} catch (IllegalArgumentException | IOException e) {

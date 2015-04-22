@@ -34,7 +34,7 @@ public class Reduce1 extends Reducer<Text, IntWritable, Text, IntWritable>{
     @Override
     public void setup(Context context) throws IOException{
         String count = context.getConfiguration().get("count");
-        support = Integer.parseInt(context.getConfiguration().get("support"));
+        support = Double.parseDouble(context.getConfiguration().get("support"));
         String fileCachedPath = context.getConfiguration().get("fileCached");
         Path path = new Path(fileCachedPath);
         log.info("Iniciando o REDUCE 1. Count Dir: "+count);

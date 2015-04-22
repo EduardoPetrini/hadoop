@@ -78,7 +78,7 @@ public class Map3  extends Mapper<LongWritable, Text, Text, IntWritable>{
         	}
         }else{
         	log.info("Arquivo do cache distribuído é vazio!");
-        	System.exit(0);
+        	return;
         }
         
         int lkSize = fileCached.size();
@@ -102,7 +102,7 @@ public class Map3  extends Mapper<LongWritable, Text, Text, IntWritable>{
         		if(isSamePrefix(itemA, itemB, i, j)){
         			itemsetC = combine(itemA, itemB);
         			itemsetAux.add(itemsetC);
-        			System.out.println(itemsetC+" no primeiro passo");
+        			//System.out.println(itemsetC+" no primeiro passo");
         			//Building HashTree
         			prefixTree.add(prefixTree, itemsetC.split(" "), 0);
         		}
@@ -113,7 +113,7 @@ public class Map3  extends Mapper<LongWritable, Text, Text, IntWritable>{
         
         int cSetSize = itemsetAux.size();
         while( cSetSize <= ct){
-        	System.out.println("Cset size "+cSetSize);
+        	//System.out.println("Cset size "+cSetSize);
         	fileCached.clear();
         	if(itemsetAux.isEmpty()){
         		break;
@@ -126,7 +126,7 @@ public class Map3  extends Mapper<LongWritable, Text, Text, IntWritable>{
 	        		if(isSamePrefix(itemA, itemB, i, j)){
 	        			itemsetC = combine(itemA, itemB);
 	        			fileCached.add(itemsetC);
-	        			System.out.println(itemsetC+" no primeiro passo");
+	        			//System.out.println(itemsetC+" no primeiro passo");
 	        			//Building HashTree
 	        			prefixTree.add(prefixTree, itemsetC.split(" "), 0);
 	        		}
@@ -144,7 +144,7 @@ public class Map3  extends Mapper<LongWritable, Text, Text, IntWritable>{
 	        		if(isSamePrefix(itemA, itemB, i, j)){
 	        			itemsetC = combine(itemA, itemB);
 	        			itemsetAux.add(itemsetC);
-	        			System.out.println(itemsetC+" no segundp passo");
+	        			//System.out.println(itemsetC+" no segundp passo");
 	        			//Building HashTree
 	        			prefixTree.add(prefixTree, itemsetC.split(" "), 0);
 	        		}
@@ -155,14 +155,22 @@ public class Map3  extends Mapper<LongWritable, Text, Text, IntWritable>{
        
         prefixTree.printStrArray(itemsetAux);
         prefixTree.printPrefixTree(prefixTree);
-        System.out.println("Fim do setup, inicia função map para o k = "+k);
+        //System.out.println("Fim do setup, inicia função map para o k = "+k);
     }
     
+    /**
+     * 
+     * @param itemA
+     * @param itemB
+     * @param i
+     * @param j
+     * @return
+     */
     public boolean isSamePrefix(String[] itemA, String[] itemB, int i, int j){
     	if(k == 2) return true;
     	for(int a = 0; a < k -2; a++){
             if(!itemA[a].equals(itemB[a])){
-            	System.out.println("Não é o mesmo prefixo: "+itemA[a]+" != "+itemB[a]);
+            	//System.out.println("Não é o mesmo prefixo: "+itemA[a]+" != "+itemB[a]);
                 return false;
             }
         }
@@ -170,6 +178,12 @@ public class Map3  extends Mapper<LongWritable, Text, Text, IntWritable>{
     	return true;
     }
     
+    /**
+     * 
+     * @param itemA
+     * @param itemB
+     * @return
+     */
     public String combine(String[] itemA, String[] itemB){
         StringBuilder sb = new StringBuilder();
         
@@ -180,6 +194,14 @@ public class Map3  extends Mapper<LongWritable, Text, Text, IntWritable>{
         return sb.toString();
     }
     
+    /**
+     * 
+     * @param transaction
+     * @param pt
+     * @param i
+     * @param sb
+     * @param context
+     */
     public void subset(String[] transaction, PrefixTree pt, int i, StringBuilder sb, Context context){
     	if(i >= transaction.length){
 			return;
@@ -187,15 +209,17 @@ public class Map3  extends Mapper<LongWritable, Text, Text, IntWritable>{
 		int index = pt.getPrefix().indexOf(transaction[i]);
 		
 		if(index == -1){
-			System.out.println("Não achou :( "+sb.toString());
+//			System.out.println("Não achou :( "+sb.toString());
 			return;
 		}else{
 			if(i == transaction.length-1){
 				sb.append(transaction[i]);
-				System.out.println("Achou :) "+sb.toString());
+//				System.out.println("Achou :) "+sb.toString());
 				
 				//Manda pro reduce
 				try {
+					System.out.print("\nITEMSET: ");
+					System.out.println(sb.toString());
 					context.write(new Text(sb.toString()), new IntWritable(1));
 				} catch (IOException | InterruptedException e) {
 					// TODO Auto-generated catch block
@@ -206,7 +230,7 @@ public class Map3  extends Mapper<LongWritable, Text, Text, IntWritable>{
 				sb.append(transaction[i]).append(" ");
 				i++;
 				if(pt.getPrefixTree().isEmpty()){
-					System.out.println("Não achou :'( "+sb.toString());
+//					System.out.println("Não achou :'( "+sb.toString());
 					return;
 				}else{
 					subset(transaction, pt.getPrefixTree().get(index), i, sb ,context);
@@ -221,13 +245,19 @@ public class Map3  extends Mapper<LongWritable, Text, Text, IntWritable>{
 		//Aplica a função subset e envia o itemset para o reduce
     	StringBuilder sb = new StringBuilder();
     	String[] transaction = value.toString().split(" ");
-    	System.out.println("In transaction "+value.toString());
-    	if(transaction.length >= k-2){
-    		System.out.println("Subset...");
+//    	System.out.println("In transaction "+value.toString());
+    	if(transaction.length >= k){
+//    		System.out.println("Subset...");
     		subset(transaction, prefixTree, 0, sb , context);
     	}
     }
     
+    /**
+     * 
+     * @param path
+     * @param context
+     * @return
+     */
     public ArrayList<String> openFile(String path, Context context){
     	fileCached = new ArrayList<String>();
     	try {
@@ -236,7 +266,7 @@ public class Map3  extends Mapper<LongWritable, Text, Text, IntWritable>{
 			IntWritable value = (IntWritable) ReflectionUtils.newInstance(reader.getValueClass(), context.getConfiguration());
 			
 			while (reader.next(key, value)) {
-				System.out.println("Add Key: "+key.toString());
+				//System.out.println("Add Key: "+key.toString());
 	            fileCached.add(key.toString());
 	        }
 		} catch (IllegalArgumentException | IOException e) {
