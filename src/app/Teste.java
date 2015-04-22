@@ -664,54 +664,28 @@ public void loadFileBinaryFormat(String path) throws IOException {
     }
     
     public static void main(String[] args) throws Exception {
+    	HashMap<String, Integer> itemSup = new HashMap<String, Integer>(4);
+    	addToHashItemSup(itemSup,"a");
+    	addToHashItemSup(itemSup,"b");
+    	addToHashItemSup(itemSup,"a");
+    	addToHashItemSup(itemSup,"b");
+    	addToHashItemSup(itemSup,"a");
+    	addToHashItemSup(itemSup,"d");
+    	addToHashItemSup(itemSup,"e");
+    	addToHashItemSup(itemSup,"d");
+    	System.out.println(itemSup.size());
         
-        final Teste t = new Teste();
-        long timeBegin = 0;
-        long timeEnd = 0;
-        long totalEquals2 = 0;
-        long totalEquals = 0;
-        int countEquals2 = 0;
-        int countEquals = 0;
-        final String itemset = "4 5";
-        final ArrayList<String> transactions = getTransactions();
-        
-//        /************************************/
-//        timeBegin = System.currentTimeMillis();
-//        for(int i = 0; i < 100; i++){
-//        	countEquals = t.execEquals(itemset, transactions);
-//        }
-//        timeEnd = System.currentTimeMillis();
-//        
-//        totalEquals = timeEnd - timeBegin;
-//        /************************************/
-//        
-//        
-//        /************************************/
-//        timeBegin = System.currentTimeMillis();
-//        for(int i = 0; i < 100; i++){
-//        	countEquals2 = t.execEquals2(itemset, transactions);
-//        }
-//        timeEnd = System.currentTimeMillis();
-//        
-//        totalEquals2 = timeEnd - timeBegin;
-        /************************************/
-        
-        Evaluator.evaluator(new Callable() {
-
-            public Integer call() {
-            	t.execEquals(itemset, transactions);
-                    return 0;
-            }
-        }, new Callable() {
-
-            public Integer call() {
-            	t.execEquals2(itemset, transactions);
-                    return 0;
-            }
-    }, 30, 20);//vezes
-        
-//        System.out.println("Count equals2: "+countEquals2+" time: "+totalEquals2/2);
-//        System.out.println("Count equals: "+countEquals+" time: "+totalEquals/2);
+    }
+    
+    public static void addToHashItemSup(HashMap<String, Integer> itemSup, String item){
+    	Integer value = 0;
+    	
+    	if((value = itemSup.get(item)) == null){
+    		itemSup.put(item, 1);
+    	}else{
+    		value++;
+    		itemSup.put(item, value);
+    	}
     }
     
     public int execEquals(String itemset, ArrayList<String> transactions){

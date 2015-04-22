@@ -21,7 +21,6 @@ import org.apache.hadoop.util.ReflectionUtils;
 
 import app.HashTree;
 import app.ItemSup;
-import app.PrefixTree;
 
 /**
  * Gerar itemsets de tamanho 2.
@@ -109,6 +108,12 @@ public class Map2  extends Mapper<LongWritable, Text, Text, Text>{
     	
     }
     
+    /**
+     * 
+     * @param transactions
+     * @param itemset
+     * @return
+     */
     public int count(String[] transactions, String itemset){
     	int count = 0;
     	int i,j;
@@ -123,13 +128,13 @@ public class Map2  extends Mapper<LongWritable, Text, Text, Text>{
     		while(true){
     			if(itemsetSplit[i].equals(tSplit[j])){
 					if(++i == itemsetSplit.length || 
-							++j == tSplit.length){
+							++j == tSplit.length-1){
 						count++;
 						continue for_trans;
 					}
 					
 				}else{
-					if(++j == tSplit.length){
+					if(++j == tSplit.length-1){
 						continue for_trans;
 					}
 				}
@@ -139,6 +144,10 @@ public class Map2  extends Mapper<LongWritable, Text, Text, Text>{
     	return count;
     }
     
+    /**
+     * 
+     * @param context
+     */
     public void openFile(Context context){
     	Path path = new Path(inputPartialName+splitName); 
 

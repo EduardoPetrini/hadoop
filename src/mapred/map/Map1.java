@@ -7,37 +7,20 @@
 package mapred.map;
 
 import java.io.IOException;
-import java.net.URI;
 import java.text.Collator;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Set;
-import java.util.StringTokenizer;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.fs.BlockLocation;
-import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.Cluster.JobTrackerStatus;
-import org.apache.hadoop.mapreduce.FileSystemCounter;
-import org.apache.hadoop.mapreduce.Job.JobState;
-import org.apache.hadoop.mapreduce.JobACL;
-import org.apache.hadoop.mapreduce.JobCounter;
 import org.apache.hadoop.mapreduce.Mapper;
-import org.apache.hadoop.mapreduce.TaskCounter;
-import org.apache.hadoop.mapreduce.lib.input.FileInputFormatCounter;
-import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 
 import app.PrefixTree;
 
@@ -101,7 +84,7 @@ public class Map1 extends Mapper<LongWritable, Text, Text, Text>{
     		generateCandidates(k, context);
     		//Verificar existência e contar o support de cada itemset
     		
-    		System.out.println("Verificando a existência "+candidates.size());
+    		System.out.println("Verificando a existência de "+candidates.size()+" candidatos");
     		if(k > 1){
     			for(String[] transaction: transactions){
     				if(transaction.length >= k){
@@ -129,6 +112,7 @@ public class Map1 extends Mapper<LongWritable, Text, Text, Text>{
     		v = itemSup.get(localKeys);
     		if(v != null){
     			keyOut.set(localKeys);
+    			System.out.println("Chave para o reduce 1: "+localKeys);
     			valueOut.set(String.valueOf(v+":"+splitName));
     			try {
 					context.write(keyOut, valueOut);
@@ -220,8 +204,7 @@ public class Map1 extends Mapper<LongWritable, Text, Text, Text>{
 	public void generateCandidates(int n, Context context){
     	ArrayList<String> tempCandidates = new ArrayList<String>(); 
     	
-    	String str1, str2; 
-    	StringTokenizer st1, st2;
+    	System.out.println("Valor de N: "+n);
     	StringBuilder tmpItem;
     	String[] tmpItemsets;
     			
@@ -230,8 +213,7 @@ public class Map1 extends Mapper<LongWritable, Text, Text, Text>{
     		for(int i=0; i<transactions.size(); i++){
     			tmpItemsets = transactions.get(i);
     			for(int j = 0; j < tmpItemsets.length; j++){
-    				addToHashItemSup(tmpItemsets[j]);
-					if(!tempCandidates.contains(tmpItemsets[j])){
+					if(addToHashItemSup(tmpItemsets[j])){
 						tempCandidates.add(tmpItemsets[j]);		
 					}
     			}
@@ -244,9 +226,9 @@ public class Map1 extends Mapper<LongWritable, Text, Text, Text>{
     		//envia para o reduce
     		outputToReduce(tempCandidates, context);
     		
-    	}
-    	else if(n==2) {
+    	}else if(n==2) {
     		itemSup.clear();
+    		System.out.println("Geransadfh");
     		for(int i=0; i<candidates.size(); i++){
     			tmpItem = new StringBuilder();
     			tmpItem.append(candidates.get(i).trim()).append(" ");
@@ -262,14 +244,12 @@ public class Map1 extends Mapper<LongWritable, Text, Text, Text>{
     		/*É preciso verificar o prefixo, isso não está sendo feito!!*/
     		String prefix;
     		String sufix;
+    		 
     		for(int i=0; i<candidates.size(); i++){
 //    			System.out.println("Progress: "+context.getProgress());
     			for(int j=i+1; j<candidates.size(); j++){
 
-    				str1 = new String();
-    				str2 = new String();
-    				
-    				prefix = getPrefix(candidates.get(i));
+					prefix = getPrefix(candidates.get(i));
     				
     				if(candidates.get(j).startsWith(prefix)){
     					/*Se o próximo elemento já possui o mesmo prefixo, basta concatenar o sufixo do segundo item.*/
@@ -293,6 +273,7 @@ public class Map1 extends Mapper<LongWritable, Text, Text, Text>{
     		
     	}
     	candidates.clear();
+    	printCadidates(tempCandidates, n);
     	candidates = new ArrayList<String>(tempCandidates);
     	System.out.println("Quantidade de candidatos de tamanho "+n+": "+candidates.size());
     	
@@ -349,14 +330,16 @@ public class Map1 extends Mapper<LongWritable, Text, Text, Text>{
     	}
     }
     
-    public void addToHashItemSup(String item){
+    public boolean addToHashItemSup(String item){
     	Integer value = 0;
     	
     	if((value = itemSup.get(item)) == null){
     		itemSup.put(item, 1);
+    		return true;
     	}else{
     		value++;
     		itemSup.put(item, value);
+    		return false;
     	}
     }
     
@@ -399,4 +382,19 @@ public class Map1 extends Mapper<LongWritable, Text, Text, Text>{
 			 
 		}
 	};
+	
+	public void printCadidates(ArrayList<String> can, int n){
+		System.out.println("\n*************************************\n");
+		System.out.println("Print "+n+"-itemsets candidates: ");
+		if(!can.isEmpty()){
+			for(String s: can){
+				System.out.println(s);
+			}
+			System.out.println("Size: "+can.size());
+			System.out.println("k: "+can.get(can.size()-1).split(" ").length);
+		}else{
+			System.out.println("Nenhum candidato!");
+		}
+		System.out.println("\n*************************************\n");
+	}
 }

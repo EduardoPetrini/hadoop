@@ -7,7 +7,6 @@
 package main;
 
 import hadoop.inputformat.WholeInputFormat;
-import hadoop.inputformat.WholeSplitInputFormat;
 
 import java.io.IOException;
 import java.net.URI;
@@ -24,14 +23,7 @@ import mapred.reduce.Reduce2;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hdfs.DistributedFileSystem;
-import org.apache.hadoop.hdfs.protocol.Block;
-import org.apache.hadoop.hdfs.server.balancer.Balancer;
-import org.apache.hadoop.hdfs.server.namenode.NameNode;
-import org.apache.hadoop.hdfs.server.protocol.BalancerBandwidthCommand;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
@@ -49,7 +41,7 @@ public class Main {
     private Log log = LogFactory.getLog(Main.class);
     public static int countDir;
     private int timeTotal;
-    public static double supportPercentage = 0.01;
+    public static double supportPercentage = 0.0001;
     public static String support;
     private int k = 1;
     public static int totalBlockCount;
@@ -58,7 +50,7 @@ public class Main {
     public static String clusterUrl = "hdfs://master/";
     public static long totalTransactionCount;
     public ArrayList<String> blocksIds;
-    private String outputPartialName = user+"output-fase-1/partition";
+    public String outputPartialName = user+"partitions-fase-1/partition";
     
     public Main() {
         countDir = 0;
@@ -197,9 +189,6 @@ public class Main {
         }
     }
     
-   
-
-
     public static void main(String[] args) throws IOException {
         Main m = new Main();
 //        System.out.println(m.checkOutput(user+"output1"));
@@ -207,16 +196,16 @@ public class Main {
         MrUtils.initialConfig();//Dentre outras coisas, define a quantidade total de transações
         m.blocksIds = MrUtils.extractBlocksIds();
         MrUtils.createIfNotExistOrClean(m.outputPartialName);
+        MrUtils.printConfigs(m);
         
-//        MrUtils.delOutDirs(m.user);
-//        Main.countDir++;
-//        m.job1();
+        MrUtils.delOutDirs(user);
+        Main.countDir++;
+        m.job1();
         
         m.blocksIds = MrUtils.getPartitions(m.outputPartialName);
         
-//		MrUtils.delOutDirs(m.user);
-//		Main.countDir++;
-//		m.job1();
+		Main.countDir++;
+		m.job2();
 		
         double seg = ((double)m.timeTotal/1000);
         

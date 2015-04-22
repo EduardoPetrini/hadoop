@@ -15,7 +15,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
 
@@ -32,28 +31,22 @@ public class Reduce2 extends Reducer<Text, Text, Text, IntWritable> {
     @Override
     public void setup(Context context) throws IOException{
         String count = context.getConfiguration().get("count");
-        String fileCachedPath = context.getConfiguration().get("fileCachedWrited");
         support = Double.parseDouble(context.getConfiguration().get("support"));//Definido no initial config
-        
-        Path path = new Path(fileCachedPath);
         log.info("Iniciando o REDUCE 2. Count dir: "+count);
-        
+        System.out.println("Support global: "+support);
     }
     
     @Override
     public void reduce(Text key, Iterable<Text> values, Context context){
     	
-    	int count = 0;
-    	int supportTotal = Integer.parseInt(values.iterator().next().toString().split("+")[0]);
+    	int count = Integer.parseInt(values.iterator().next().toString().split("+")[0]);
     	
     	for (Iterator<Text> it = values.iterator(); it.hasNext();) {
             count += Integer.parseInt(it.next().toString().split("+")[1]);
         }
-    	
-    	supportTotal += count;
-    	
-        if(supportTotal >= support){
-        	valueOut.set(supportTotal);
+    	System.out.println("Chave: "+key+" support: "+count);
+    	if(count >= support){
+        	valueOut.set(count);
             try {
                 context.write(key, valueOut);
             } catch (IOException | InterruptedException ex) {
@@ -61,18 +54,10 @@ public class Reduce2 extends Reducer<Text, Text, Text, IntWritable> {
             }
         }
     }
-   
     
     @Override
     public void cleanup(Context c){
         log.info("Finalizando o REDUCE 2.");
         
-        try {
-            writer.close();
-        } catch (IOException ex) {
-            Logger.getLogger(Reduce2.class.getName()).log(Level.SEVERE, null, ex);
-        }
     }
-    
-    
 }

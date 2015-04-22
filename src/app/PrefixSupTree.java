@@ -1,7 +1,6 @@
 package app;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 import mapred.map.Map2;
 
@@ -46,7 +45,7 @@ public class PrefixSupTree {
 		if(i >= itemset.length){
 			//adicionar o suporte
 			int index = pt.prefix.indexOf(itemset[i-1]);
-			pt.support.add(index, Map2.currentSupport);
+//			pt.support.add(index, Map2.currentSupport);
 			return;
 		}
 		
@@ -77,7 +76,7 @@ public class PrefixSupTree {
 			i++;
 			if(i >= itemset.length){
 				//adicionar o suporte
-				pt.support.add(index,Map2.currentSupport);
+//				pt.support.add(index,Map2.currentSupport);
 				return;
 			}
 			pt.prefixSupTree.add(index, new PrefixSupTree(i));

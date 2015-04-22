@@ -17,15 +17,6 @@ import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hdfs.DFSUtil;
-import org.apache.hadoop.hdfs.DistributedFileSystem;
-import org.apache.hadoop.hdfs.ExtendedBlockId;
-import org.apache.hadoop.hdfs.protocol.Block;
-import org.apache.hadoop.hdfs.protocol.BlockStoragePolicy;
-import org.apache.hadoop.hdfs.protocol.HdfsBlocksMetadata;
-import org.apache.hadoop.hdfs.protocol.LocatedBlock;
-import org.apache.hadoop.hdfs.server.namenode.FSImage;
-import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 
 public class MrUtils {
 	private Log log = LogFactory.getLog(MrUtils.class);
@@ -275,7 +266,6 @@ public class MrUtils {
 			
 			int totalBlocks = (int)Math.ceil(numBlock);
 			
-			System.out.println("Total blocks: "+totalBlocks);
 			Main.totalBlockCount = totalBlocks;
 			
 //             FileSystem fs = FileSystem.get(new Configuration());
@@ -285,7 +275,6 @@ public class MrUtils {
 			while (br.readLine() != null){
 				Main.totalTransactionCount++;
 			}
-			System.out.println("Total de transações: "+Main.totalTransactionCount);
 			Main.support = String.valueOf((Main.totalTransactionCount*Main.supportPercentage)/100);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -310,7 +299,6 @@ public class MrUtils {
         	
         	BlockLocation[] bl = fs.getFileBlockLocations(fs.getFileStatus(inputPath),0,Long.MAX_VALUE);
         	for(BlockLocation b: bl){
-        		System.out.println("Lenght: "+b.getLength()+" offset: "+b.getOffset());
         		blocksIds.add(String.valueOf(b.getOffset()));
         		
         	}
@@ -348,7 +336,7 @@ public class MrUtils {
      * @param pathName
      */
     public static void createIfNotExistOrClean(String pathName){
-    	Path path = new Path(pathName);
+    	Path path = new Path(pathName.substring(0,pathName.length()-9));
     	Configuration c = new Configuration();
         c.set("fs.defaultFS", Main.clusterUrl);
     	
@@ -379,7 +367,7 @@ public class MrUtils {
     public static ArrayList<String> getPartitions(String pathName){
     	ArrayList<String> partitions = new ArrayList<String>();
     	
-    	Path path = new Path(pathName);
+    	Path path = new Path(pathName.substring(0,pathName.length()-9));
     	Configuration c = new Configuration();
         c.set("fs.defaultFS", Main.clusterUrl);
         
@@ -390,7 +378,8 @@ public class MrUtils {
         		FileStatus[] fileStatus = fs.listStatus(path);
         		
         		for(FileStatus individualFileStatus: fileStatus){
-        			if(individualFileStatus.getLen() > 0){
+        			long len =individualFileStatus.getLen();
+        			if(len > 128){
         				partitions.add(individualFileStatus.getPath().getName());
         			}
         		}
@@ -403,5 +392,31 @@ public class MrUtils {
         }
     	
     	return partitions;
+    }
+    
+    /**
+     *     public static String user = "/user/eduardo/";
+    public static String inputEntry = "input/T2.5I2D10N1500K.dobro";
+    public static String clusterUrl = "hdfs://master/";
+    public static long totalTransactionCount;
+    public ArrayList<String> blocksIds;
+    private String outputPartialName = user+"partitions-fase-1/partition";
+     * @param m
+     */
+    public static void printConfigs(Main m){
+    	System.out.println("\n******************************************************\n");
+    	System.out.println("Count: "+m.countDir);
+    	System.out.println("Support percentage: "+Main.supportPercentage);
+    	System.out.println("Support: "+Main.support);
+    	System.out.println("Total blocks/partitiions/Maps: "+Main.totalBlockCount);
+    	System.out.println("Total transactions: "+Main.totalTransactionCount);
+    	System.out.println("User dir: "+Main.user);
+    	System.out.println("User partition dir: "+m.outputPartialName);
+    	System.out.println("Entry file: "+Main.inputEntry);
+    	System.out.println("Cluster url: "+Main.clusterUrl);
+    	for(String b: m.blocksIds){
+    		System.out.println("Blocks id: "+b);
+    	}
+    	System.out.println("\n******************************************************\n");
     }
 }
