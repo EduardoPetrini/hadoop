@@ -42,11 +42,11 @@ public class Main {
     private Log log = LogFactory.getLog(Main.class);
     public static int countDir;
     private int timeTotal;
-    public static double supportPercentage = 0;
+    public static double supportPercentage = 0.001;
     public static String support;
     int k = 1;
     public static String user = "/user/eduardo/";
-    public static String inputEntry = "input/T2.5I2D10N100K";
+    public static String inputEntry = "input/T2.5I2D10N15000K.ok";
     public static String clusterUrl = "hdfs://master/";
     public String fileCached = user+"outputCached/outputMR";
     public static long totalTransactionCount;
