@@ -279,6 +279,7 @@ public class MrUtils {
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+			System.exit(1);
 		}
         
     }
@@ -419,4 +420,9 @@ public class MrUtils {
     	}
     	System.out.println("\n******************************************************\n");
     }
+
+	public static void configGlobalSupporte() {
+		Main.support = String.valueOf(Main.supportPercentage * Main.totalTransactionCount);
+		
+	}
 }

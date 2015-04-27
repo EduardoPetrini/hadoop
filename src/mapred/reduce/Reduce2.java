@@ -22,11 +22,11 @@ import org.apache.hadoop.mapreduce.Reducer;
  * Salva o conjunto de 2itemsets e seus respectivos tids.
  * @author eduardo
  */
-public class Reduce2 extends Reducer<Text, Text, Text, IntWritable> {
+public class Reduce2 extends Reducer<Text, Text, Text, Text> {
     
     Log log = LogFactory.getLog(Reduce2.class);
     double support;
-    IntWritable valueOut = new IntWritable();
+    Text valueOut = new Text();
     
     @Override
     public void setup(Context context) throws IOException{
@@ -39,14 +39,14 @@ public class Reduce2 extends Reducer<Text, Text, Text, IntWritable> {
     @Override
     public void reduce(Text key, Iterable<Text> values, Context context){
     	
-    	int count = Integer.parseInt(values.iterator().next().toString().split("+")[0]);
+    	int count = Integer.parseInt(values.iterator().next().toString().split("#")[0]);
     	
     	for (Iterator<Text> it = values.iterator(); it.hasNext();) {
-            count += Integer.parseInt(it.next().toString().split("+")[1]);
+            count += Integer.parseInt(it.next().toString().split("#")[1]);
         }
     	System.out.println("Chave: "+key+" support: "+count);
     	if(count >= support){
-        	valueOut.set(count);
+        	valueOut.set(String.valueOf(count));
             try {
                 context.write(key, valueOut);
             } catch (IOException | InterruptedException ex) {

@@ -41,12 +41,12 @@ public class Main {
     private Log log = LogFactory.getLog(Main.class);
     public static int countDir;
     private int timeTotal;
-    public static double supportPercentage = 0.0001;
+    public static double supportPercentage = 0.001;
     public static String support;
     private int k = 1;
     public static int totalBlockCount;
     public static String user = "/user/eduardo/";
-    public static String inputEntry = "input/T2.5I2D10N1500K.dobro";
+    public static String inputEntry = "input/T2.5I4D10N15K.ok";
     public static String clusterUrl = "hdfs://master/";
     public static long totalTransactionCount;
     public ArrayList<String> blocksIds;
@@ -143,7 +143,7 @@ public class Main {
         job.setReducerClass(Reduce2.class);
         
         job.setOutputKeyClass(Text.class);
-        job.setOutputValueClass(IntWritable.class);
+        job.setOutputValueClass(Text.class);
         job.setInputFormatClass(WholeInputFormat.class);
         
         job.getConfiguration().set("count", String.valueOf(Main.countDir));
@@ -159,7 +159,7 @@ public class Main {
         
         try {
             for(int i = 1; i <= this.blocksIds.size(); i++){
-            	job.addCacheFile(new URI(user+"output-fase-1/"+this.blocksIds.get(i-1)));
+            	job.addCacheFile(new URI(user+"partitions-fase-1/"+this.blocksIds.get(i-1)));
             }
         } catch (URISyntaxException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
@@ -203,6 +203,9 @@ public class Main {
         m.job1();
         
         m.blocksIds = MrUtils.getPartitions(m.outputPartialName);
+        //configurar o suporte global
+        MrUtils.configGlobalSupporte();
+        
         
 		Main.countDir++;
 		m.job2();

@@ -8,6 +8,7 @@ package mapred.map;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -53,7 +54,7 @@ public class Map2  extends Mapper<LongWritable, Text, Text, Text>{
         
         blocksIds = new ArrayList<String>();
     	for(int i = 1; i <= totalPartitions; i++){
-    		blocksIds.add(context.getConfiguration().get("blockId"+i));//Id da partição é o offset do bloco
+    		blocksIds.add(context.getConfiguration().get("blockId"+i).replace("partition", ""));//Id da partição é o offset do bloco
     	}
     	
     	/*No método 'map', ao identificar que a partição atual será processada, le seus itemsets para memória*/
@@ -69,8 +70,16 @@ public class Map2  extends Mapper<LongWritable, Text, Text, Text>{
     	
     	for(String ids: blocksIds){
     		System.out.println("Verificando se a partição atual será processada: "+splitName+" == "+ids);
-    		if(ids.equalsIgnoreCase(splitName)){
-    			return true;
+    		if(splitName.length() > 2){
+    			if(ids.contains(splitName.substring(0, splitName.length()-2))){
+    				splitName = ids;
+    				return true;
+    			}
+    		}else{
+    			if(ids.contains(splitName)){
+    				splitName = ids;
+    				return true;
+    			}
     		}
     	}
     	
@@ -87,7 +96,7 @@ public class Map2  extends Mapper<LongWritable, Text, Text, Text>{
     	if(checkPartition()){
     		//A partição atual será processada
     		//Executar o map da fase 2
-    		
+    		System.out.println("A partição atual será processada: "+splitName);
     		openFile(context);//Ler o arquivo da partição para a memória
     		//Para cada lPartialItemset, contar o suporte em Di (value)
     		int supportLocal;
@@ -97,15 +106,15 @@ public class Map2  extends Mapper<LongWritable, Text, Text, Text>{
     			supportLocal = count(value.toString().split("\n"), item.getItemset().toString());
     			
     			try{
-    				valueOut.set(String.valueOf(item.getSupport())+"+"+supportLocal);
+    				valueOut.set(String.valueOf(item.getSupport())+"#"+supportLocal);
     				keyOut.set(item.getItemset());
+    						
     				context.write(keyOut, valueOut);
     			}catch(IOException | InterruptedException e){
     				e.printStackTrace();
     			}
     		}
     	}
-    	
     }
     
     /**
@@ -124,20 +133,28 @@ public class Map2  extends Mapper<LongWritable, Text, Text, Text>{
     		i = 0;
     		j = 0;
     		tSplit = transaction.split(" ");
-    		
-    		while(true){
-    			if(itemsetSplit[i].equals(tSplit[j])){
-					if(++i == itemsetSplit.length || 
-							++j == tSplit.length-1){
-						count++;
-						continue for_trans;
-					}
-					
-				}else{
-					if(++j == tSplit.length-1){
-						continue for_trans;
-					}
-				}
+    		if(tSplit.length >= itemsetSplit.length){
+	    		while(true){
+	    			
+	    			try{
+		    			if(itemsetSplit[i].equals(tSplit[j])){
+							if(++i == itemsetSplit.length || ++j == tSplit.length-1){
+								count++;
+								continue for_trans;
+							}
+							
+						}else{
+							if(++j >= tSplit.length-1){
+								continue for_trans;
+							}
+						}
+	    			}catch(IndexOutOfBoundsException e){
+	    				System.out.println(Arrays.asList(itemsetSplit)+" == "+Arrays.asList(tSplit));
+		    			System.out.println(i+" "+j);
+	    				e.printStackTrace();
+	    				System.exit(0);
+	    			}
+	    		}
     		}
     	}
     	
@@ -160,8 +177,8 @@ public class Map2  extends Mapper<LongWritable, Text, Text, Text>{
 			IntWritable value = (IntWritable) ReflectionUtils.newInstance(reader.getValueClass(), context.getConfiguration());
 			
 			while (reader.next(key, value)) {
-				System.out.println("Add Key: "+key.toString());
-				lPartialItemsets.add(new ItemSup(key.toString(), value.get()));//Adicionar direto na prefix tree
+				//System.out.println("Add Key: "+key.toString());
+				lPartialItemsets.add(new ItemSup(key.toString(), value.get()));
 			}
  
 		} catch (IllegalArgumentException | IOException e) {

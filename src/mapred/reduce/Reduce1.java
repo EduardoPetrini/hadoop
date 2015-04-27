@@ -53,7 +53,7 @@ public class Reduce1 extends Reducer<Text, Text, Text, IntWritable>{
         	partitionFileName = writersFileName+context.getConfiguration().get("blockId"+i);
 			blocksIds.add(context.getConfiguration().get("blockId"+i));
     		writers[i-1] = SequenceFile.createWriter(context.getConfiguration(), SequenceFile.Writer.file(new Path(partitionFileName)),
-    	               SequenceFile.Writer.keyClass(Text.class), SequenceFile.Writer.valueClass(Text.class));
+    	               SequenceFile.Writer.keyClass(Text.class), SequenceFile.Writer.valueClass(IntWritable.class));
     	}
         
         log.info("Iniciando o REDUCE 1. Count Dir: "+count);
