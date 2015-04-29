@@ -634,13 +634,12 @@ public void loadFileBinaryFormat(String path) throws IOException {
     	
     	String[] itemsetSplit = itemset.split(" ");
     			
-		boolean itemCombina;
+		boolean itemCombina = true;
 		String[] tSplit;
 		int j,i;
 		
 		for_t:
 		for(String t: transactions){
-			itemCombina = true;
 			tSplit = t.split(" ");
 			j = 0;i = 0;
 			while(itemCombina){
@@ -664,17 +663,15 @@ public void loadFileBinaryFormat(String path) throws IOException {
     }
     
     public static void main(String[] args) throws Exception {
-    	HashMap<String, Integer> itemSup = new HashMap<String, Integer>(4);
-    	addToHashItemSup(itemSup,"a");
-    	addToHashItemSup(itemSup,"b");
-    	addToHashItemSup(itemSup,"a");
-    	addToHashItemSup(itemSup,"b");
-    	addToHashItemSup(itemSup,"a");
-    	addToHashItemSup(itemSup,"d");
-    	addToHashItemSup(itemSup,"e");
-    	addToHashItemSup(itemSup,"d");
-    	System.out.println(itemSup.size());
-        
+    	Teste t = new Teste();
+    	String itemset = "29";
+    	ArrayList<String> transactions = new ArrayList<String>();
+    	transactions.add("0 10 29 30");
+    	transactions.add("0 29 40");
+    	transactions.add("2 12  30");
+    	
+    	System.out.println(t.countByEquals2(itemset, transactions));
+    	
     }
     
     public static void addToHashItemSup(HashMap<String, Integer> itemSup, String item){

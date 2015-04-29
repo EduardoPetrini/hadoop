@@ -21,6 +21,8 @@ import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
 
+import utils.MrUtils;
+
 /**
  *
  * @author eduardo
@@ -41,7 +43,7 @@ public class Reduce1 extends Reducer<Text, Text, Text, IntWritable>{
      */
     public void setup(Context context) throws IOException{
         String count = context.getConfiguration().get("count");
-        support = Double.parseDouble(context.getConfiguration().get("support"));//Definido no initial config
+        support = Double.parseDouble(context.getConfiguration().get("supportPercentage"));//Definido no Main
         String writersFileName = context.getConfiguration().get("outputPartialName");
         totalMaps = Integer.parseInt(context.getConfiguration().get("totalMaps"));
         totalTransactions = Integer.parseInt(context.getConfiguration().get("totalTransactions"));
@@ -74,44 +76,42 @@ public class Reduce1 extends Reducer<Text, Text, Text, IntWritable>{
         String[] splitValues;
         Double partialGlobalSupport = new Double(0);
         ArrayList<String> diList = new ArrayList<String>();
-        ArrayList<Integer> diSize = new ArrayList<Integer>();
+//        ArrayList<Integer> diSize = new ArrayList<Integer>();
         int di = 0;
-        
+        //verificar o calculo desse suporte do satanás
     	for (Iterator<Text> it = values.iterator(); it.hasNext();) {
     		splitValues = it.next().toString().split(":");
             partialSupport += Integer.valueOf(splitValues[0]);
             diList.add(splitValues[1]);
-            di += Integer.parseInt(splitValues[1]);
-            diSize.add(Integer.valueOf(splitValues[2]));
+            di += Integer.parseInt(splitValues[2]);
+//            diSize.add(Integer.valueOf(splitValues[2]));
             numMapsOfX++;
         }
-    	di = di/numMapsOfX;
-    	System.out.println("Itemset: "+key.toString());
-    	System.out.println("Suporte parcial: "+partialSupport);
-    	System.out.println("Suport threshold: "+support);
-    	System.out.println("Número de Maps do item (Nx): "+numMapsOfX);
-    	System.out.println("Valor de Di: "+di);
-    	System.out.println("Toal de Maps: "+totalMaps);
-    	System.out.println("Total de Transações: "+totalTransactions);
     	
-    	if(numMapsOfX == totalMaps){
-    		System.out.println("Item processado em todos os Maps, enviar para a partição global de itens frequentes");
-    		valueOut.set(partialSupport);
-    		try {
-                context.write(key, valueOut);
-            } catch (IOException | InterruptedException ex) {
-                Logger.getLogger(Reduce1.class.getName()).log(Level.SEVERE, null, ex);
-            }
+    	di = di/numMapsOfX;
+    	valueOut.set(partialSupport);
+    	
+    	if(key.toString().equals("15")){
+			System.out.println("Item 15");
+			printInfo(key.toString(), partialSupport, numMapsOfX, di);
+		}
+    	
+    	if(numMapsOfX >= totalMaps){
+    		if(partialSupport > (support*totalTransactions)){
+//	    		System.out.println("Item processado em todos os Maps, enviar para a partição global de itens frequentes");
+	    		try {
+	                context.write(key, valueOut);
+	            } catch (IOException | InterruptedException ex) {
+	                Logger.getLogger(Reduce1.class.getName()).log(Level.SEVERE, null, ex);
+	            }
+    		}
     	}else{
 	    	partialGlobalSupport = calcPartialGlobalSupport(di,numMapsOfX, partialSupport);
-	    	System.out.println("Suporte Parcialmente Global: "+partialGlobalSupport);
-	    	System.out.println("Mínimo suporte global: "+support);
-	        if(partialGlobalSupport >= (support)){
+//	    	System.out.println("Suporte Parcialmente Global: "+partialGlobalSupport);
+	        if(partialGlobalSupport >= (support*totalTransactions)){
 	        
 	        	//Item parcialmente frequente, enviá-lo para partições em que não foi frequente]
-	        	
-	        	System.out.println("IEM parcialmente FREQUENTE---|");
-	        	valueOut.set(partialGlobalSupport.intValue());
+//	        	System.out.println("IEM parcialmente FREQUENTE---|");
 	        	
 	        	boolean cameFromThePartition;
 	        	
@@ -119,12 +119,15 @@ public class Reduce1 extends Reducer<Text, Text, Text, IntWritable>{
 	        	for(int i = 0; i < blocksIds.size(); i++){
 	        		cameFromThePartition = false;
 	        		for(int j = 0; j < diList.size(); j++){
-	        			if(blocksIds.get(i).equalsIgnoreCase(diList.get(j))){
+	        			if(MrUtils.checkPartitions(blocksIds.get(i),diList.get(j),100)){
+//	        			if(blocksIds.get(i).equalsIgnoreCase(diList.get(j))){
 	        				cameFromThePartition = true;
+	        				System.out.println("Veio da partição "+diList.get(j));
 	        				continue for_ext;
 	        			}
 	        		}
 	        		if(!cameFromThePartition){
+	        			System.out.println("Vai para partição "+blocksIds.get(i));
 	        			saveInCache(key, valueOut, i);
 	        		}
 	        	}
@@ -135,6 +138,18 @@ public class Reduce1 extends Reducer<Text, Text, Text, IntWritable>{
     	}
         System.out.println("\n*********-**********-************-*****************-**********");
     }
+    
+    public void printInfo(String key, double partialSupport, int numMapsOfX, int di){
+    	System.out.println("Itemset: "+key);
+    	System.out.println("Suporte parcial: "+partialSupport);
+    	System.out.println("Suport threshold: "+support);
+    	System.out.println("Número de Maps do item (Nx): "+numMapsOfX);
+    	System.out.println("Valor de Di: "+di);
+    	System.out.println("Toal de Maps: "+totalMaps);
+    	System.out.println("Total de Transações: "+totalTransactions);
+    	System.out.println("Mínimo suporte global: "+support*totalTransactions);
+    }
+    
     
     /**
      * 

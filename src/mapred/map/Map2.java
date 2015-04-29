@@ -20,6 +20,7 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.util.ReflectionUtils;
 
+import utils.MrUtils;
 import app.HashTree;
 import app.ItemSup;
 
@@ -70,16 +71,9 @@ public class Map2  extends Mapper<LongWritable, Text, Text, Text>{
     	
     	for(String ids: blocksIds){
     		System.out.println("Verificando se a partição atual será processada: "+splitName+" == "+ids);
-    		if(splitName.length() > 2){
-    			if(ids.contains(splitName.substring(0, splitName.length()-2))){
-    				splitName = ids;
-    				return true;
-    			}
-    		}else{
-    			if(ids.contains(splitName)){
-    				splitName = ids;
-    				return true;
-    			}
+    		if(MrUtils.checkPartitions(ids, splitName, 100)){
+    			splitName = ids;
+				return true;
     		}
     	}
     	
@@ -105,13 +99,18 @@ public class Map2  extends Mapper<LongWritable, Text, Text, Text>{
     		for(ItemSup item: lPartialItemsets){
     			supportLocal = count(value.toString().split("\n"), item.getItemset().toString());
     			
-    			try{
-    				valueOut.set(String.valueOf(item.getSupport())+"#"+supportLocal);
-    				keyOut.set(item.getItemset());
-    						
-    				context.write(keyOut, valueOut);
-    			}catch(IOException | InterruptedException e){
-    				e.printStackTrace();
+    			if(item.getItemset().equals("15")){
+    				System.out.println("Itemset "+item.getItemset()+" supporte do disco "+item.getSupport()+", support do count "+supportLocal);
+    			}
+    			if(supportLocal > 0){
+	    			try{
+	    				valueOut.set(String.valueOf(item.getSupport())+"#"+supportLocal);
+	    				keyOut.set(item.getItemset());
+	    						
+	    				context.write(keyOut, valueOut);
+	    			}catch(IOException | InterruptedException e){
+	    				e.printStackTrace();
+	    			}
     			}
     		}
     	}
@@ -124,23 +123,30 @@ public class Map2  extends Mapper<LongWritable, Text, Text, Text>{
      * @return
      */
     public int count(String[] transactions, String itemset){
-    	int count = 0;
+    	int count;
+    	int occurrenceCount = 0;
     	int i,j;
     	String[] tSplit;
     	String[] itemsetSplit = itemset.split(" ");
+    	boolean checkOccurrence = true;
     	for_trans:
     	for(String transaction: transactions){
     		i = 0;
     		j = 0;
+    		count = 0;
     		tSplit = transaction.split(" ");
+    		if(transaction.contains(" 8 ") || transaction.contains("29"))
+	    		if(itemset.equals("8") || itemset.equals("29")){
+	    			System.out.println("óh");
+	    		}
     		if(tSplit.length >= itemsetSplit.length){
-	    		while(true){
+	    		while(checkOccurrence){
 	    			
 	    			try{
 		    			if(itemsetSplit[i].equals(tSplit[j])){
 							if(++i == itemsetSplit.length || ++j == tSplit.length-1){
 								count++;
-								continue for_trans;
+								break;
 							}
 							
 						}else{
@@ -155,10 +161,13 @@ public class Map2  extends Mapper<LongWritable, Text, Text, Text>{
 	    				System.exit(0);
 	    			}
 	    		}
+	    		if(count == itemsetSplit.length){
+	    			occurrenceCount++;
+	    		}
     		}
     	}
     	
-    	return count;
+    	return occurrenceCount;
     }
     
     /**

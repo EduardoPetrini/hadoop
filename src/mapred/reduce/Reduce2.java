@@ -38,13 +38,19 @@ public class Reduce2 extends Reducer<Text, Text, Text, Text> {
     
     @Override
     public void reduce(Text key, Iterable<Text> values, Context context){
-    	
-    	int count = Integer.parseInt(values.iterator().next().toString().split("#")[0]);
-    	
+    	String[] firstValue = values.iterator().next().toString().split("#");
+    	int count = Integer.parseInt(firstValue[0]);
+    	count += Integer.parseInt(firstValue[1
+    	                                     ]);
     	for (Iterator<Text> it = values.iterator(); it.hasNext();) {
             count += Integer.parseInt(it.next().toString().split("#")[1]);
+            if(key.toString().equals("15")){
+            	System.out.println("Item 15");
+            }
         }
-    	System.out.println("Chave: "+key+" support: "+count);
+    	if(key.toString().equals("15")){
+			System.out.println("Item 15");
+		}
     	if(count >= support){
         	valueOut.set(String.valueOf(count));
             try {

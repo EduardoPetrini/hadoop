@@ -425,4 +425,19 @@ public class MrUtils {
 		Main.support = String.valueOf(Main.supportPercentage * Main.totalTransactionCount);
 		
 	}
+	
+	/**
+	 * 
+	 * @param part1
+	 * @param part2
+	 * @param byteDiference
+	 * @return
+	 */
+	public static boolean checkPartitions(String part1, String part2, long byteDiference){
+		
+		long p1 = Integer.valueOf(part1);
+		long p2 = Integer.valueOf(part2);
+		if((p1 <= (p2+byteDiference)) && (p1 >= (p2-byteDiference))) return true;
+		return false;
+	}
 }

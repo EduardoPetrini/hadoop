@@ -41,7 +41,7 @@ public class Main {
     private Log log = LogFactory.getLog(Main.class);
     public static int countDir;
     private int timeTotal;
-    public static double supportPercentage = 0.001;
+    public static double supportPercentage = 0.009;
     public static String support;
     private int k = 1;
     public static int totalBlockCount;
@@ -84,6 +84,7 @@ public class Main {
         
         job.getConfiguration().set("count", String.valueOf(Main.countDir));
         job.getConfiguration().set("support", support);
+        job.getConfiguration().set("supportPercentage", String.valueOf(supportPercentage));
         job.getConfiguration().set("outputPartialName", outputPartialName);
         job.getConfiguration().set("totalMaps", String.valueOf(totalBlockCount));
         job.getConfiguration().set("totalTransactions", String.valueOf(totalTransactionCount));

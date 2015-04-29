@@ -48,14 +48,14 @@ public class Map1 extends Mapper<LongWritable, Text, Text, Text>{
     
     @Override
     public void setup(Context context){
-    	String sup = context.getConfiguration().get("support");
+    	String sup = context.getConfiguration().get("supportPercentage");
     	totalBlockCount = Integer.parseInt(context.getConfiguration().get("totalMaps"));
     	blocksIds = new ArrayList<String>();
     	for(int i = 1; i <= totalBlockCount; i++){
     		blocksIds.add(context.getConfiguration().get("blockId"+i));
     	}
     	
-    	support = Double.parseDouble(sup)/100;
+    	support = Double.parseDouble(sup);
     	log.info("Iniciando Map 1...");
     	    	
     }
@@ -109,17 +109,22 @@ public class Map1 extends Mapper<LongWritable, Text, Text, Text>{
     	Text valueOut = new Text();
     	Integer v;
     	for(String localKeys: keys){
-    		v = itemSup.get(localKeys);
-    		if(v != null){
-    			keyOut.set(localKeys);
-    			System.out.println("Chave para o reduce 1: "+localKeys);
-    			valueOut.set(String.valueOf(v+":"+splitName));
-    			try {
-					context.write(keyOut, valueOut);
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+    		if(localKeys.split(" ").length > 1){
+	    		v = itemSup.get(localKeys);
+	    		if(v != null){
+	    			keyOut.set(localKeys);
+	//    			System.out.println("Chave para o reduce 1: "+localKeys);
+	    			valueOut.set(String.valueOf(v+":"+splitName));
+	    			if(localKeys.equals("15")){
+	    				System.out.println("Item 15: suporte "+value);
+	    			}
+	    			try {
+						context.write(keyOut, valueOut);
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+	    		}
     		}
     	}
     	
@@ -129,7 +134,7 @@ public class Map1 extends Mapper<LongWritable, Text, Text, Text>{
     	
     	splitName = offset+":"+transactions.size();
     	System.out.println("|************************************************************|");
-    	System.out.println("Split Name: "+splitName);
+    	System.out.println("Split Name: "+splitName+" , support "+support);
     	System.out.println("|************************************************************|");
     	
     }
@@ -314,6 +319,9 @@ public class Map1 extends Mapper<LongWritable, Text, Text, Text>{
 			key.set(item);
 			val.set(String.valueOf(value)+":"+splitName);
 			try {
+				if(item.equals("15")){
+	    			System.out.println("Item 15: suporte "+value);
+	    		}
 				context.write(key , val);
 			} catch (IOException | InterruptedException e) {
 				// TODO Auto-generated catch block
@@ -348,7 +356,10 @@ public class Map1 extends Mapper<LongWritable, Text, Text, Text>{
     	ArrayList<String> rmItems = new ArrayList<String>();
     	for(String item: tempCandidates){
     		value = itemSup.get(item);
-    		if(value == null || value < support){
+    		if(item.equals("15")){
+    			System.out.println("Item 15: suporte "+value);
+    		}
+    		if(value == null || value <= support){
     			rmItems.add(item);
     		}
     	}
