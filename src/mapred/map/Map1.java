@@ -319,9 +319,6 @@ public class Map1 extends Mapper<LongWritable, Text, Text, Text>{
 			key.set(item);
 			val.set(String.valueOf(value)+":"+splitName);
 			try {
-				if(item.equals("15")){
-	    			System.out.println("Item 15: suporte "+value);
-	    		}
 				context.write(key , val);
 			} catch (IOException | InterruptedException e) {
 				// TODO Auto-generated catch block

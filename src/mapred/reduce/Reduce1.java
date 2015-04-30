@@ -91,11 +91,6 @@ public class Reduce1 extends Reducer<Text, Text, Text, IntWritable>{
     	di = di/numMapsOfX;
     	valueOut.set(partialSupport);
     	
-    	if(key.toString().equals("15")){
-			System.out.println("Item 15");
-			printInfo(key.toString(), partialSupport, numMapsOfX, di);
-		}
-    	
     	if(numMapsOfX >= totalMaps){
     		if(partialSupport > (support*totalTransactions)){
 //	    		System.out.println("Item processado em todos os Maps, enviar para a partição global de itens frequentes");
@@ -120,23 +115,22 @@ public class Reduce1 extends Reducer<Text, Text, Text, IntWritable>{
 	        		cameFromThePartition = false;
 	        		for(int j = 0; j < diList.size(); j++){
 	        			if(MrUtils.checkPartitions(blocksIds.get(i),diList.get(j),100)){
-//	        			if(blocksIds.get(i).equalsIgnoreCase(diList.get(j))){
 	        				cameFromThePartition = true;
-	        				System.out.println("Veio da partição "+diList.get(j));
+//	        				System.out.println("Veio da partição "+diList.get(j));
 	        				continue for_ext;
 	        			}
 	        		}
 	        		if(!cameFromThePartition){
-	        			System.out.println("Vai para partição "+blocksIds.get(i));
+//	        			System.out.println("Vai para partição "+blocksIds.get(i));
 	        			saveInCache(key, valueOut, i);
 	        		}
 	        	}
 	        
 	        }else{
-	        	System.out.println("IEM NÃO FREQUENTE---|");
+//	        	System.out.println("IEM NÃO FREQUENTE---|");
 	        }
     	}
-        System.out.println("\n*********-**********-************-*****************-**********");
+//        System.out.println("\n*********-**********-************-*****************-**********");
     }
     
     public void printInfo(String key, double partialSupport, int numMapsOfX, int di){

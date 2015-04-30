@@ -99,9 +99,6 @@ public class Map2  extends Mapper<LongWritable, Text, Text, Text>{
     		for(ItemSup item: lPartialItemsets){
     			supportLocal = count(value.toString().split("\n"), item.getItemset().toString());
     			
-    			if(item.getItemset().equals("15")){
-    				System.out.println("Itemset "+item.getItemset()+" supporte do disco "+item.getSupport()+", support do count "+supportLocal);
-    			}
     			if(supportLocal > 0){
 	    			try{
 	    				valueOut.set(String.valueOf(item.getSupport())+"#"+supportLocal);
@@ -135,10 +132,7 @@ public class Map2  extends Mapper<LongWritable, Text, Text, Text>{
     		j = 0;
     		count = 0;
     		tSplit = transaction.split(" ");
-    		if(transaction.contains(" 8 ") || transaction.contains("29"))
-	    		if(itemset.equals("8") || itemset.equals("29")){
-	    			System.out.println("óh");
-	    		}
+    		
     		if(tSplit.length >= itemsetSplit.length){
 	    		while(checkOccurrence){
 	    			
@@ -150,7 +144,7 @@ public class Map2  extends Mapper<LongWritable, Text, Text, Text>{
 							}
 							
 						}else{
-							if(++j >= tSplit.length-1){
+							if(++j >= tSplit.length){
 								continue for_trans;
 							}
 						}
