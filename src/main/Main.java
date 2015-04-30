@@ -46,7 +46,7 @@ public class Main {
     public static String support;
     int k = 1;
     public static String user = "/user/eduardo/";
-    public static String inputEntry = "input/T2.5I2D10N15000K.ok";
+    public static String inputEntry = "input//T2.5I4D10N15K.ok";
     public static String clusterUrl = "hdfs://master/";
     public String fileCached = user+"outputCached/outputMR";
     public static long totalTransactionCount;

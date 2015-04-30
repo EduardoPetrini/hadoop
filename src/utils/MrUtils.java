@@ -263,7 +263,7 @@ public class MrUtils {
 			while (br.readLine() != null){
 				Main.totalTransactionCount++;
 			}
-			Main.support = String.valueOf((Main.totalTransactionCount*Main.supportPercentage)/100);
+			Main.support = String.valueOf(Main.totalTransactionCount*Main.supportPercentage);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

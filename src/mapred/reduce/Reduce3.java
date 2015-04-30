@@ -28,11 +28,13 @@ public class Reduce3 extends Reducer<Text, IntWritable, Text, IntWritable> {
     Log log = LogFactory.getLog(Reduce3.class);
     SequenceFile.Writer writer;
     String count;
+    double support;
     int k;
     
     @Override
     public void setup(Context context) throws IOException{
         count = context.getConfiguration().get("count");
+        support = Double.parseDouble(context.getConfiguration().get("support"));
         log.info("Iniciando o REDUCE 3. Count dir: "+count);
         String kStr = context.getConfiguration().get("k");
         k = Integer.parseInt(kStr);
@@ -40,6 +42,8 @@ public class Reduce3 extends Reducer<Text, IntWritable, Text, IntWritable> {
         
         writer = SequenceFile.createWriter(context.getConfiguration(), SequenceFile.Writer.file(new Path(fileCachedPath)),
                SequenceFile.Writer.keyClass(Text.class), SequenceFile.Writer.valueClass(IntWritable.class));
+        
+        System.out.println("Support total: "+support);
     }
     
     @Override
@@ -50,16 +54,18 @@ public class Reduce3 extends Reducer<Text, IntWritable, Text, IntWritable> {
             count += it.next().get();
         }
     	
-        try {
-        	/*Divide as saídas pelo k. k e k+1 para a saída default*/
-        	if(key.toString().split(" ").length < (k+2)){
-        		context.write(key, new IntWritable(count));
-        	}else{
-        		save(key, new IntWritable(count));
-        	}
-        } catch (IOException | InterruptedException ex) {
-            Logger.getLogger(Reduce3.class.getName()).log(Level.SEVERE, null, ex);
-        }
+    	if(count >= support){
+	        try {
+	        	/*Divide as saídas pelo k. k e k+1 para a saída default*/
+	        	if(key.toString().split(" ").length < (k+2)){
+	        		context.write(key, new IntWritable(count));
+	        	}else{
+	        		save(key, new IntWritable(count));
+	        	}
+	        } catch (IOException | InterruptedException ex) {
+	            Logger.getLogger(Reduce3.class.getName()).log(Level.SEVERE, null, ex);
+	        }
+    	}
     }
     
     /**

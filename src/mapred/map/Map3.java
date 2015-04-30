@@ -109,7 +109,7 @@ public class Map3  extends Mapper<LongWritable, Text, Text, IntWritable>{
         	}
         }
         
-        log.info("Inicia o loop dinamico");
+        log.info("Inicia o loop dinâmico");
         
         int cSetSize = itemsetAux.size();
         while( cSetSize <= ct){
@@ -238,6 +238,73 @@ public class Map3  extends Mapper<LongWritable, Text, Text, IntWritable>{
 			}
 		}
     }
+    
+    /**
+     * subset do imrapriori
+     * @param transaction
+     * @param pt
+     * @param i
+     * @param k
+     * @param itemset
+     * @param itemsetIndex
+     */
+    private void subSet(String[] transaction, PrefixTree pt, int i,	int k, String[] itemset, int itemsetIndex) {
+    	if(i >= transaction.length){
+			return;
+		}
+		int index = -1;
+		
+		try{
+			index = pt.getPrefix().indexOf(transaction[i]);
+		}catch(Exception e){
+			e.printStackTrace();
+			System.out.println("Prefix: "+pt.getPrefix()+" item: "+transaction[i]);
+			System.out.println("Error");
+		}
+		
+		if(index == -1){
+			return;
+		}else{
+			itemset[itemsetIndex] = transaction[i];
+			/*if(i == transaction.length-1 && i == k-1){
+				StringBuilder sb = new StringBuilder();
+				System.out.println("Achou1 "+Arrays.asList(itemset));
+				for(String s: itemset){
+					if(s != null)
+						sb.append(s).append(" ");
+				}
+				
+				itemset[itemsetIndex] = "";
+				addToHashItemSup(sb.toString().trim());
+				return;
+			}else{*/
+				i++;
+				if(pt.getLevel() == k-1){
+					StringBuilder sb = new StringBuilder();
+//					System.out.println("Achou2 "+Arrays.asList(itemset));
+					for(String s: itemset){
+						if(s != null)
+							sb.append(s).append(" ");
+					}
+					addToHashItemSup(sb.toString().trim());
+					itemset[itemsetIndex] = "";
+					return;
+				}
+				
+				if(pt.getPrefixTree().isEmpty() || pt.getPrefixTree().size() <= index || pt.getPrefixTree().get(index) == null){
+					itemset[itemsetIndex] = "";
+					return;
+				}else{
+					itemsetIndex++;
+					while(i < transaction.length){
+						subSet(transaction, pt.getPrefixTree().get(index),i, k, itemset, itemsetIndex);
+						i++;
+					}
+				}
+				
+//			}
+		}
+	}
     
     @Override
     public void map(LongWritable key, Text value, Context context){
