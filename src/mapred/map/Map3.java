@@ -9,6 +9,8 @@ package mapred.map;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -71,12 +73,14 @@ public class Map3  extends Mapper<LongWritable, Text, Text, IntWritable>{
         mink = k;
         
         String itemsetC;
-        prefixTree.printStrArray(fileCached);
+//        prefixTree.printStrArray(fileCached);
         
         if(fileCachedRead != null && fileCached.size() > 0){
         	if(fileCached.get(fileCached.size()-1).split(" ").length < k-1){
 	        	log.info("Itemsets é menor do que k");
 	        	prefixTree.printStrArray(fileCached);
+	        	log.info("Itemsets é menor do que k");
+	        	System.out.println("Saíndo da aplicação!");
 	        	System.exit(0);
         	}
         }else{
@@ -105,7 +109,7 @@ public class Map3  extends Mapper<LongWritable, Text, Text, IntWritable>{
         		if(isSamePrefix(itemA, itemB, i, j)){
         			itemsetC = combine(itemA, itemB);
         			itemsetAux.add(itemsetC);
-        			//System.out.println(itemsetC+" no primeiro passo");
+//        			System.out.println(itemsetC+" no primeiro passo");
         			//Building HashTree
         			prefixTree.add(prefixTree, itemsetC.split(" "), 0);
         		}
@@ -119,6 +123,7 @@ public class Map3  extends Mapper<LongWritable, Text, Text, IntWritable>{
         	//System.out.println("Cset size "+cSetSize);
         	fileCached.clear();
         	if(itemsetAux.isEmpty()){
+        		System.out.println("Opa, break com k = "+k+" reduzido para k = "+(k-1));
         		k--;
         		break;
         	}
@@ -131,13 +136,14 @@ public class Map3  extends Mapper<LongWritable, Text, Text, IntWritable>{
 	        		if(isSamePrefix(itemA, itemB, i, j)){
 	        			itemsetC = combine(itemA, itemB);
 	        			fileCached.add(itemsetC);
-	        			//System.out.println(itemsetC+" no primeiro passo");
+//	        			System.out.println(itemsetC+" no primeiro passo");
 	        			//Building HashTree
 	        			prefixTree.add(prefixTree, itemsetC.split(" "), 0);
 	        		}
 	        	}
 	        }
 	        if(fileCached.isEmpty()){
+	        	System.out.println("Opa, break com k = "+k+" reduzido para k = "+(k-1));
 	        	k--;
         		break;
         	}
@@ -150,7 +156,7 @@ public class Map3  extends Mapper<LongWritable, Text, Text, IntWritable>{
 	        		if(isSamePrefix(itemA, itemB, i, j)){
 	        			itemsetC = combine(itemA, itemB);
 	        			itemsetAux.add(itemsetC);
-	        			//System.out.println(itemsetC+" no segundp passo");
+//	        			System.out.println(itemsetC+" no segundp passo");
 	        			//Building HashTree
 	        			prefixTree.add(prefixTree, itemsetC.split(" "), 0);
 	        		}
@@ -159,8 +165,8 @@ public class Map3  extends Mapper<LongWritable, Text, Text, IntWritable>{
 	        cSetSize += itemsetAux.size();
         }
        
-        prefixTree.printStrArray(itemsetAux);
-        prefixTree.printPrefixTree(prefixTree);
+//        prefixTree.printStrArray(itemsetAux);
+//        prefixTree.printPrefixTree(prefixTree);
         //System.out.println("Fim do setup, inicia função map para o k = "+k);
         maxk = k;
         System.out.println("MinK "+mink+" maxK "+maxk);
@@ -295,6 +301,13 @@ public class Map3  extends Mapper<LongWritable, Text, Text, IntWritable>{
 				//System.out.println("Add Key: "+key.toString());
 	            fileCached.add(key.toString());
 	        }
+			long begin = System.currentTimeMillis();
+			Collections.sort(fileCached, NUMERIC_ORDER);
+			long end = System.currentTimeMillis();
+			double total = end-begin;
+			if((total/1000) > 1){
+				System.out.println("Tempo gasto para ordenação: "+total+" milis ou "+total/1000+" segundos...");
+			}
 		} catch (IllegalArgumentException | IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -302,4 +315,28 @@ public class Map3  extends Mapper<LongWritable, Text, Text, IntWritable>{
     	
     	return fileCached;
     }
+    
+    public static Comparator<Object> NUMERIC_ORDER = new Comparator<Object>() {
+    	public int compare(Object obj1, Object obj2){
+    		
+    		String[] o1 = ((String)obj1).trim().split(" ");
+    		String[] o2 = ((String)obj2).trim().split(" ");
+    		int a;
+    		int b;
+    		for(int i = 0; i < o1.length; i++){
+    			a = Integer.parseInt(o1[i]);
+    			b = Integer.parseInt(o2[i]);
+    			
+    			if(a < b){
+    				return -1;
+    			}else if(a > b){
+    				return 1;
+    			}else{
+    				continue;
+    			}
+    		}
+    		
+    		return 0;
+    	}
+	};
 }

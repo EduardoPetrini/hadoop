@@ -47,7 +47,6 @@ public class Reduce2 extends Reducer<Text, IntWritable, Text, IntWritable> {
     @Override
     public void reduce(Text key, Iterable<IntWritable> values, Context context){
     	Text keyOut = new Text(key.toString().replaceAll("\\[+|\\]+|,+", ""));
-    	log.info("Key at Reduce 2: "+keyOut.toString());
     	int count = 0;
     	for (Iterator<IntWritable> it = values.iterator(); it.hasNext();) {
             count += it.next().get();

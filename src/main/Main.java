@@ -41,7 +41,7 @@ public class Main {
     public static String support;
     int k = 1;
     public static String user = "/user/eduardo/";
-    public static String inputEntry = "input/input-file";
+    public static String inputEntry = "input/T2.5I4D10N15K.ok";
     public static String clusterUrl = "hdfs://master/";
     public static 	String fileCached = user+"outputCached/outputMR";
     public static long totalTransactionCount;
@@ -214,7 +214,6 @@ public class Main {
         job.getConfiguration().set("fileCachedRead", fileCached+(Main.countDir-1));
         job.getConfiguration().set("fileCachedWrited", fileCached+(Main.countDir));
         job.getConfiguration().set("earlierTime", String.valueOf(earlierTime));
-         this.k += 2;
         System.out.println("Job 3 - CountDir: "+Main.countDir);
         
         try {
