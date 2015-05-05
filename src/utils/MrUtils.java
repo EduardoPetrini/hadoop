@@ -257,6 +257,7 @@ public class MrUtils {
         try {
         	
 			FileSystem fs = inputPath.getFileSystem(c);
+			
 						
 			BufferedReader br=new BufferedReader(new InputStreamReader(fs.open(inputPath)));
 			Main.totalTransactionCount = 0;
@@ -264,6 +265,16 @@ public class MrUtils {
 				Main.totalTransactionCount++;
 			}
 			Main.support = String.valueOf(Main.totalTransactionCount*Main.supportPercentage);
+			
+//			Path outputCached = new Path(Main.user+"outputCached/");
+//			if(!fs.exists(outputCached)){
+//				fs.create(outputCached);
+//			}else{
+//				for(FileStatus fss: fs.listStatus(outputCached)){
+//					fs.delete(fss.getPath(), true);
+//				}
+//			}
+			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

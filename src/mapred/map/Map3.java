@@ -35,6 +35,7 @@ public class Map3  extends Mapper<LongWritable, Text, Text, IntWritable>{
     ArrayList<String> itemsetAux;
     PrefixTree prefixTree;
     int k;
+    int mink, maxk = 0;
     /**
      * Le o arquivo invertido para a memória.
      * @param context
@@ -67,6 +68,8 @@ public class Map3  extends Mapper<LongWritable, Text, Text, IntWritable>{
         itemsetAux = new ArrayList<String>();
         
         log.info("K is "+k);
+        mink = k;
+        
         String itemsetC;
         prefixTree.printStrArray(fileCached);
         
@@ -116,8 +119,10 @@ public class Map3  extends Mapper<LongWritable, Text, Text, IntWritable>{
         	//System.out.println("Cset size "+cSetSize);
         	fileCached.clear();
         	if(itemsetAux.isEmpty()){
+        		k--;
         		break;
         	}
+        	
         	k++;
 	        for (int i = 0; i < itemsetAux.size(); i++){
 	        	for (int j = i+1; j < itemsetAux.size(); j++){
@@ -133,6 +138,7 @@ public class Map3  extends Mapper<LongWritable, Text, Text, IntWritable>{
 	        	}
 	        }
 	        if(fileCached.isEmpty()){
+	        	k--;
         		break;
         	}
 	        k++;
@@ -156,6 +162,8 @@ public class Map3  extends Mapper<LongWritable, Text, Text, IntWritable>{
         prefixTree.printStrArray(itemsetAux);
         prefixTree.printPrefixTree(prefixTree);
         //System.out.println("Fim do setup, inicia função map para o k = "+k);
+        maxk = k;
+        System.out.println("MinK "+mink+" maxK "+maxk);
     }
     
     /**
@@ -199,110 +207,57 @@ public class Map3  extends Mapper<LongWritable, Text, Text, IntWritable>{
      * @param transaction
      * @param pt
      * @param i
-     * @param sb
-     * @param context
-     */
-    public void subset(String[] transaction, PrefixTree pt, int i, StringBuilder sb, Context context){
-    	if(i >= transaction.length){
-			return;
-		}
-		int index = pt.getPrefix().indexOf(transaction[i]);
-		
-		if(index == -1){
-//			System.out.println("Não achou :( "+sb.toString());
-			return;
-		}else{
-			if(i == transaction.length-1){
-				sb.append(transaction[i]);
-//				System.out.println("Achou :) "+sb.toString());
-				
-				//Manda pro reduce
-				try {
-					System.out.print("\nITEMSET: ");
-					System.out.println(sb.toString());
-					context.write(new Text(sb.toString()), new IntWritable(1));
-				} catch (IOException | InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				return;
-			}else{
-				sb.append(transaction[i]).append(" ");
-				i++;
-				if(pt.getPrefixTree().isEmpty()){
-//					System.out.println("Não achou :'( "+sb.toString());
-					return;
-				}else{
-					subset(transaction, pt.getPrefixTree().get(index), i, sb ,context);
-				}
-			}
-		}
-    }
-    
-    /**
-     * subset do imrapriori
-     * @param transaction
-     * @param pt
-     * @param i
-     * @param k
      * @param itemset
      * @param itemsetIndex
+     * @param context
      */
-    private void subSet(String[] transaction, PrefixTree pt, int i,	int k, String[] itemset, int itemsetIndex) {
+    private void subSet(String[] transaction, PrefixTree pt, int i, String[] itemset, int itemsetIndex, Context context) {
+    	
     	if(i >= transaction.length){
 			return;
 		}
-		int index = -1;
-		
-		try{
-			index = pt.getPrefix().indexOf(transaction[i]);
-		}catch(Exception e){
-			e.printStackTrace();
-			System.out.println("Prefix: "+pt.getPrefix()+" item: "+transaction[i]);
-			System.out.println("Error");
+
+		if(pt.getLevel() > maxk){
+			return;
 		}
+
+		int index =  pt.getPrefix().indexOf(transaction[i]);
 		
 		if(index == -1){
 			return;
 		}else{
 			itemset[itemsetIndex] = transaction[i];
-			/*if(i == transaction.length-1 && i == k-1){
+			i++;
+			if(pt.getLevel() >= mink-1){
 				StringBuilder sb = new StringBuilder();
-				System.out.println("Achou1 "+Arrays.asList(itemset));
+
 				for(String s: itemset){
-					if(s != null)
+					if(s != null && !s.isEmpty())
 						sb.append(s).append(" ");
 				}
 				
+				//envia para o reduce
+				try{
+					context.write(new Text(sb.toString().trim()+":"+maxk), new IntWritable(1));
+				}catch(IOException | InterruptedException e){
+					e.printStackTrace();
+					System.exit(1);
+				}
+				
+//				itemset[itemsetIndex] = "";
+//				return;
+			}
+			
+			if(pt.getPrefixTree().isEmpty() || pt.getPrefixTree().size() <= index || pt.getPrefixTree().get(index) == null){
 				itemset[itemsetIndex] = "";
-				addToHashItemSup(sb.toString().trim());
 				return;
-			}else{*/
-				i++;
-				if(pt.getLevel() == k-1){
-					StringBuilder sb = new StringBuilder();
-//					System.out.println("Achou2 "+Arrays.asList(itemset));
-					for(String s: itemset){
-						if(s != null)
-							sb.append(s).append(" ");
-					}
-					addToHashItemSup(sb.toString().trim());
-					itemset[itemsetIndex] = "";
-					return;
+			}else{
+				itemsetIndex++;
+				while(i < transaction.length){
+					subSet(transaction, pt.getPrefixTree().get(index),i, itemset, itemsetIndex, context);
+					i++;
 				}
-				
-				if(pt.getPrefixTree().isEmpty() || pt.getPrefixTree().size() <= index || pt.getPrefixTree().get(index) == null){
-					itemset[itemsetIndex] = "";
-					return;
-				}else{
-					itemsetIndex++;
-					while(i < transaction.length){
-						subSet(transaction, pt.getPrefixTree().get(index),i, k, itemset, itemsetIndex);
-						i++;
-					}
-				}
-				
-//			}
+			}
 		}
 	}
     
@@ -312,10 +267,14 @@ public class Map3  extends Mapper<LongWritable, Text, Text, IntWritable>{
 		//Aplica a função subset e envia o itemset para o reduce
     	StringBuilder sb = new StringBuilder();
     	String[] transaction = value.toString().split(" ");
+    	String[] itemset = new String[maxk];
 //    	System.out.println("In transaction "+value.toString());
-    	if(transaction.length >= k){
+    	if(transaction.length >= mink){
 //    		System.out.println("Subset...");
-    		subset(transaction, prefixTree, 0, sb , context);
+    		for(int i = 0; i < transaction.length; i++){
+//    			subset(transaction, prefixTree, 0, sb , context);
+    			subSet(transaction, prefixTree, i, itemset, 0, context);
+    		}
     	}
     }
     

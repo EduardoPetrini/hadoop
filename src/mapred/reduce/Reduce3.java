@@ -50,6 +50,9 @@ public class Reduce3 extends Reducer<Text, IntWritable, Text, IntWritable> {
     public void reduce(Text key, Iterable<IntWritable> values, Context context){
         
     	int count = 0;
+    	String[] keySplt = key.toString().split(":");
+    	int maxk = Integer.parseInt(keySplt[1]);
+    	
     	for (Iterator<IntWritable> it = values.iterator(); it.hasNext();) {
             count += it.next().get();
         }
@@ -57,7 +60,8 @@ public class Reduce3 extends Reducer<Text, IntWritable, Text, IntWritable> {
     	if(count >= support){
 	        try {
 	        	/*Divide as saídas pelo k. k e k+1 para a saída default*/
-	        	if(key.toString().split(" ").length < (k+2)){
+	        	key.set(keySplt[0]);
+	        	if(keySplt[0].split(" ").length < maxk){
 	        		context.write(key, new IntWritable(count));
 	        	}else{
 	        		save(key, new IntWritable(count));

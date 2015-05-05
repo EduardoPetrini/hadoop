@@ -19,11 +19,7 @@ import mapred.reduce.Reduce1;
 import mapred.reduce.Reduce2;
 import mapred.reduce.Reduce3;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
@@ -39,16 +35,15 @@ import utils.MrUtils;
  */
 public class Main {
 
-    private Log log = LogFactory.getLog(Main.class);
     public static int countDir;
     private int timeTotal;
     public static double supportPercentage = 0.001;
     public static String support;
     int k = 1;
     public static String user = "/user/eduardo/";
-    public static String inputEntry = "input//T2.5I4D10N15K.ok";
+    public static String inputEntry = "input/input-file";
     public static String clusterUrl = "hdfs://master/";
-    public String fileCached = user+"outputCached/outputMR";
+    public static 	String fileCached = user+"outputCached/outputMR";
     public static long totalTransactionCount;
     double earlierTime;
     /*
@@ -255,8 +250,8 @@ public class Main {
     
     public static void main(String[] args) throws IOException {
         Main m = new Main();
-        MrUtils.initialConfig();
         MrUtils.delOutDirs(user);
+        MrUtils.initialConfig();
         
         Main.countDir++;
         MrUtils.printConfigs(m);
