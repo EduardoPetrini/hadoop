@@ -207,7 +207,6 @@ public class Main {
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(IntWritable.class);
         
-        k++;
         job.getConfiguration().set("count", String.valueOf(Main.countDir));
         job.getConfiguration().set("support", String.valueOf(support));
         job.getConfiguration().set("k", String.valueOf(k));
@@ -266,7 +265,9 @@ public class Main {
         while(MrUtils.checkOutputMR()){
             System.out.println("LOOP "+ ++l);
             Main.countDir++;
+            m.k++;
             m.job3();
+            m.k = MrUtils.getK(m.k);
         }
 
         /*Remover os arquivos invertidos anteriores*/

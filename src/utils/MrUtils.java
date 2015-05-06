@@ -17,6 +17,10 @@ import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.SequenceFile;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.util.ReflectionUtils;
 
 public class MrUtils {
 	private Log log = LogFactory.getLog(MrUtils.class);
@@ -412,4 +416,36 @@ public class MrUtils {
     	
     	System.out.println("\n******************************************************\n");
     }
+    
+    public static int getK(int k) {
+		String inputPathUri = Main.fileCached+(Main.countDir);
+    	
+    	Path inputPath = new Path(inputPathUri);
+    	Configuration c = new Configuration();
+        c.set("fs.defaultFS", Main.clusterUrl);
+        
+        try {
+        	
+			FileSystem fs = inputPath.getFileSystem(c);
+			SequenceFile.Reader reader = new SequenceFile.Reader(c, SequenceFile.Reader.file(inputPath));
+				
+			Text key = (Text) ReflectionUtils.newInstance(reader.getKeyClass(), c);
+			IntWritable value = (IntWritable) ReflectionUtils.newInstance(reader.getValueClass(), c);
+			int kCount = 0;
+			while (reader.next(key, value)) {
+				System.out.println("Key: "+key.toString());
+	            kCount = key.toString().split(" ").length;
+	            break;
+	        }
+		
+			if(kCount != k+2){
+				return -1;
+			}
+			return kCount;
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return 0;
+	}
 }
