@@ -51,7 +51,6 @@ public class Map3  extends Mapper<LongWritable, Text, Text, IntWritable>{
         k = Integer.parseInt(kStr);
         double earlierTime = Double.parseDouble(context.getConfiguration().get("earlierTime"));
         
-        
         log.info("Iniciando map 3 count = "+count);
         log.info("Arquivo Cached = "+fileCachedRead);
         
@@ -271,14 +270,12 @@ public class Map3  extends Mapper<LongWritable, Text, Text, IntWritable>{
     public void map(LongWritable key, Text value, Context context){
     	
 		//Aplica a função subset e envia o itemset para o reduce
-    	StringBuilder sb = new StringBuilder();
     	String[] transaction = value.toString().split(" ");
     	String[] itemset = new String[maxk];
-//    	System.out.println("In transaction "+value.toString());
+
     	if(transaction.length >= mink){
-//    		System.out.println("Subset...");
+
     		for(int i = 0; i < transaction.length; i++){
-//    			subset(transaction, prefixTree, 0, sb , context);
     			subSet(transaction, prefixTree, i, itemset, 0, context);
     		}
     	}
