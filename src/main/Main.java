@@ -262,7 +262,7 @@ public class Main {
         MrUtils.checkOutputMR();
         
         int l = 0;
-        while(MrUtils.checkOutputMR()){
+        while(MrUtils.checkOutputMR() && m.k != -1){
             System.out.println("LOOP "+ ++l);
             Main.countDir++;
             m.k++;

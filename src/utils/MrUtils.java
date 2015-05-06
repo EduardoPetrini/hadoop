@@ -446,6 +446,6 @@ public class MrUtils {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		return 0;
+		return -1;
 	}
 }
