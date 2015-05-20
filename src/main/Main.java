@@ -37,11 +37,11 @@ public class Main {
 
     public static int countDir;
     private int timeTotal;
-    public static double supportPercentage = 0.001;
+    public static double supportPercentage = 0.005;
     public static String support;
     int k = 1;
     public static String user = "/user/eduardo/";
-    public static String inputEntry = "input/T2.5I4D10N15K.ok";
+    public static String inputEntry = "input/T10I4D10N1000K.100.ok";
     public static String clusterUrl = "hdfs://master/";
     public static 	String fileCached = user+"outputCached/outputMR";
     public static long totalTransactionCount;
@@ -263,6 +263,7 @@ public class Main {
         
         int l = 0;
         while(MrUtils.checkOutputMR() && m.k != -1){
+        	System.out.println("Map 3 com k = "+m.k);
             System.out.println("LOOP "+ ++l);
             Main.countDir++;
             m.k++;

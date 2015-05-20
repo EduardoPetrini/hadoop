@@ -162,6 +162,7 @@ public class Map3  extends Mapper<LongWritable, Text, Text, IntWritable>{
 	        	}
 	        }
 	        cSetSize += itemsetAux.size();
+	        System.out.println("No loop dinamico, cSetSize: "+cSetSize+", ct: "+ct);
         }
        
 //        prefixTree.printStrArray(itemsetAux);

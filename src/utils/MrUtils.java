@@ -438,9 +438,6 @@ public class MrUtils {
 	            break;
 	        }
 		
-			if(kCount != k+2){
-				return -1;
-			}
 			return kCount;
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
