@@ -64,11 +64,12 @@ public class Map1 extends Mapper<LongWritable, Text, Text, Text>{
     	//Recebe todo o bloco de transações de uma vez
     	//Aplica-se o algoritmo Apriori
     	System.out.println("\n*****************/////// KEY: "+key);
-    	//buildTransactionsArraySet
+
     	candidates = new ArrayList<String>();
     	prefixTree = new PrefixTree(0);
     	transactions = new ArrayList<String[]>();
-    	buildTransactionsArraySet(value.toString());
+    	buildTransactionsArraySet(value.toString());//Erro OutOfMemoryError com arquivos grandes
+    	value.clear();
     	System.out.println("Procentagem do suporte: "+support+"%");
     	support = Math.ceil(support * transactions.size());
     	System.out.println("Valor o suporte: "+support);
@@ -115,9 +116,7 @@ public class Map1 extends Mapper<LongWritable, Text, Text, Text>{
 	    			keyOut.set(localKeys);
 	//    			System.out.println("Chave para o reduce 1: "+localKeys);
 	    			valueOut.set(String.valueOf(v+":"+splitName));
-	    			if(localKeys.equals("15")){
-	    				System.out.println("Item 15: suporte "+value);
-	    			}
+	    			
 	    			try {
 						context.write(keyOut, valueOut);
 					} catch (InterruptedException e) {
@@ -278,7 +277,7 @@ public class Map1 extends Mapper<LongWritable, Text, Text, Text>{
     		
     	}
     	candidates.clear();
-    	printCadidates(tempCandidates, n);
+//    	printCadidates(tempCandidates, n);
     	candidates = new ArrayList<String>(tempCandidates);
     	System.out.println("Quantidade de candidatos de tamanho "+n+": "+candidates.size());
     	
@@ -329,9 +328,26 @@ public class Map1 extends Mapper<LongWritable, Text, Text, Text>{
     
     public void buildTransactionsArraySet(String block){
     	String[] transaction = block.split("\n");
-    	
+    	block = null;
+    	System.out.println("Quantidade de transações "+transaction.length);
     	for(String tr : transaction){
-    		transactions.add(tr.split(" "));    		
+    		try{
+    			transactions.add(tr.split(" "));
+    			tr = null;
+    		}catch(OutOfMemoryError e){
+    			e.printStackTrace();
+    			System.out.print("Estou de memória! Número de elementos do vetor "+transactions.size()+" tamanho em bytes ");
+    			long bytes = 0;
+    			for(String[] t: transactions){
+    				
+    				for(String i: t){
+    					bytes += i.length();
+    				}
+    			}
+    			bytes = bytes*2;
+    			System.out.println(bytes);
+    			System.exit(0);
+    		}
     	}
     }
     
