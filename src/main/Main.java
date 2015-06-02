@@ -27,6 +27,7 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
+import utils.AprioriUtils;
 import utils.MrUtils;
 
 /**
@@ -39,13 +40,14 @@ public class Main {
     private int timeTotal;
     public static double supportPercentage = 0.005;
     public static String support;
-    int k = 1;
+    public static int k = 1;
     public static String user = "/user/eduardo/";
     public static String inputEntry = "input/T10I4D10N1000K.100.ok";
     public static String clusterUrl = "hdfs://master/";
     public static 	String fileCached = user+"outputCached/outputMR";
     public static long totalTransactionCount;
-    double earlierTime;
+    public static double earlierTime;
+    public static String file2kItemset = "";
     /*
     Valor do suporte para 1.000.000
     7500
@@ -79,7 +81,7 @@ public class Main {
         job.setJarByClass(Main.class);
         
         job.setMapperClass(Map1.class);
-//        job.setCombinerClass(Combiner1.class);
+        job.setCombinerClass(Reduce1.class);
         job.setReducerClass(Reduce1.class);
         
         job.setOutputKeyClass(Text.class);
@@ -256,6 +258,8 @@ public class Main {
         
         m.job1();
         MrUtils.checkOutputMR();
+        Main.file2kItemset = Main.user+"output"+Main.countDir+"/2kitemset";
+//        AprioriUtils.generate2ItemsetCandidates();
         
         Main.countDir++;
         m.job2();
@@ -263,12 +267,13 @@ public class Main {
         
         int l = 0;
         while(MrUtils.checkOutputMR() && m.k != -1){
-        	System.out.println("Map 3 com k = "+m.k);
+        	System.out.println("Map 3 com k = "+Main.k);
             System.out.println("LOOP "+ ++l);
+            //Gerate dynamic itemsets
             Main.countDir++;
-            m.k++;
+            Main.k++;
             m.job3();
-            m.k = MrUtils.getK(m.k);
+            Main.k = MrUtils.getK();
         }
 
         /*Remover os arquivos invertidos anteriores*/

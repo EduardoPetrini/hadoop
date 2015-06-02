@@ -1,9 +1,12 @@
 package utils;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -417,7 +420,7 @@ public class MrUtils {
     	System.out.println("\n******************************************************\n");
     }
     
-    public static int getK(int k) {
+    public static int getK() {
 		String inputPathUri = Main.fileCached+(Main.countDir);
     	
     	Path inputPath = new Path(inputPathUri);
@@ -444,5 +447,152 @@ public class MrUtils {
 			e.printStackTrace();
 		}
 		return -1;
+	}
+    
+    /**
+     * 
+     * @param fileName
+     * @return ArrayList<String>
+     */
+    public static ArrayList<String> readFromHDFS(String fileName){
+    	Path inputPath = new Path(fileName);
+    	Configuration c = new Configuration();
+        c.set("fs.defaultFS", Main.clusterUrl);
+        ArrayList<String> data = new ArrayList<String>();
+        
+        try {
+        	
+			FileSystem fs = inputPath.getFileSystem(c);
+			BufferedReader br=new BufferedReader(new InputStreamReader(fs.open(inputPath)));
+			String line;
+			while ((line = br.readLine()) != null){
+				data.add(line);
+				
+			}
+			br.close();
+        }catch(IOException e){
+        	e.printStackTrace();
+        }
+        
+        return data;
+    }
+    
+    /**
+     * 
+     * @param data
+     * @param fileName
+     */
+    public static void saveTextInHDFS(ArrayList<String> data, String fileName){
+    	Path inputPath = new Path(fileName);
+    	Configuration c = new Configuration();
+        c.set("fs.defaultFS", Main.clusterUrl);
+        
+        	try {
+			FileSystem fs = inputPath.getFileSystem(c);
+			if(fs.exists(inputPath)){
+				fs.delete(inputPath, true);
+			}
+			
+			BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fs.create(inputPath, true)));
+			
+			for(String d: data){
+				bw.write(d+"\n");
+			}
+			bw.close();
+        }catch(IOException e){
+        	e.printStackTrace();
+        }
+    }
+
+    /**
+     * 
+     * @param outputDir
+     * @return
+     */
+	public static String getOutputFile(String outputDir) {
+		// TODO Auto-generated method stub
+		System.out.println("Encontrado o arquivo de saída dentro de "+outputDir);
+		String outputFile = null;
+		
+		Path p = new Path(outputDir);
+        Path aux;
+        Configuration c = new Configuration();
+        c.set("fs.defaultFS", Main.clusterUrl);
+        try{
+            FileSystem fs = FileSystem.get(c);
+
+            if(fs.isDirectory(p)){
+
+                 FileStatus[] ff = fs.listStatus(p);
+                 System.out.println("Há "+ff.length+" arquivos dentro de "+outputDir);
+                 for(FileStatus f: ff){
+                     System.out.println(f.getPath().getName());
+                     aux = f.getPath();
+                     if(aux.getName().startsWith("part")){
+                    	 outputFile = aux.getParent()+"/"+aux.getName();
+                    	 System.out.println("Encontrado arquivo de saída "+outputFile);
+                    	 break;
+                     }
+                 }
+
+            }else{
+                System.out.println("Não é um diretório: "+outputDir);
+            }
+        }catch(IOException e){
+        	e.printStackTrace();
+        }
+        return outputFile;
+	}
+
+	/**
+	 * 
+	 * @param data
+	 * @param fileOut
+	 */
+	public static void saveSequenceInHDFS(ArrayList<String> data,
+			String fileOut) {
+		Path p = new Path(fileOut);
+        Configuration c = new Configuration();
+        c.set("fs.defaultFS", Main.clusterUrl);
+        
+        System.out.println("Salvando arquivo de sequência "+fileOut+" com "+data.size()+" elementos...");
+		try {
+			SequenceFile.Writer writer = SequenceFile.createWriter(c, SequenceFile.Writer.file(p),
+			           SequenceFile.Writer.keyClass(Text.class), SequenceFile.Writer.valueClass(IntWritable.class));
+			Text text = new Text();
+			IntWritable value = new IntWritable(1);
+			for(String is: data){
+				text.set(is);
+				writer.append(text, value);
+			}
+			writer.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	/**
+	 * 
+	 * @param fileName
+	 * @return
+	 */
+	public static ArrayList<String> readSequenfileInHDFS(String fileName){
+		ArrayList<String> itemsets = new ArrayList<String>();
+		Path p = new Path(fileName);
+        Configuration c = new Configuration();
+        c.set("fs.defaultFS", Main.clusterUrl);
+		
+		try{
+			SequenceFile.Reader reader = new SequenceFile.Reader(c, SequenceFile.Reader.file(p));
+			Text key = (Text) ReflectionUtils.newInstance(reader.getKeyClass(), c);
+			IntWritable value = (IntWritable) ReflectionUtils.newInstance(reader.getValueClass(), c);
+			while (reader.next(key, value)) {
+				itemsets.add(key.toString());
+	        }
+		}catch(IOException e){
+			e.printStackTrace();
+		}
+		return itemsets;
 	}
 }
