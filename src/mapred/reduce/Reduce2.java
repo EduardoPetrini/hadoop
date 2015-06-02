@@ -54,12 +54,7 @@ public class Reduce2 extends Reducer<Text, IntWritable, Text, IntWritable> {
     	
         if(count >= support){
         	valueOut.set(count);
-            try {
-            	saveInCache(keyOut, valueOut);
-                context.write(keyOut, valueOut);
-            } catch (IOException | InterruptedException ex) {
-                Logger.getLogger(Reduce1.class.getName()).log(Level.SEVERE, null, ex);
-            }
+        	saveInCache(keyOut, valueOut);
         }
     }
     

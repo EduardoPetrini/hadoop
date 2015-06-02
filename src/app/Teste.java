@@ -23,6 +23,9 @@ import java.util.concurrent.Callable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import utils.AprioriUtils;
+import utils.MrUtils;
+
 
 /**
  *
@@ -255,7 +258,7 @@ public class Teste {
         
     }
      
-    public static void main(String[] args) throws Exception {
+    public static void mainOld (String[] args) throws Exception {
         
         Teste t = new Teste();
         
@@ -567,4 +570,23 @@ public void loadFileBinaryFormat(String path) throws IOException {
         
         return sb.toString().trim();
     }
+    
+    public static void main(String[] args) {
+    	ArrayList<String> tmp = new ArrayList<String>();
+    	tmp.add("1");
+    	tmp.add("2");
+    	tmp.add("3");
+    	tmp.add("4");
+    	tmp.add("5");
+    	tmp.add("6");
+    	tmp.add("7");
+    	tmp.add("8");
+    	tmp.add("9");
+    	tmp.add("10");
+    	String fileIn = "/user/eduardo/tmp/1itemset";
+    	String fileOut = "/user/eduardo/tmp/2itemset";
+    	MrUtils.saveSequenceInHDFS(tmp, fileIn);
+    	AprioriUtils.generate2ItemsetCandidates(fileIn, fileOut);
+    	AprioriUtils.gerateDynamicKItemsets(fileOut);
+	}
 }
