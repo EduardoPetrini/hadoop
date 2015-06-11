@@ -106,7 +106,7 @@ public class MrUtils {
                 for(FileStatus f: ff){
                     aux = f.getPath();
                     
-                    if(aux.getName().contains("output")){
+                    if(aux.getName().contains("output") || aux.getName().contains("inputCached")){
                         
                         if(fs.delete(aux, true)){
                         	System.out.println("Excluido diretório -> "+aux.getName());
@@ -226,7 +226,7 @@ public class MrUtils {
     }
     
     public static boolean checkOutputMR(){
-        String dir = Main.user+"outputCached/outputMR"+Main.countDir;
+        String dir = Main.fileSequenceOutput+Main.countDir;
         Path p = new Path(dir);
         
         Configuration c = new Configuration();
@@ -237,7 +237,7 @@ public class MrUtils {
             FileSystem fs = FileSystem.get(c);
             FileStatus conf = fs.getFileStatus(p);
             long len = conf.getLen();
-            if(conf.getLen() > 130){
+            if(conf.getLen() > 128){
                 System.out.println("O arquivo "+dir+" não é vazio! "+conf.getLen());
                 return true;
             }
@@ -421,7 +421,7 @@ public class MrUtils {
     }
     
     public static int getK() {
-		String inputPathUri = Main.fileCached+(Main.countDir);
+		String inputPathUri = Main.fileSequenceOutput+(Main.countDir);
     	
     	Path inputPath = new Path(inputPathUri);
     	Configuration c = new Configuration();

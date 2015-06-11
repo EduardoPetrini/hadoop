@@ -33,6 +33,12 @@ public class HashTree {
 		this.nodes = nodes;
 	}
 	
+	public ArrayList<String> getItemsets() {
+		return itemsets;
+	}
+	public void setItemsets(ArrayList<String> itemsets) {
+		this.itemsets = itemsets;
+	}
 	public HashTree getHasTreeNode(int index){
 		return nodes[index];
 	}
@@ -228,9 +234,9 @@ public class HashTree {
 	}
 	
 	public static void main(String[] args){
-		String[] itemsets = {"1 2 3", "1 3 4", "2 3 4", "3 4 5", "4 5 8"};
+		String[] itemsets = {"1 2", "1 3", "2 3", "3 4", "4 5"};
 		String t = "1 2 3 4 5 6 7 8";
-		HashTree hashTree = new HashTree(3);
+		HashTree hashTree = new HashTree(2);
 		
 		for(String itemset : itemsets){
 			hashTree.add(itemset);

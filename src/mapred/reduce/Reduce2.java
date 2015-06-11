@@ -33,10 +33,10 @@ public class Reduce2 extends Reducer<Text, IntWritable, Text, IntWritable> {
     @Override
     public void setup(Context context) throws IOException{
         String count = context.getConfiguration().get("count");
-        String fileCachedPath = context.getConfiguration().get("fileCachedWrited");
+        String fileSequenceOutput = context.getConfiguration().get("fileSequenceOutput");
         support = Double.parseDouble(context.getConfiguration().get("support"));
         
-        Path path = new Path(fileCachedPath);
+        Path path = new Path(fileSequenceOutput);
         log.info("Iniciando o REDUCE 2. Count dir: "+count);
         
          writer = SequenceFile.createWriter(context.getConfiguration(), SequenceFile.Writer.file(path),

@@ -585,8 +585,9 @@ public void loadFileBinaryFormat(String path) throws IOException {
     	tmp.add("10");
     	String fileIn = "/user/eduardo/tmp/1itemset";
     	String fileOut = "/user/eduardo/tmp/2itemset";
-    	MrUtils.saveSequenceInHDFS(tmp, fileIn);
-    	AprioriUtils.generate2ItemsetCandidates(fileIn, fileOut);
-    	AprioriUtils.gerateDynamicKItemsets(fileOut);
+//    	AprioriUtils.k = 2;
+//    	MrUtils.saveSequenceInHDFS(tmp, fileIn);
+//    	AprioriUtils.generate2ItemsetCandidates(fileIn, fileOut);
+//    	while(AprioriUtils.gerateDynamicKItemsets("/user/eduardo/tmp/"+AprioriUtils.k+"itemset"));
 	}
 }

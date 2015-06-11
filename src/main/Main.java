@@ -37,17 +37,18 @@ import utils.MrUtils;
 public class Main {
 
     public static int countDir;
-    private int timeTotal;
+    private static int timeTotal;
     public static double supportPercentage = 0.005;
     public static String support;
     public static int k = 1;
     public static String user = "/user/eduardo/";
-    public static String inputEntry = "input/T10I4D10N1000K.10x.ok";
+    public static String inputEntry = "input/T10I4D10N1000K.05.ok";
     public static String clusterUrl = "hdfs://master/";
-    public static 	String fileCached = user+"outputCached/outputMR";
+    public static String fileSequenceOutput = user+"outputCached/outputMR";
+    public static String fileSequenceInput = user+"inputCached/inputMR";
     public static long totalTransactionCount;
     public static double earlierTime;
-    public static String file2kItemset = "";
+
     /*
     Valor do suporte para 1.000.000
     7500
@@ -81,7 +82,7 @@ public class Main {
         job.setJarByClass(Main.class);
         
         job.setMapperClass(Map1.class);
-        job.setCombinerClass(Reduce1.class);
+//        job.setCombinerClass(Reduce1.class);
         job.setReducerClass(Reduce1.class);
         
         job.setOutputKeyClass(Text.class);
@@ -89,7 +90,7 @@ public class Main {
         
         job.getConfiguration().set("count", String.valueOf(Main.countDir));
         job.getConfiguration().set("support", String.valueOf(support));
-        job.getConfiguration().set("fileCached", fileCached+(Main.countDir));
+        job.getConfiguration().set("fileSequenceOutput", fileSequenceOutput+(Main.countDir));
         
         try {
             FileInputFormat.setInputPaths(job, new Path(user+"input"));
@@ -148,13 +149,13 @@ public class Main {
         job.getConfiguration().set("count", String.valueOf(Main.countDir));
         job.getConfiguration().set("support", String.valueOf(support));
         job.getConfiguration().set("k", String.valueOf(k));
-        job.getConfiguration().set("fileCachedRead", fileCached+(Main.countDir-1));
-        job.getConfiguration().set("fileCachedWrited", fileCached+(Main.countDir));
+        job.getConfiguration().set("fileSequenceInput", fileSequenceInput+(Main.countDir-1));
+        job.getConfiguration().set("fileSequenceOutput", fileSequenceOutput+(Main.countDir));
           
         System.out.println("Job 2 - CountDir: "+Main.countDir);
         
         try {
-           job.addCacheFile(new URI(fileCached+(Main.countDir-1)));
+           job.addCacheFile(new URI(fileSequenceOutput+(Main.countDir-1)));
         } catch (URISyntaxException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -212,13 +213,13 @@ public class Main {
         job.getConfiguration().set("count", String.valueOf(Main.countDir));
         job.getConfiguration().set("support", String.valueOf(support));
         job.getConfiguration().set("k", String.valueOf(k));
-        job.getConfiguration().set("fileCachedRead", fileCached+(Main.countDir-1));
-        job.getConfiguration().set("fileCachedWrited", fileCached+(Main.countDir));
+        job.getConfiguration().set("fileCachedRead", fileSequenceOutput+(Main.countDir-1));
+        job.getConfiguration().set("fileCachedWrited", fileSequenceOutput+(Main.countDir));
         job.getConfiguration().set("earlierTime", String.valueOf(earlierTime));
         System.out.println("Job 3 - CountDir: "+Main.countDir);
         
         try {
-           job.addCacheFile(new URI(fileCached+(Main.countDir-1)));
+           job.addCacheFile(new URI(fileSequenceOutput+(Main.countDir-1)));
         } catch (URISyntaxException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -248,6 +249,19 @@ public class Main {
         }
     }
     
+    public static void endTime(){
+    	double seg = ((double)timeTotal/1000);
+        System.out.println("Tempo total: "+timeTotal+" mile ou "+seg+" segundos! ou "+seg/60+" minutos");
+    }
+    
+    public static void checkOutputSequence(){
+    	if(!MrUtils.checkOutputMR()){
+        	System.out.println("Arquivo gerado na fase "+countDir+" é vazio!!!\n");
+    		endTime();
+    		System.exit(0);
+        }
+    }
+    
     public static void main(String[] args) throws IOException {
         Main m = new Main();
         MrUtils.delOutDirs(user);
@@ -257,14 +271,14 @@ public class Main {
         MrUtils.printConfigs(m);
         
         m.job1();
-        MrUtils.checkOutputMR();
-        Main.file2kItemset = Main.user+"output"+Main.countDir+"/2kitemset";
-//        AprioriUtils.generate2ItemsetCandidates();
+        checkOutputSequence();
+        AprioriUtils.generate2ItemsetCandidates();
         
         Main.countDir++;
         m.job2();
-        MrUtils.checkOutputMR();
+        checkOutputSequence();
         
+        System.exit(0);
         int l = 0;
         while(MrUtils.checkOutputMR() && m.k != -1){
         	System.out.println("Map 3 com k = "+Main.k);
@@ -275,14 +289,8 @@ public class Main {
             m.job3();
             Main.k = MrUtils.getK();
         }
-
-        /*Remover os arquivos invertidos anteriores*/
-//        m.delOutDirs(user);
-//        m.delContentFiles("invert");
-        
-        double seg = ((double)m.timeTotal/1000);
-        
-        System.out.println("Tempo total: "+m.timeTotal+" mile ou "+seg+" segundos! ou "+seg/60+" minutos");
+        endTime();
     }
+    
    
 }

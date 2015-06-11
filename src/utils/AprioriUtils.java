@@ -7,18 +7,16 @@ import java.util.Comparator;
 import main.Main;
 
 public class AprioriUtils {
-	private static int k;
+	public static int k;
 	/**
 	 * A partir do arquivo de saída, com 1-itemset por linha, gera-se 2-itemset
 	 */
-	public static void generate2ItemsetCandidates(String inputFile, String fileOut){
-//		String inputFile = MrUtils.getOutputFile(Main.user+"output"+Main.countDir);
-//		ArrayList<String> itemsets = MrUtils.readFromHDFS(inputFile);
+	public static void generate2ItemsetCandidates(){
+		String inputFile = Main.fileSequenceOutput+Main.countDir;
 		ArrayList<String> itemsets = MrUtils.readSequenfileInHDFS(inputFile);
 		Collections.sort(itemsets,NUMERIC_ORDER);
 		ArrayList<String> itemset2k = get2itemset(itemsets);
-//		MrUtils.saveSequenceInHDFS(itemset2k, Main.file2kItemset);
-		MrUtils.saveSequenceInHDFS(itemset2k, fileOut);
+		MrUtils.saveSequenceInHDFS(itemset2k, Main.fileSequenceInput+Main.countDir);
 	}
 	
 	private static ArrayList<String> get2itemset(ArrayList<String> itemset){
@@ -35,7 +33,6 @@ public class AprioriUtils {
 	
 	public static boolean gerateDynamicKItemsets(String inputFile){
 //		k = Main.k;
-		k = 2;
 		boolean success = true;
 //		String inputFile = Main.fileCached+Main.countDir;
 		ArrayList<String> itemsets = MrUtils.readSequenfileInHDFS(inputFile);
@@ -45,7 +42,6 @@ public class AprioriUtils {
 		int lkSize = itemsets.size();
 		int ct;
 		int cSetSize;
-		int sizeBefore;
 		if(!checkItemsetArray(itemsets)){
 			return false;
 		}
@@ -56,30 +52,32 @@ public class AprioriUtils {
 //        }else{
         	ct = (int)Math.round(lkSize * 1.2);
 //        }
-		
+		int mink = k;
 		roundGeneration(itemsets, newItemsets);
-		
+		k++;
 		if(!checkItemsetArray(newItemsets)){
 			return false;
 		}
-		sizeBefore = newItemsets.size();
 		cSetSize = newItemsets.size();
 		tmp1.addAll(newItemsets);
-		while( cSetSize <= ct){
-			k++;
+		while( cSetSize <= 240){
+			
 			roundGeneration(tmp1, tmp2);
+			k++;
 			if(tmp2.size() <= 0){
 				k--;
+				success = false;
 				break;
 			}
 			tmp1.clear();
 			tmp1.addAll(tmp2);
 			newItemsets.addAll(tmp2);
 			tmp2.clear();
-			k++;
 			roundGeneration(tmp1, tmp2);
+			k++;
 			if(tmp2.size() <= 0){
 				k--;
+				success = false;
 				break;
 			}
 			tmp1.clear();
@@ -89,10 +87,21 @@ public class AprioriUtils {
 			
 			cSetSize += newItemsets.size();
 		}
-		
-		MrUtils.saveSequenceInHDFS(newItemsets, "/user/eduardo/tmp/"+k+"itemset");
-                
+
+		saveItemsets(newItemsets);
 		return success;
+	}
+	
+	private static void saveItemsets(ArrayList<String> itemsets ){
+		ArrayList<String> kitemset = new ArrayList<String>();
+		for(String item: itemsets){
+			if(item.split(" ").length == k){
+				kitemset.add(item);
+			}
+		}
+		
+		MrUtils.saveSequenceInHDFS(kitemset, "/user/eduardo/tmp/"+k+"itemset");
+		MrUtils.saveSequenceInHDFS(itemsets, "/user/eduardo/tmp/"+k+"."+k+"itemset");
 	}
 	
 	
@@ -100,7 +109,7 @@ public class AprioriUtils {
 		String[] itemA;
         String[] itemB;
         String itemsetCandidate;
-        for (int i = 0; i < itemsets.size(); i++){
+        for (int i = 0; i < itemsets.size()-1; i++){
         	for (int j = i+1; j < itemsets.size(); j++){
         		itemA = itemsets.get(i).split(" ");
         		itemB = itemsets.get(j).split(" ");
@@ -138,10 +147,17 @@ public class AprioriUtils {
      */
     public static boolean isSamePrefix(String[] itemA, String[] itemB, int i, int j){
     	if(k == 1) return true;
-    	for(int a = 0; a < k -2; a++){
-            if(!itemA[a].equals(itemB[a])){
-                return false;
-            }
+    	for(int a = 0; a < k - 1; a++){
+    		try{
+	            if(!itemA[a].equals(itemB[a])){
+	                return false;
+	            }
+    		}catch(ArrayIndexOutOfBoundsException e){
+    			System.out.println(itemA);
+    			System.out.println(itemB);
+    			System.out.println(a);
+    			e.printStackTrace();
+    		}
         }
         
     	return true;
