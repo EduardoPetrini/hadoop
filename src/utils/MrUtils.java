@@ -235,13 +235,46 @@ public class MrUtils {
         
         try {
             FileSystem fs = FileSystem.get(c);
-            FileStatus conf = fs.getFileStatus(p);
-            long len = conf.getLen();
-            if(conf.getLen() > 128){
-                System.out.println("O arquivo "+dir+" não é vazio! "+conf.getLen());
-                return true;
+            if(fs.exists(p)){
+	            FileStatus conf = fs.getFileStatus(p);
+	            long len = conf.getLen();
+	            if(conf.getLen() > 128){
+	                System.out.println("O arquivo "+dir+" não é vazio! "+conf.getLen());
+	                return true;
+	            }
+	            System.out.println("O arquivo "+dir+" é vazio! "+conf.getLen());
+            }else{
+            	System.out.println("Arquivo "+dir+" não existe!");
             }
-            System.out.println("O arquivo "+dir+" é vazio! "+conf.getLen());
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        
+        return false;
+    }
+    
+    public static boolean checkInputMR(){
+        String dir = Main.fileSequenceInput+Main.countDir;
+        Path p = new Path(dir);
+        
+        Configuration c = new Configuration();
+        c.set("fs.defaultFS", Main.clusterUrl);
+        System.out.println("Verificando diretório: "+dir);
+        
+        try {
+            FileSystem fs = FileSystem.get(c);
+            if(fs.exists(p)){
+	            FileStatus conf = fs.getFileStatus(p);
+	            long len = conf.getLen();
+	            if(conf.getLen() > 128){
+	                System.out.println("O arquivo "+dir+" não é vazio! "+conf.getLen());
+	                return true;
+	            }
+	            System.out.println("O arquivo "+dir+" é vazio! "+conf.getLen());
+            }else{
+            	System.out.println("Arquivo "+dir+" não existe!");
+            }
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();

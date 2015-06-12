@@ -7,7 +7,8 @@ import java.util.Comparator;
 import main.Main;
 
 public class AprioriUtils {
-	public static int k;
+	public static int maxk;
+	public static int mink;
 	/**
 	 * A partir do arquivo de saída, com 1-itemset por linha, gera-se 2-itemset
 	 */
@@ -31,10 +32,10 @@ public class AprioriUtils {
 		return newItemsets;
 	}
 	
-	public static boolean gerateDynamicKItemsets(String inputFile){
-//		k = Main.k;
+	public static boolean gerateDynamicKItemsets(){
+		maxk = Main.k;
 		boolean success = true;
-//		String inputFile = Main.fileCached+Main.countDir;
+		String inputFile = Main.fileSequenceOutput+Main.countDir;
 		ArrayList<String> itemsets = MrUtils.readSequenfileInHDFS(inputFile);
 		ArrayList<String> newItemsets = new ArrayList<String>();
 		ArrayList<String> tmp1 = new ArrayList<String>();
@@ -46,26 +47,26 @@ public class AprioriUtils {
 			return false;
 		}
 		
-//		if(Main.earlierTime >= 60){
-		
-//        	ct = lkSize * 1;
-//        }else{
+		if(Main.earlierTime >= 60){
+        	ct = lkSize * 1;
+        }else{
         	ct = (int)Math.round(lkSize * 1.2);
-//        }
-		int mink = k;
+        }
+		mink = maxk;
 		roundGeneration(itemsets, newItemsets);
-		k++;
+		maxk++;
 		if(!checkItemsetArray(newItemsets)){
 			return false;
 		}
 		cSetSize = newItemsets.size();
 		tmp1.addAll(newItemsets);
-		while( cSetSize <= 240){
+		
+		while( cSetSize <= ct){
 			
 			roundGeneration(tmp1, tmp2);
-			k++;
+			maxk++;
 			if(tmp2.size() <= 0){
-				k--;
+				maxk--;
 				success = false;
 				break;
 			}
@@ -74,9 +75,9 @@ public class AprioriUtils {
 			newItemsets.addAll(tmp2);
 			tmp2.clear();
 			roundGeneration(tmp1, tmp2);
-			k++;
+			maxk++;
 			if(tmp2.size() <= 0){
-				k--;
+				maxk--;
 				success = false;
 				break;
 			}
@@ -88,20 +89,20 @@ public class AprioriUtils {
 			cSetSize += newItemsets.size();
 		}
 
-		saveItemsets(newItemsets);
+		MrUtils.saveSequenceInHDFS(newItemsets, Main.fileSequenceInput+Main.countDir);
 		return success;
 	}
 	
 	private static void saveItemsets(ArrayList<String> itemsets ){
 		ArrayList<String> kitemset = new ArrayList<String>();
 		for(String item: itemsets){
-			if(item.split(" ").length == k){
+			if(item.split(" ").length == maxk){
 				kitemset.add(item);
 			}
 		}
 		
-		MrUtils.saveSequenceInHDFS(kitemset, "/user/eduardo/tmp/"+k+"itemset");
-		MrUtils.saveSequenceInHDFS(itemsets, "/user/eduardo/tmp/"+k+"."+k+"itemset");
+		MrUtils.saveSequenceInHDFS(kitemset, "/user/eduardo/tmp/"+maxk+"itemset");
+		MrUtils.saveSequenceInHDFS(itemsets, "/user/eduardo/tmp/"+maxk+"."+maxk+"itemset");
 	}
 	
 	
@@ -146,8 +147,8 @@ public class AprioriUtils {
      * @return
      */
     public static boolean isSamePrefix(String[] itemA, String[] itemB, int i, int j){
-    	if(k == 1) return true;
-    	for(int a = 0; a < k - 1; a++){
+    	if(maxk == 1) return true;
+    	for(int a = 0; a < maxk - 1; a++){
     		try{
 	            if(!itemA[a].equals(itemB[a])){
 	                return false;

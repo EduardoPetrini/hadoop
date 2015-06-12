@@ -33,11 +33,8 @@ public class Map3  extends Mapper<LongWritable, Text, Text, IntWritable>{
     Log log = LogFactory.getLog(Map3.class);
     IntWritable countOut = new IntWritable(1);
     SequenceFile.Reader reader;
-    ArrayList<String> fileCached;
-    ArrayList<String> itemsetAux;
     PrefixTree prefixTree;
-    int k;
-    int mink, maxk = 0;
+    int mink, maxk;
     /**
      * Le o arquivo invertido para a memória.
      * @param context
@@ -46,166 +43,19 @@ public class Map3  extends Mapper<LongWritable, Text, Text, IntWritable>{
     @Override
     public void setup(Context context) throws IOException{
         String count = context.getConfiguration().get("count");
-        String fileCachedRead = context.getConfiguration().get("fileCachedRead");
-        String kStr = context.getConfiguration().get("k");
-        k = Integer.parseInt(kStr);
-        double earlierTime = Double.parseDouble(context.getConfiguration().get("earlierTime"));
+        String fileSequenceInput = context.getConfiguration().get("fileSequenceInput");
+        maxk = Integer.parseInt(context.getConfiguration().get("maxk"));
+        mink = Integer.parseInt(context.getConfiguration().get("mink"));
         
         log.info("Iniciando map 3 count = "+count);
-        log.info("Arquivo Cached = "+fileCachedRead);
+        log.info("Arquivo Cached = "+fileSequenceInput);
         
-        log.info("Tempo da fase anterior é "+earlierTime);
-        
-        URI[] patternsFiles = context.getCacheFiles();
-        
-        Path path = new Path(patternsFiles[0].toString());
+        Path path = new Path(fileSequenceInput);
         
         reader = new SequenceFile.Reader(context.getConfiguration(), SequenceFile.Reader.file(path));
-        openFile(fileCachedRead, context);
+        openFile(fileSequenceInput, context);
         
-        //Gerar combinações dos itens de acordo com o tamanho de lk e do tempo gasto da fase anterior
-        
-        prefixTree = new PrefixTree(0);
-        itemsetAux = new ArrayList<String>();
-        
-        log.info("K is "+k);
-        mink = k;
-        
-        String itemsetC;
-//        prefixTree.printStrArray(fileCached);
-        
-        if(fileCachedRead != null && fileCached.size() > 0){
-        	if(fileCached.get(fileCached.size()-1).split(" ").length < k-1){
-	        	log.info("Itemsets é menor do que k");
-	        	prefixTree.printStrArray(fileCached);
-	        	log.info("Itemsets é menor do que k");
-	        	System.out.println("Saíndo da aplicação!");
-	        	System.exit(0);
-        	}
-        }else{
-        	log.info("Arquivo do cache distribuído é vazio!");
-        	return;
-        }
-        
-        int lkSize = fileCached.size();
-        
-        int ct;
-        
-        if(earlierTime >= 60){
-        	ct = lkSize * 1;
-        }else{
-        	ct = (int)Math.round(lkSize * 1.2);
-        }
-        String[] itemA;
-        String[] itemB;
-        
-        log.info("O valor de ct é "+ct);
-        
-        for (int i = 0; i < fileCached.size(); i++){
-        	for (int j = i+1; j < fileCached.size(); j++){
-        		itemA = fileCached.get(i).split(" ");
-        		itemB = fileCached.get(j).split(" ");
-        		if(isSamePrefix(itemA, itemB, i, j)){
-        			itemsetC = combine(itemA, itemB);
-        			itemsetAux.add(itemsetC);
-//        			System.out.println(itemsetC+" no primeiro passo");
-        			//Building HashTree
-        			prefixTree.add(prefixTree, itemsetC.split(" "), 0);
-        		}
-        	}
-        }
-        
-        log.info("Inicia o loop dinâmico");
-        
-        int cSetSize = itemsetAux.size();
-        while( cSetSize <= ct){
-        	//System.out.println("Cset size "+cSetSize);
-        	fileCached.clear();
-        	if(itemsetAux.isEmpty()){
-        		System.out.println("Opa, break com k = "+k+" reduzido para k = "+(k-1));
-        		k--;
-        		break;
-        	}
-        	
-        	k++;
-	        for (int i = 0; i < itemsetAux.size(); i++){
-	        	for (int j = i+1; j < itemsetAux.size(); j++){
-	        		itemA = itemsetAux.get(i).split(" ");
-	        		itemB = itemsetAux.get(j).split(" ");
-	        		if(isSamePrefix(itemA, itemB, i, j)){
-	        			itemsetC = combine(itemA, itemB);
-	        			fileCached.add(itemsetC);
-//	        			System.out.println(itemsetC+" no primeiro passo");
-	        			//Building HashTree
-	        			prefixTree.add(prefixTree, itemsetC.split(" "), 0);
-	        		}
-	        	}
-	        }
-	        if(fileCached.isEmpty()){
-	        	System.out.println("Opa, break com k = "+k+" reduzido para k = "+(k-1));
-	        	k--;
-        		break;
-        	}
-	        k++;
-	        itemsetAux.clear();
-	        for (int i = 0; i < fileCached.size(); i++){
-	        	for (int j = i+1; j < fileCached.size(); j++){
-	        		itemA = fileCached.get(i).split(" ");
-	        		itemB = fileCached.get(j).split(" ");
-	        		if(isSamePrefix(itemA, itemB, i, j)){
-	        			itemsetC = combine(itemA, itemB);
-	        			itemsetAux.add(itemsetC);
-//	        			System.out.println(itemsetC+" no segundp passo");
-	        			//Building HashTree
-	        			prefixTree.add(prefixTree, itemsetC.split(" "), 0);
-	        		}
-	        	}
-	        }
-	        cSetSize += itemsetAux.size();
-	        System.out.println("No loop dinamico, cSetSize: "+cSetSize+", ct: "+ct);
-        }
-       
-//        prefixTree.printStrArray(itemsetAux);
-//        prefixTree.printPrefixTree(prefixTree);
-        //System.out.println("Fim do setup, inicia função map para o k = "+k);
-        maxk = k;
         System.out.println("MinK "+mink+" maxK "+maxk);
-    }
-    
-    /**
-     * 
-     * @param itemA
-     * @param itemB
-     * @param i
-     * @param j
-     * @return
-     */
-    public boolean isSamePrefix(String[] itemA, String[] itemB, int i, int j){
-    	if(k == 2) return true;
-    	for(int a = 0; a < k -2; a++){
-            if(!itemA[a].equals(itemB[a])){
-            	//System.out.println("Não é o mesmo prefixo: "+itemA[a]+" != "+itemB[a]);
-                return false;
-            }
-        }
-        
-    	return true;
-    }
-    
-    /**
-     * 
-     * @param itemA
-     * @param itemB
-     * @return
-     */
-    public String combine(String[] itemA, String[] itemB){
-        StringBuilder sb = new StringBuilder();
-        
-        for(int i = 0; i < itemA.length; i++){
-            sb.append(itemA[i]).append(" ");
-        }
-        sb.append(itemB[itemB.length-1]);
-        return sb.toString();
     }
     
     /**
@@ -244,7 +94,7 @@ public class Map3  extends Mapper<LongWritable, Text, Text, IntWritable>{
 				
 				//envia para o reduce
 				try{
-					context.write(new Text(sb.toString().trim()+":"+maxk), new IntWritable(1));
+					context.write(new Text(sb.toString().trim()), new IntWritable(1));
 				}catch(IOException | InterruptedException e){
 					e.printStackTrace();
 					System.exit(1);
@@ -288,53 +138,28 @@ public class Map3  extends Mapper<LongWritable, Text, Text, IntWritable>{
      * @param context
      * @return
      */
-    public ArrayList<String> openFile(String path, Context context){
-    	fileCached = new ArrayList<String>();
+    public void openFile(String path, Context context){
     	try {
-			
+			prefixTree =  new PrefixTree(0);
 			Text key = (Text) ReflectionUtils.newInstance(reader.getKeyClass(), context.getConfiguration());
 			IntWritable value = (IntWritable) ReflectionUtils.newInstance(reader.getValueClass(), context.getConfiguration());
 			
 			while (reader.next(key, value)) {
 				//System.out.println("Add Key: "+key.toString());
-	            fileCached.add(key.toString());
+//	            fileCached.add(key.toString());
+				prefixTree.add(prefixTree, key.toString().split(" "), 0);
 	        }
-			long begin = System.currentTimeMillis();
-			Collections.sort(fileCached, NUMERIC_ORDER);
-			long end = System.currentTimeMillis();
-			double total = end-begin;
-			if((total/1000) > 1){
-				System.out.println("Tempo gasto para ordenação: "+total+" milis ou "+total/1000+" segundos...");
-			}
+//			long begin = System.currentTimeMillis();
+//			Collections.sort(fileCached, NUMERIC_ORDER);
+//			long end = System.currentTimeMillis();
+//			double total = end-begin;
+//			if((total/1000) > 1){
+//				System.out.println("Tempo gasto para ordenação: "+total+" milis ou "+total/1000+" segundos...");
+//			}
 		} catch (IllegalArgumentException | IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-    	
-    	return fileCached;
     }
     
-    public static Comparator<Object> NUMERIC_ORDER = new Comparator<Object>() {
-    	public int compare(Object obj1, Object obj2){
-    		
-    		String[] o1 = ((String)obj1).trim().split(" ");
-    		String[] o2 = ((String)obj2).trim().split(" ");
-    		int a;
-    		int b;
-    		for(int i = 0; i < o1.length; i++){
-    			a = Integer.parseInt(o1[i]);
-    			b = Integer.parseInt(o2[i]);
-    			
-    			if(a < b){
-    				return -1;
-    			}else if(a > b){
-    				return 1;
-    			}else{
-    				continue;
-    			}
-    		}
-    		
-    		return 0;
-    	}
-	};
 }

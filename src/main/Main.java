@@ -42,7 +42,7 @@ public class Main {
     public static String support;
     public static int k = 1;
     public static String user = "/user/eduardo/";
-    public static String inputEntry = "input/T10I4D10N1000K.05.ok";
+    public static String inputEntry = "input/input-file";
     public static String clusterUrl = "hdfs://master/";
     public static String fileSequenceOutput = user+"outputCached/outputMR";
     public static String fileSequenceInput = user+"inputCached/inputMR";
@@ -172,7 +172,7 @@ public class Main {
             long fim = System.currentTimeMillis();
             
             long t = fim - ini;
-            earlierTime = ((double)t/1000);
+            earlierTime += ((double)t/1000);
             System.out.println("Tempo da fase 2: "+earlierTime);
             
             timeTotal += t;
@@ -212,10 +212,10 @@ public class Main {
         
         job.getConfiguration().set("count", String.valueOf(Main.countDir));
         job.getConfiguration().set("support", String.valueOf(support));
-        job.getConfiguration().set("k", String.valueOf(k));
-        job.getConfiguration().set("fileCachedRead", fileSequenceOutput+(Main.countDir-1));
-        job.getConfiguration().set("fileCachedWrited", fileSequenceOutput+(Main.countDir));
-        job.getConfiguration().set("earlierTime", String.valueOf(earlierTime));
+        job.getConfiguration().set("maxk", String.valueOf(k));
+        job.getConfiguration().set("mink", String.valueOf(AprioriUtils.mink));
+        job.getConfiguration().set("fileSequenceInput", fileSequenceInput+(Main.countDir-1));
+        job.getConfiguration().set("fileSequenceOutput", fileSequenceOutput+(Main.countDir));
         System.out.println("Job 3 - CountDir: "+Main.countDir);
         
         try {
@@ -236,7 +236,7 @@ public class Main {
             long fim = System.currentTimeMillis();
             
             long t = fim - ini;
-            earlierTime = ((double)t/1000);
+            earlierTime += ((double)t/1000);
             System.out.println("Tempo da fase 3: "+earlierTime);
             
             timeTotal += t;
@@ -262,6 +262,14 @@ public class Main {
         }
     }
     
+    public static void checkInputSequence(){
+    	if(!MrUtils.checkInputMR()){
+        	System.out.println("Arquivo gerado na fase "+countDir+" é vazio!!!\n");
+    		endTime();
+    		System.exit(0);
+        }
+    }
+    
     public static void main(String[] args) throws IOException {
         Main m = new Main();
         MrUtils.delOutDirs(user);
@@ -272,23 +280,30 @@ public class Main {
         
         m.job1();
         checkOutputSequence();
+        long ini = System.currentTimeMillis();
         AprioriUtils.generate2ItemsetCandidates();
+        long fim = System.currentTimeMillis();
+        earlierTime = ((double)(fim - ini)/1000);
         
         Main.countDir++;
         m.job2();
         checkOutputSequence();
         
-        System.exit(0);
-        int l = 0;
-        while(MrUtils.checkOutputMR() && m.k != -1){
+        do{
+        	
+        	ini = System.currentTimeMillis();
+        	if(!AprioriUtils.gerateDynamicKItemsets()){
+        		checkInputSequence();
+        	}
+        	fim = System.currentTimeMillis();
+            earlierTime = ((double)(fim - ini)/1000);
+            
+        	Main.countDir++;
+        	Main.k = AprioriUtils.maxk;
         	System.out.println("Map 3 com k = "+Main.k);
-            System.out.println("LOOP "+ ++l);
-            //Gerate dynamic itemsets
-            Main.countDir++;
-            Main.k++;
-            m.job3();
-            Main.k = MrUtils.getK();
-        }
+        	m.job3();
+        	checkOutputSequence();
+        }while(m.k != -1);
         endTime();
     }
     
