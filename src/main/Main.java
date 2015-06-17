@@ -42,7 +42,7 @@ public class Main {
     public static String support;
     public static int k = 1;
     public static String user = "/user/eduardo/";
-    public static String inputEntry = "input/input-file";
+    public static String inputEntry = "input/T10I4D10N1000K.05.ok";
     public static String clusterUrl = "hdfs://master/";
     public static String fileSequenceOutput = user+"outputCached/outputMR";
     public static String fileSequenceInput = user+"inputCached/inputMR";
@@ -283,7 +283,7 @@ public class Main {
         long ini = System.currentTimeMillis();
         AprioriUtils.generate2ItemsetCandidates();
         long fim = System.currentTimeMillis();
-        earlierTime = ((double)(fim - ini)/1000);
+        earlierTime = ((timeTotal += (int)(fim - ini))/1000);
         
         Main.countDir++;
         m.job2();
@@ -296,7 +296,7 @@ public class Main {
         		checkInputSequence();
         	}
         	fim = System.currentTimeMillis();
-            earlierTime = ((double)(fim - ini)/1000);
+        	earlierTime = ((timeTotal += (int)(fim - ini))/1000);
             
         	Main.countDir++;
         	Main.k = AprioriUtils.maxk;
