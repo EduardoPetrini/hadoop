@@ -46,7 +46,13 @@ public class PrefixTree {
 				pt.prefixTree.add(index, new PrefixTree(i));
 				add(pt.prefixTree.get(index), itemset, i);
 			}else{
-				add(pt.prefixTree.get(index), itemset, i);
+				try{
+					add(pt.prefixTree.get(index), itemset, i);
+				}catch(IndexOutOfBoundsException e){
+					e.printStackTrace();
+					pt.prefixTree.add(index, new PrefixTree(i));
+					add(pt.prefixTree.get(index), itemset, i);
+				}
 			}
 		}else{
 			 

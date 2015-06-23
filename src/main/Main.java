@@ -38,11 +38,11 @@ public class Main {
 
     public static int countDir;
     private static int timeTotal;
-    public static double supportPercentage = 0.005;
+    public static double supportPercentage = 0.001;
     public static String support;
     public static int k = 1;
     public static String user = "/user/eduardo/";
-    public static String inputEntry = "input/T10I4D10N1000K.05.ok";
+    public static String inputEntry = "input/T10I4D10N1000K.05.ok.2";
     public static String clusterUrl = "hdfs://master/";
     public static String fileSequenceOutput = user+"outputCached/outputMR";
     public static String fileSequenceInput = user+"inputCached/inputMR";
