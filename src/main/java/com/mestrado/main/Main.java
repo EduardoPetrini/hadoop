@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-package main;
+package main.java.com.mestrado.main;
 
 import java.io.IOException;
 import java.net.URI;
@@ -12,12 +12,13 @@ import java.net.URISyntaxException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import mapred.map.Map1;
-import mapred.map.Map2;
-import mapred.map.Map3;
-import mapred.reduce.Reduce1;
-import mapred.reduce.Reduce2;
-import mapred.reduce.Reduce3;
+import main.java.com.mestrado.mapred.map.Map1;
+import main.java.com.mestrado.mapred.map.Map2;
+import main.java.com.mestrado.mapred.map.Map3;
+import main.java.com.mestrado.mapred.reduce.Reduce1;
+import main.java.com.mestrado.mapred.reduce.Reduce2;
+import main.java.com.mestrado.mapred.reduce.Reduce3;
+import main.java.com.mestrado.utils.MrUtils;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -26,8 +27,6 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
-
-import utils.MrUtils;
 
 /**
  *
@@ -73,7 +72,7 @@ public class Main {
         } catch (IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
-        job.getConfiguration().set("fs.defaultFS", clusterUrl);
+//         job.getConfiguration().set("fs.defaultFS", clusterUrl);
         job.setJobName("Fase 1");
         
         job.setJarByClass(Main.class);
@@ -130,7 +129,7 @@ public class Main {
         } catch (IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
-        job.getConfiguration().set("fs.defaultFS", clusterUrl);
+//         job.getConfiguration().set("fs.defaultFS", clusterUrl);
         job.setJobName("Fase 2");
         
         job.setJarByClass(Main.class);
@@ -195,7 +194,7 @@ public class Main {
         } catch (IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
-        job.getConfiguration().set("fs.defaultFS", clusterUrl);
+//         job.getConfiguration().set("fs.defaultFS", clusterUrl);
         job.setJobName("Fase 3");
         
         job.setJarByClass(Main.class);

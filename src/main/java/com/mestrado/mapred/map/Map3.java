@@ -4,13 +4,15 @@
  * and open the template in the editor.
  */
 
-package mapred.map;
+package main.java.com.mestrado.mapred.map;
 
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+
+import main.java.com.mestrado.app.PrefixTree;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -21,8 +23,6 @@ import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.util.ReflectionUtils;
-
-import app.PrefixTree;
 
 /**
  * Gerar itemsets de tamanho k, k+1 e k+3 em uma única instância Map/Reduce.

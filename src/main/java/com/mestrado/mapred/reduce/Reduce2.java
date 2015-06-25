@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-package mapred.reduce;
+package main.java.com.mestrado.mapred.reduce;
 
 import java.io.IOException;
 import java.util.Iterator;
