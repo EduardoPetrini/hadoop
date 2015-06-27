@@ -40,7 +40,7 @@ public class Main {
     public static String support;
     int k = 1;
     public static String user = "/user/eduardo/";
-    public static String inputEntry = "input/T10I4D10N1000K.10x.ok";
+    public static String inputEntry = "input/T10I4D10N1000K.05.ok";
     public static String clusterUrl = "hdfs://master/";
     public static 	String fileCached = user+"outputCached/outputMR";
     public static long totalTransactionCount;
