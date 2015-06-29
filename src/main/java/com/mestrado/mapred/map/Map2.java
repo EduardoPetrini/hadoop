@@ -119,50 +119,51 @@ public class Map2  extends Mapper<LongWritable, Text, Text, Text>{
      * @param itemset
      * @return
      */
-    public int count(String[] transactions, String itemset){
-    	int count;
-    	int occurrenceCount = 0;
-    	int i,j;
-    	String[] tSplit;
-    	String[] itemsetSplit = itemset.split(" ");
-    	boolean checkOccurrence = true;
-    	for_trans:
-    	for(String transaction: transactions){
-    		i = 0;
-    		j = 0;
-    		count = 0;
-    		tSplit = transaction.split(" ");
-    		
-    		if(tSplit.length >= itemsetSplit.length){
-	    		while(checkOccurrence){
-	    			
-	    			try{
-		    			if(itemsetSplit[i].equals(tSplit[j])){
-							if(++i == itemsetSplit.length || ++j == tSplit.length-1){
-								count++;
+    public int count(String[] transactions, String itemset) {
+		int count;
+		int occurrenceCount = 0;
+		int i, j;
+		String[] tSplit;
+		String[] itemsetSplit = itemset.split(" ");
+		boolean checkOccurrence = true;
+		for_trans: for (String transaction : transactions) {
+			i = 0;
+			j = 0;
+			count = 0;
+			tSplit = transaction.split(" ");
+
+			if (tSplit.length >= itemsetSplit.length) {
+				while (checkOccurrence) {
+
+					try {
+						if (itemsetSplit[i].equals(tSplit[j])) {
+							count++;
+							if (++i >= itemsetSplit.length
+									|| ++j >= tSplit.length) {
 								break;
 							}
-							
-						}else{
-							if(++j >= tSplit.length){
+
+						} else {
+							if (++j >= tSplit.length) {
 								continue for_trans;
 							}
 						}
-	    			}catch(IndexOutOfBoundsException e){
-	    				System.out.println(Arrays.asList(itemsetSplit)+" == "+Arrays.asList(tSplit));
-		    			System.out.println(i+" "+j);
-	    				e.printStackTrace();
-	    				System.exit(0);
-	    			}
-	    		}
-	    		if(count == itemsetSplit.length){
-	    			occurrenceCount++;
-	    		}
-    		}
-    	}
-    	
-    	return occurrenceCount;
-    }
+					} catch (Exception e) {
+						System.out.println(Arrays.asList(itemsetSplit) + " == "
+								+ Arrays.asList(tSplit));
+						System.out.println(i + " " + j);
+						e.printStackTrace();
+						System.exit(0);
+					}
+				}
+				if (count == itemsetSplit.length) {
+					occurrenceCount++;
+				}
+			}
+		}
+
+		return occurrenceCount;
+	}
     
     /**
      * 
