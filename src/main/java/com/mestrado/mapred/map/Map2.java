@@ -4,11 +4,15 @@
  * and open the template in the editor.
  */
 
-package mapred.map;
+package main.java.com.mestrado.mapred.map;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+
+import main.java.com.mestrado.app.HashTree;
+import main.java.com.mestrado.app.ItemSup;
+import main.java.com.mestrado.utils.MrUtils;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -19,10 +23,6 @@ import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.util.ReflectionUtils;
-
-import utils.MrUtils;
-import app.HashTree;
-import app.ItemSup;
 
 /**
  * Gerar itemsets de tamanho 2.

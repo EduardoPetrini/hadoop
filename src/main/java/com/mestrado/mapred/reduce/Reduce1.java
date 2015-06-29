@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-package mapred.reduce;
+package main.java.com.mestrado.mapred.reduce;
 
 
 import java.io.IOException;
@@ -13,6 +13,8 @@ import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import main.java.com.mestrado.utils.MrUtils;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.Path;
@@ -20,8 +22,6 @@ import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
-
-import utils.MrUtils;
 
 /**
  *

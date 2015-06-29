@@ -1,20 +1,17 @@
-package app;
+package main.java.com.mestrado.app;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
-import mapred.map.Map2;
-
-public class PrefixSupTree {
+public class PrefixTree {
 	private ArrayList<String> prefix;
-	private ArrayList<PrefixSupTree> prefixSupTree;
-	private ArrayList<Integer> support;
+	private ArrayList<PrefixTree> prefixTree;
 	private int level;
 	
-	public PrefixSupTree(int level) {
+	public PrefixTree(int level) {
 		this.level = level;
-		support = new ArrayList<Integer>();
 		prefix = new ArrayList<String>();
-		prefixSupTree = new ArrayList<PrefixSupTree>();
+		prefixTree = new ArrayList<PrefixTree>();
 	}
 	public ArrayList<String> getPrefix() {
 		return prefix;
@@ -22,11 +19,11 @@ public class PrefixSupTree {
 	public void setPrefix(ArrayList<String> prefix) {
 		this.prefix = prefix;
 	}
-	public ArrayList<PrefixSupTree> getPrefixTree() {
-		return prefixSupTree;
+	public ArrayList<PrefixTree> getPrefixTree() {
+		return prefixTree;
 	}
-	public void setPrefixTree(ArrayList<PrefixSupTree> prefixTree) {
-		this.prefixSupTree = prefixTree;
+	public void setPrefixTree(ArrayList<PrefixTree> prefixTree) {
+		this.prefixTree = prefixTree;
 	}
 	public int getLevel() {
 		return level;
@@ -41,11 +38,8 @@ public class PrefixSupTree {
 	 * @param itemset array
 	 * @param i always zero
 	 */
-	public void add(PrefixSupTree pt, String[] itemset, int i){
+	public void add(PrefixTree pt, String[] itemset, int i){
 		if(i >= itemset.length){
-			//adicionar o suporte
-			int index = pt.prefix.indexOf(itemset[i-1]);
-//			pt.support.add(index, Map2.currentSupport);
 			return;
 		}
 		
@@ -57,17 +51,17 @@ public class PrefixSupTree {
 			
 			/*Existe o item, percorrer a árvore de acordo com o index obtido*/
 			i++;
-			if(pt.prefixSupTree.size() <= index || pt.prefixSupTree.get(index) == null){
+			if(pt.prefixTree.size() <= index || pt.prefixTree.get(index) == null){
 				
-				for(int x = pt.prefixSupTree.size(); x <= index; x++){
-					pt.prefixSupTree.add(x, null);
+				for(int x = pt.prefixTree.size(); x <= index; x++){
+					pt.prefixTree.add(x, null);
 				}
 				
-				pt.prefixSupTree.add(index, new PrefixSupTree(i));
+				pt.prefixTree.add(index, new PrefixTree(i));
 //			}else if(pt.prefixTree.get(index) == null){
 //				pt.prefixTree.add(index, new PrefixTree(i));
 			}
-			add(pt.prefixSupTree.get(index), itemset, i);
+			add(pt.prefixTree.get(index), itemset, i);
 		}else{
 			 
 			/*Adicionar o novo item no nó*/
@@ -75,42 +69,74 @@ public class PrefixSupTree {
 			pt.prefix.add(index,itemset[i]);
 			i++;
 			if(i >= itemset.length){
-				//adicionar o suporte
-//				pt.support.add(index,Map2.currentSupport);
 				return;
 			}
-			pt.prefixSupTree.add(index, new PrefixSupTree(i));
-			add(pt.prefixSupTree.get(index), itemset, i);
+			pt.prefixTree.add(index, new PrefixTree(i));
+			add(pt.prefixTree.get(index), itemset, i);
 		}
 	}
 	
-	public void find(PrefixSupTree pt, String[] transaction, int i, String[] itemset, int itemsetIndex){
+	public void find(PrefixTree pt, String[] transaction, int i, int k, String[] itemset, int itemsetIndex){
 		
+		if(i >= transaction.length){
+			return;
+		}
+		int index = pt.prefix.indexOf(transaction[i]);
 		
+		if(index == -1){
+			System.out.println("Não achou1 :(");
+			return;
+		}else{
+			itemset[itemsetIndex] = transaction[i];
+			itemsetIndex++;
+			if(i == transaction.length-1){
+//				sb.append(transaction[i]);
+				System.out.println("Achou1 :) "+Arrays.asList(itemset));
+				//itemset[itemsetIndex] = "";
+				return;
+			}else{
+//				sb.append(transaction[i]).append(" ");
+				i++;
+				if(pt.level == k-1){
+					System.out.println("Achou2 :) "+Arrays.asList(itemset));
+					//itemset[itemsetIndex] = "";
+					return;
+				}
+				if(pt.prefixTree.isEmpty()){
+					System.out.println("Não achou2 :'(");
+					return;
+				}else{
+					while(i < transaction.length){
+						find(pt.prefixTree.get(index),transaction,i, k, itemset, itemsetIndex);
+						System.out.println("Retornou i = "+i);
+						i++;
+					}
+				}
+			}
+		}
 	}
 	
 	public void printStrArray(ArrayList<String> str){
 		System.out.println("Array de itemsets");
 		for(String s: str){
-			System.out.print(s+" ");
+			System.out.println(s);
 		}
 		System.out.println();
 	}
-	public void printPrefixTree(PrefixSupTree pt){
-		if(pt == null) return;
+	public void printPrefixTree(PrefixTree pt){
 		System.out.println("Imprime prefixTree");
 		if(!pt.prefix.isEmpty()){
 			System.out.println("Level: "+pt.level);
 			printStrArray(pt.prefix);
 			
-			for(int i = 0; i < pt.prefixSupTree.size(); i++){
-				printPrefixTree(pt.prefixSupTree.get(i));
+			for(int i = 0; i < pt.prefixTree.size(); i++){
+				printPrefixTree(pt.prefixTree.get(i));
 			}
 		}
 	}
 	
 	public static void main(String[] args){
-		PrefixSupTree pt = new PrefixSupTree(0);
+		PrefixTree pt = new PrefixTree(0);
 		String[] itemset1 = {"1", "2"};
 		String[] itemset2 = {"1", "3"};
 		String[] itemset3 = {"1", "4"};
@@ -132,7 +158,7 @@ public class PrefixSupTree {
 		pt.add(pt, itemset9, 0);
 		pt.printPrefixTree(pt);
 		
-		for(int i = 0; i < itemset4.length; i++)
-			pt.find(pt, itemset4, i, new String[3], 0);
+		/*for(int i = 0; i < itemset4.length; i++)
+			pt.find(pt, itemset4, i, 3, new String[3], 0);*/
 	}
 }

@@ -1,4 +1,4 @@
-package app;
+package main.java.com.mestrado.app;
 
 
 /**

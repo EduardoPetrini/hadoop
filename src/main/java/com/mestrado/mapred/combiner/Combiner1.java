@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-package mapred.combiner;
+package main.java.com.mestrado.mapred.combiner;
 
 import java.io.IOException;
 import java.util.ArrayList;

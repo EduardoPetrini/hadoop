@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-package mapred.map;
+package main.java.com.mestrado.mapred.map;
 
 import java.io.IOException;
 import java.text.Collator;
@@ -15,14 +15,14 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Set;
 
+import main.java.com.mestrado.app.PrefixTree;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
-
-import app.PrefixTree;
 
 
 /**
@@ -40,7 +40,7 @@ public class Map1 extends Mapper<LongWritable, Text, Text, Text>{
     ArrayList<String> tempCandidates;
     HashMap<String, Integer> itemSup;
     
-    ArrayList<String[]> transactions;
+    ArrayList<String> transactions;
     PrefixTree prefixTree;
     ArrayList<String> blocksIds;
     
@@ -67,7 +67,7 @@ public class Map1 extends Mapper<LongWritable, Text, Text, Text>{
 
     	candidates = new ArrayList<String>();
     	prefixTree = new PrefixTree(0);
-    	transactions = new ArrayList<String[]>();
+    	transactions = new ArrayList<String>();
     	buildTransactionsArraySet(value.toString());//Erro OutOfMemoryError com arquivos grandes
     	value.clear();
     	System.out.println("Procentagem do suporte: "+support+"%");
@@ -79,6 +79,7 @@ public class Map1 extends Mapper<LongWritable, Text, Text, Text>{
     	
     	int k = 1;
     	String[] itemset;
+    	String[] tr;
     	int itemsetIndex;
     	do{
     		System.out.println("Gerando itens de tamanho "+k);
@@ -87,12 +88,13 @@ public class Map1 extends Mapper<LongWritable, Text, Text, Text>{
     		
     		System.out.println("Verificando a existência de "+candidates.size()+" candidatos");
     		if(k > 1){
-    			for(String[] transaction: transactions){
-    				if(transaction.length >= k){
-	    				for(int i = 0; i < transaction.length; i++){
+    			for(String transaction: transactions){
+    				tr = transaction.split(" ");
+    				if(tr.length >= k){
+	    				for(int i = 0; i < tr.length; i++){
 	    					itemset = new String[k];
 	    					itemsetIndex = 0;
-	    					subSet(transaction, prefixTree, i, k, itemset, itemsetIndex);
+	    					subSet(tr, prefixTree, i, k, itemset, itemsetIndex);
 	    				}
     				}
     			}
@@ -215,7 +217,7 @@ public class Map1 extends Mapper<LongWritable, Text, Text, Text>{
     	if(n==1){
     		itemSup = new HashMap<String, Integer>();
     		for(int i=0; i<transactions.size(); i++){
-    			tmpItemsets = transactions.get(i);
+    			tmpItemsets = transactions.get(i).split(" ");
     			for(int j = 0; j < tmpItemsets.length; j++){
 					if(addToHashItemSup(tmpItemsets[j])){
 						tempCandidates.add(tmpItemsets[j]);		
@@ -332,20 +334,12 @@ public class Map1 extends Mapper<LongWritable, Text, Text, Text>{
     	System.out.println("Quantidade de transações "+transaction.length);
     	for(String tr : transaction){
     		try{
-    			transactions.add(tr.split(" "));
+    			transactions.add(tr);
     			tr = null;
     		}catch(OutOfMemoryError e){
     			e.printStackTrace();
     			System.out.print("Estou de memória! Número de elementos do vetor "+transactions.size()+" tamanho em bytes ");
-    			long bytes = 0;
-    			for(String[] t: transactions){
-    				
-    				for(String i: t){
-    					bytes += i.length();
-    				}
-    			}
-    			bytes = bytes*2;
-    			System.out.println(bytes);
+    			
     			System.exit(0);
     		}
     	}

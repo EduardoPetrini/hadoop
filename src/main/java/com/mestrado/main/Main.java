@@ -4,9 +4,7 @@
  * and open the template in the editor.
  */
 
-package main;
-
-import hadoop.inputformat.WholeInputFormat;
+package main.java.com.mestrado.main;
 
 import java.io.IOException;
 import java.net.URI;
@@ -15,22 +13,21 @@ import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import mapred.map.Map1;
-import mapred.map.Map2;
-import mapred.reduce.Reduce1;
-import mapred.reduce.Reduce2;
+import main.java.com.mestrado.hadoop.inputformat.WholeInputFormat;
+import main.java.com.mestrado.mapred.map.Map1;
+import main.java.com.mestrado.mapred.map.Map2;
+import main.java.com.mestrado.mapred.reduce.Reduce1;
+import main.java.com.mestrado.mapred.reduce.Reduce2;
+import main.java.com.mestrado.utils.MrUtils;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
-
-import utils.MrUtils;
 
 /**
  *
@@ -46,7 +43,7 @@ public class Main {
     private int k = 1;
     public static int totalBlockCount;
     public static String user = "/user/eduardo/";
-    public static String inputEntry = "input/T10I4D10N1000K.10x.ok";
+    public static String inputEntry = "input/T100";
     public static String clusterUrl = "hdfs://master/";
     public static long totalTransactionCount;
     public ArrayList<String> blocksIds;
@@ -69,7 +66,7 @@ public class Main {
         } catch (IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
-        job.getConfiguration().set("fs.defaultFS", "hdfs://master/");
+//         job.getConfiguration().set("fs.defaultFS", "hdfs://master/");
         job.setJobName("Fase 1");
         
         job.setJarByClass(Main.class);
@@ -134,7 +131,7 @@ public class Main {
         } catch (IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
-        job.getConfiguration().set("fs.defaultFS", "hdfs://master/");
+//         job.getConfiguration().set("fs.defaultFS", "hdfs://master/");
         job.setJobName("Fase 2");
         
         job.setJarByClass(Main.class);

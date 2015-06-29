@@ -1,4 +1,4 @@
-package hadoop.inputformat;
+package main.java.com.mestrado.hadoop.inputformat;
 
 import java.io.IOException;
 
