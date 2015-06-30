@@ -377,7 +377,12 @@ public class Map1 extends Mapper<LongWritable, Text, Text, Text>{
     
     @Override
     public void cleanup(Context context){
-    	context.getConfiguration().set("totalTransactions", String.valueOf(transactions.size()));
+    	try {
+			super.cleanup(context);
+		} catch (IOException | InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
     }
     
     private static Comparator<Object> ALPHABETICAL_ORDER = new Comparator<Object>()  {
