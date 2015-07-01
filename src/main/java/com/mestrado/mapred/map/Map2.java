@@ -96,8 +96,10 @@ public class Map2  extends Mapper<LongWritable, Text, Text, Text>{
     		int supportLocal;
     		valueOut = new Text();
     		keyOut = new Text();
+    		String[] transacions = value.toString().split("\n");
+    		value.clear();
     		for(ItemSup item: lPartialItemsets){
-    			supportLocal = count(value.toString().split("\n"), item.getItemset().toString());
+    			supportLocal = count(transacions, item.getItemset().toString());
     			
     			if(supportLocal > 0){
 	    			try{
