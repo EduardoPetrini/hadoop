@@ -74,13 +74,13 @@ public class Map1 extends Mapper<LongWritable, Text, Text, Text>{
     	support = Math.ceil(support * transactions.size());
     	System.out.println("Valor o suporte: "+support);
     	
-    	/*Obtendo um id para o Map*/
-    	setSplitName(key);
     	
     	int k = 1;
     	String[] itemset;
     	String[] tr;
     	int itemsetIndex;
+    	int blockSize = 0;
+    	boolean splitNameDefined = false;
     	do{
     		System.out.println("Gerando itens de tamanho "+k);
     		generateCandidates(k, context);
@@ -97,6 +97,11 @@ public class Map1 extends Mapper<LongWritable, Text, Text, Text>{
 	    					subSet(tr, prefixTree, i, k, itemset, itemsetIndex);
 	    				}
     				}
+    				blockSize++;
+    			}
+    			if(!splitNameDefined){
+    				setSplitName(key,blockSize);
+    				splitNameDefined = true;
     			}
     			
     			/*Remover os itemsets não frequentes*/
@@ -131,9 +136,9 @@ public class Map1 extends Mapper<LongWritable, Text, Text, Text>{
     	
     }
     
-    public void setSplitName(LongWritable offset){
+    public void setSplitName(LongWritable offset, int blockSize){
     	
-    	splitName = offset+":"+transactions.size();
+    	splitName = offset+":"+blockSize;
     	System.out.println("|************************************************************|");
     	System.out.println("Split Name: "+splitName+" , support "+support);
     	System.out.println("|************************************************************|");
