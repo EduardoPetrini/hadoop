@@ -1,4 +1,5 @@
 /*
+
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
@@ -52,9 +53,6 @@ public class Reduce1 extends Reducer<Text, IntWritable, Text, IntWritable>{
     	for (Iterator<IntWritable> it = values.iterator(); it.hasNext();) {
             count += it.next().get();
         }
-    	if(key.toString().equals("1053")){
-    		System.out.println(key);
-    	}
     	
         if(count >= support){
         	valueOut.set(count);

@@ -41,7 +41,7 @@ public class Main {
     public static String support;
     public static int k = 1;
     public static String user = "/user/eduardo/";
-    public static String inputEntry = "input/T10I4D10N1000K.05.ok";
+    public static String inputEntry = "input/T100";
     public static String clusterUrl = "hdfs://master/";
     public static String fileSequenceOutput = user+"outputCached/outputMR";
     public static String fileSequenceInput = user+"inputCached/inputMR";
@@ -75,7 +75,7 @@ public class Main {
         } catch (IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
-//         job.getConfiguration().set("fs.defaultFS", clusterUrl);
+         job.getConfiguration().set("fs.defaultFS", clusterUrl);
         job.setJobName("Fase 1");
         
         job.setJarByClass(Main.class);
@@ -132,7 +132,7 @@ public class Main {
         } catch (IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
-//         job.getConfiguration().set("fs.defaultFS", clusterUrl);
+         job.getConfiguration().set("fs.defaultFS", clusterUrl);
         job.setJobName("Fase 2");
         
         job.setJarByClass(Main.class);
@@ -197,7 +197,7 @@ public class Main {
         } catch (IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
-//         job.getConfiguration().set("fs.defaultFS", clusterUrl);
+         job.getConfiguration().set("fs.defaultFS", clusterUrl);
         job.setJobName("Fase 3");
         
         job.setJarByClass(Main.class);
