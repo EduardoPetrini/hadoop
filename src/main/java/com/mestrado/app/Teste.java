@@ -14,6 +14,8 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.charset.CharacterCodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -22,6 +24,9 @@ import java.util.StringTokenizer;
 import java.util.concurrent.Callable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import org.apache.hadoop.io.DataInputBuffer;
+import org.apache.hadoop.io.Text;
 
 
 /**
@@ -663,15 +668,7 @@ public void loadFileBinaryFormat(String path) throws IOException {
     }
     
     public static void main(String[] args) throws Exception {
-    	Teste t = new Teste();
-    	String itemset = "29";
-    	ArrayList<String> transactions = new ArrayList<String>();
-    	transactions.add("0 10 29 30");
-    	transactions.add("0 29 40");
-    	transactions.add("2 12  30");
-    	
-    	System.out.println(t.countByEquals2(itemset, transactions));
-    	
+    	System.out.println(allSubsetIsFrequent());
     }
     
     public static void addToHashItemSup(HashMap<String, Integer> itemSup, String item){
@@ -721,5 +718,67 @@ public void loadFileBinaryFormat(String path) throws IOException {
 		t.add("1 5 6");
 		t.add("1 3 4 5");
 		return t;
+	}
+	
+	private static void testText(ArrayList<String> ha){
+		
+		Text t = new Text("ab cd\nz xv\ner t\nt re\n");
+		ha.remove("bb");
+		int start = 0;
+		int len;
+		int pos;
+		System.out.println("Bytes "+t.getBytes().length);
+		System.out.println("Len "+t.getLength());
+		while((pos = t.find("\n",start))!= -1){
+//			System.out.println(pos);
+			len = pos-start;
+			//transação está entre start e end
+			try {
+				System.out.println(Text.decode(t.getBytes(), start, len));
+			} catch (CharacterCodingException | IndexOutOfBoundsException e) {
+				System.out.println("\nStart "+start+" end "+len+" bl "+t.getBytes().length+" text "+t);
+				e.printStackTrace();
+			}
+			start = pos+1;
+			if(start >= t.getLength()){
+				System.out.println("Break... "+t.getLength());
+				break;
+			}
+		}
+		len = t.getLength()-start;
+		try {
+			System.out.println(Text.decode(t.getBytes(), start, len));
+		} catch (CharacterCodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	private static boolean allSubsetIsFrequent() {
+		ArrayList<String> candidates = new ArrayList<String>();
+		String[] itemset = {"a","b", "c","d"};
+		candidates.add("a b c");
+		candidates.add("a b d");
+		candidates.add("a b e");
+		candidates.add("a c d");
+		candidates.add("b c d");
+		int indexToSkip = 0;
+		StringBuilder subItem;
+		for(int j = 0; j < itemset.length-1; j++){
+			subItem = new StringBuilder();
+			for(int i = 0; i < itemset.length; i++){
+				if(i != indexToSkip){
+					subItem.append(itemset[i]).append(" ");
+				}
+			}
+			//subItem gerado, verificar se é do conjunto frequente
+			if(!candidates.contains(subItem.toString().trim())){
+				return false;
+			}
+			indexToSkip++;
+		}
+		//avbdgatai
+		
+		return true;
 	}
 }

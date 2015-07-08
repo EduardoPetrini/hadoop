@@ -7,12 +7,11 @@
 package main.java.com.mestrado.mapred.map;
 
 import java.io.IOException;
-import java.text.Collator;
+import java.nio.charset.CharacterCodingException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Set;
 
 import main.java.com.mestrado.app.PrefixTree;
@@ -36,15 +35,16 @@ public class Map1 extends Mapper<LongWritable, Text, Text, Text>{
     Text keyOut = new Text();
     double support;
     int totalBlockCount;
-    ArrayList<String> candidates;
-    ArrayList<String> tempCandidates;
+    ArrayList<String> frequents;
     HashMap<String, Integer> itemSup;
     
-    ArrayList<String> transactions;
     PrefixTree prefixTree;
     ArrayList<String> blocksIds;
     
     String splitName;
+    
+    int start;
+    int len;
     
     @Override
     public void setup(Context context){
@@ -65,75 +65,66 @@ public class Map1 extends Mapper<LongWritable, Text, Text, Text>{
     	//Aplica-se o algoritmo Apriori
     	System.out.println("\n*****************/////// KEY: "+key);
 
-    	candidates = new ArrayList<String>();
+    	frequents = new ArrayList<String>();
     	prefixTree = new PrefixTree(0);
-    	transactions = new ArrayList<String>();
-    	buildTransactionsArraySet(value.toString());//Erro OutOfMemoryError com arquivos grandes
-    	value.clear();
     	System.out.println("Procentagem do suporte: "+support+"%");
-    	support = Math.ceil(support * transactions.size());
-    	System.out.println("Valor o suporte: "+support);
-    	
     	
     	int k = 1;
     	String[] itemset;
     	String[] tr;
     	int itemsetIndex;
-    	int blockSize = 0;
-    	boolean splitNameDefined = false;
+    	int pos;
+    	boolean endBlock = false;
+    	start = 0;
     	do{
     		System.out.println("Gerando itens de tamanho "+k);
-    		generateCandidates(k, context);
-    		//Verificar existência e contar o support de cada itemset
+    		generateCandidates(key, k, value, context);
     		
-    		System.out.println("Verificando a existência de "+candidates.size()+" candidatos");
+    		//Verificar existência e contar o support de cada itemset
     		if(k > 1){
-    			for(String transaction: transactions){
-    				tr = transaction.split(" ");
-    				if(tr.length >= k){
-	    				for(int i = 0; i < tr.length; i++){
-	    					itemset = new String[k];
+    			while((pos = value.find("\n",start)) != -1){
+    				len = pos-start;
+    				try {
+    					tr = Text.decode(value.getBytes(), start, len).split(" ");
+    					for(int i = 0; i < tr.length; i++){
+    						itemset = new String[k];
 	    					itemsetIndex = 0;
 	    					subSet(tr, prefixTree, i, k, itemset, itemsetIndex);
-	    				}
+    					}
+    				} catch (CharacterCodingException e) {
+    					e.printStackTrace();
+    					System.exit(1);
     				}
-    				blockSize++;
+    				start = pos+1;
+    				if(start >= value.getLength()){
+    					System.out.println("Break... "+value.getLength());
+    					endBlock = true;
+    					break;
+    				}
     			}
-    			if(!splitNameDefined){
-    				setSplitName(key,blockSize);
-    				splitNameDefined = true;
+    			//pegar a ultima transação, caso tenha
+    			if(!endBlock){
+    				len = value.getLength()-start;
+    				try {
+    					tr = Text.decode(value.getBytes(), start, len).split(" ");
+    					for(int i = 0; i < tr.length; i++){
+    						itemset = new String[k];
+	    					itemsetIndex = 0;
+	    					subSet(tr, prefixTree, i, k, itemset, itemsetIndex);
+    					}
+    				} catch (CharacterCodingException e) {
+    					e.printStackTrace();
+    					System.exit(1);
+    				}
     			}
-    			
-    			/*Remover os itemsets não frequentes*/
-    			candidates.removeAll(removeUnFrequentItems(candidates));
+    			//limpar prefixTree
+    			prefixTree = new PrefixTree(0);
+//    			/*Adicionar os itemsets frequentes e os envia para o Reduce*/
+    			addFrequentsItemsAndSendToReduce(context);
     		}
     		
     		k++;
-    	}while(candidates.size() > 1);
-    	
-    	//Envia os elementos da hashMap para o reduce com seu respectivo suporte parcial
-    	Set<String> keys = itemSup.keySet();
-    	Text keyOut = new Text();
-    	Text valueOut = new Text();
-    	Integer v;
-    	for(String localKeys: keys){
-    		if(localKeys.split(" ").length > 1){
-	    		v = itemSup.get(localKeys);
-	    		if(v != null){
-	    			keyOut.set(localKeys);
-	//    			System.out.println("Chave para o reduce 1: "+localKeys);
-	    			valueOut.set(String.valueOf(v+":"+splitName));
-	    			
-	    			try {
-						context.write(keyOut, valueOut);
-					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-	    		}
-    		}
-    	}
-    	
+    	}while(frequents.size() > 1);
     }
     
     public void setSplitName(LongWritable offset, int blockSize){
@@ -212,84 +203,146 @@ public class Map1 extends Mapper<LongWritable, Text, Text, Text>{
 //			}
 		}
 	}
-	public void generateCandidates(int n, Context context){
-    	ArrayList<String> tempCandidates = new ArrayList<String>(); 
+	public void generateCandidates(LongWritable offset, int n, Text value, Context context){
+		System.out.println("Valor de N: "+n);
     	
-    	System.out.println("Valor de N: "+n);
     	StringBuilder tmpItem;
-    	String[] tmpItemsets;
     			
     	if(n==1){
-    		itemSup = new HashMap<String, Integer>();
-    		for(int i=0; i<transactions.size(); i++){
-    			tmpItemsets = transactions.get(i).split(" ");
-    			for(int j = 0; j < tmpItemsets.length; j++){
-					if(addToHashItemSup(tmpItemsets[j])){
-						tempCandidates.add(tmpItemsets[j]);		
-					}
-    			}
-    		}
+    		frequents.clear();
+    		generateCandidates1(offset, value);
     		
-    		System.out.println("Quantidade de itens de tamanho 1: "+tempCandidates.size());
-    		tempCandidates.removeAll(removeUnFrequentItems(tempCandidates));
-    		Collections.sort(tempCandidates, NUMERICAL_ORDER);
-    		
-    		//envia para o reduce
-    		outputToReduce(tempCandidates, context);
+    		System.out.println("Quantidade de candidatos de tamanho 1: "+frequents.size());
+    		removeUnFrequentItemsAndSendToReduce(context);
+    		Collections.sort(frequents, NUMERICAL_ORDER);
+        	
+        	System.out.println("Quantidade de frequentes de tamanho "+n+": "+frequents.size());
     		
     	}else if(n==2) {
     		itemSup.clear();
-    		System.out.println("Geransadfh");
-    		for(int i=0; i<candidates.size(); i++){
+    		for(int i=0; i<frequents.size(); i++){
     			tmpItem = new StringBuilder();
-    			tmpItem.append(candidates.get(i).trim()).append(" ");
-    			for(int j=i+1; j<candidates.size(); j++){
-    				tempCandidates.add(tmpItem.toString()+candidates.get(j).trim());
-    				
-//    				System.out.println("tmpSize in 2: "+tempCandidates.size()+", Adicionando na hash "+tempCandidates.get(tempCandidates.size()-1));
-    				prefixTree.add(prefixTree,tempCandidates.get(tempCandidates.size()-1).split(" "),0);
+    			tmpItem.append(frequents.get(i).trim()).append(" ");
+    			for(int j=i+1; j<frequents.size(); j++){
+    				prefixTree.add(prefixTree,(tmpItem.toString()+frequents.get(j).trim()).split(" "),0);
     			}
     		}
-    		
+    		frequents.clear();
     	}else{
     		/*É preciso verificar o prefixo, isso não está sendo feito!!*/
     		String prefix;
     		String sufix;
-    		 
-    		for(int i=0; i<candidates.size(); i++){
+    		String newItemSet;
+    		for(int i=0; i<frequents.size(); i++){
 //    			System.out.println("Progress: "+context.getProgress());
-    			for(int j=i+1; j<candidates.size(); j++){
+    			for(int j=i+1; j<frequents.size(); j++){
 
-					prefix = getPrefix(candidates.get(i));
+					prefix = getPrefix(frequents.get(i));
     				
-    				if(candidates.get(j).startsWith(prefix)){
+    				if(frequents.get(j).startsWith(prefix)){
     					/*Se o próximo elemento já possui o mesmo prefixo, basta concatenar o sufixo do segundo item.*/
-    					sufix = getSufix(candidates.get(j));
+    					sufix = getSufix(frequents.get(j));
     					
 						tmpItem = new StringBuilder();
-    					tmpItem.append(candidates.get(i)).append(" ").append(sufix);
-    					
-    					tempCandidates.add(tmpItem.toString().trim());
-    		
-    					//add to prefixTree
-    					//System.out.println("tmpSize in K = "+n+": candidate size "+tempCandidates.size()+", Adicionando na hash "+tempCandidates.get(tempCandidates.size()-1));
-    					try{
-    						prefixTree.add(prefixTree,tempCandidates.get(tempCandidates.size()-1).split(" "),0);
-    					}catch(Exception e){
-    						e.printStackTrace();
+    					tmpItem.append(frequents.get(i)).append(" ").append(sufix);
+    					//tmpItem é o novo candidato, verificar e todo o seu subconjunto é frequente
+    					newItemSet = tmpItem.toString().trim();
+    					if(allSubsetIsFrequent(newItemSet.split(" "))){
+	    		
+	    					//add to prefixTree
+	    					//System.out.println("tmpSize in K = "+n+": candidate size "+tempCandidates.size()+", Adicionando na hash "+tempCandidates.get(tempCandidates.size()-1));
+	    					try{
+	    						prefixTree.add(prefixTree,newItemSet.split(" "),0);
+	    					}catch(Exception e){
+	    						e.printStackTrace();
+	    					}
     					}
     				}
     			}
     		}
-    		
+    		frequents.clear();
     	}
-    	candidates.clear();
-//    	printCadidates(tempCandidates, n);
-    	candidates = new ArrayList<String>(tempCandidates);
-    	System.out.println("Quantidade de candidatos de tamanho "+n+": "+candidates.size());
-    	
-    	tempCandidates.clear();
     }
+	
+	/**
+	 * Verifica se todo subconjunto do itemset é frequente
+	 * @param itemset
+	 * @return
+	 */
+	private boolean allSubsetIsFrequent(String[] itemset) {
+		int indexToSkip = 0;
+		StringBuilder subItem;
+		for(int j = 0; j < itemset.length-1; j++){
+			subItem = new StringBuilder();
+			for(int i = 0; i < itemset.length; i++){
+				if(i != indexToSkip){
+					subItem.append(itemset[i]).append(" ");
+				}
+			}
+			//subItem gerado, verificar se é do conjunto frequente
+			if(!frequents.contains(subItem.toString().trim())){
+				return false;
+			}
+			indexToSkip++;
+		}
+		//avbdgatai
+		
+		return true;
+	}
+	/**
+	 * Encontra os frequentes de tamanho 1
+	 * @param tempCandidates2
+	 * @param value
+	 */
+	private void generateCandidates1(LongWritable offset, Text value) {
+		String[] tmpItemsets;
+		start = 0;
+		int pos;
+		itemSup = new HashMap<String, Integer>();
+		int blockSize = 0;
+		boolean endBlock = false;
+		while((pos = value.find("\n",start)) != -1){
+			len = pos-start;
+			blockSize++;
+			try {
+				tmpItemsets = Text.decode(value.getBytes(), start, len).split(" ");
+				for(int j = 0; j < tmpItemsets.length; j++){
+					if(addToHashItemSup(tmpItemsets[j])){
+						frequents.add(tmpItemsets[j]);		
+					}
+				}
+			} catch (CharacterCodingException e) {
+				e.printStackTrace();
+				System.exit(1);
+			}
+			start = pos+1;
+			if(start >= value.getLength()){
+				System.out.println("Break... "+value.getLength());
+				endBlock = true;
+				break;
+			}
+		}
+		//pegar a ultima transação
+		if(!endBlock){
+			len = value.getLength()-start;
+			blockSize++;
+			try {
+				tmpItemsets = Text.decode(value.getBytes(), start, len).split(" ");
+				for(int j = 0; j < tmpItemsets.length; j++){
+					if(addToHashItemSup(tmpItemsets[j])){
+						frequents.add(tmpItemsets[j]);		
+					}
+				}
+			} catch (CharacterCodingException e) {
+				e.printStackTrace();
+				System.exit(1);
+			}
+		}
+		
+		//A partir daqui já te sabe o tamanho do bloco
+		support = Math.ceil(support * blockSize);
+		setSplitName(offset, blockSize);
+	}
 	
 	public String getSufix(String kitem){
 		String[] spkitem = kitem.split(" ");
@@ -310,47 +363,7 @@ public class Map1 extends Mapper<LongWritable, Text, Text, Text>{
         return sb.toString();
     }
 	
-	/**
-	 * Envia os itemsets parciais para o reduce
-	 * @param arrayCandidates
-	 * @param context
-	 */
-	private void outputToReduce(ArrayList<String> arrayCandidates, Context context) {
-		Integer value;
-		Text key = new Text();
-		Text val = new Text();
-		
-		for(String item: arrayCandidates){
-			value = itemSup.get(item);
-			key.set(item);
-			val.set(String.valueOf(value)+":"+splitName);
-			try {
-				context.write(key , val);
-			} catch (IOException | InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-	}
-    
-    public void buildTransactionsArraySet(String block){
-    	String[] transaction = block.split("\n");
-    	block = null;
-    	System.out.println("Quantidade de transações "+transaction.length);
-    	for(String tr : transaction){
-    		try{
-    			transactions.add(tr);
-    			tr = null;
-    		}catch(OutOfMemoryError e){
-    			e.printStackTrace();
-    			System.out.print("Estou de memória! Número de elementos do vetor "+transactions.size()+" tamanho em bytes ");
-    			
-    			System.exit(0);
-    		}
-    	}
-    }
-    
-    public boolean addToHashItemSup(String item){
+	public boolean addToHashItemSup(String item){
     	Integer value = 0;
     	
     	if((value = itemSup.get(item)) == null){
@@ -363,21 +376,70 @@ public class Map1 extends Mapper<LongWritable, Text, Text, Text>{
     	}
     }
     
-    public ArrayList<String> removeUnFrequentItems(ArrayList<String> tempCandidates){
+    /**
+     * Remove itemsets não frequentes e envia para o reduce
+     * @param context
+     * @param tempCandidates
+     */
+    public void removeUnFrequentItemsAndSendToReduce(Context context){
     	Integer value;
     	ArrayList<String> rmItems = new ArrayList<String>();
-    	for(String item: tempCandidates){
+    	Text key = new Text();
+		Text val = new Text();
+    	for(String item: frequents){
     		value = itemSup.get(item);
-    		if(item.equals("15")){
-    			System.out.println("Item 15: suporte "+value);
-    		}
+    		
     		if(value == null || value <= support){
     			rmItems.add(item);
+    		}else{
+    			//envia para o reduce
+    			key.set(item);
+    			val.set(String.valueOf(value));
+    			try {
+					context.write(key, val);
+				} catch (IOException | InterruptedException e) {
+					e.printStackTrace();
+				}
     		}
+    		itemSup.remove(item);
     	}
+    	
     	System.out.println("\nRemovendo "+rmItems.size()+" não frequentes.\n");
     	
-    	return rmItems;
+    	frequents.removeAll(rmItems);
+    }
+    
+    /**
+     * Adiciona os itemsets frequentes da hash no vetor frequents para gerar Lk
+     * @param context
+     */
+    public void addFrequentsItemsAndSendToReduce(Context context){
+    	Integer value;
+    	ArrayList<String> rmItems = new ArrayList<String>();
+    	Text key = new Text();
+		Text val = new Text();
+		Set<String> keys = itemSup.keySet();
+    	for(String item: keys){
+    		value = itemSup.get(item);
+    		
+    		if(value == null || value <= support){
+    			rmItems.add(item);
+    		}else{
+    			//envia para o reduce
+    			frequents.add(item);
+    			key.set(item);
+    			val.set(String.valueOf(value));
+    			try {
+					context.write(key, val);
+				} catch (IOException | InterruptedException e) {
+					e.printStackTrace();
+				}
+    		}
+    		itemSup.remove(item);
+    	}
+    	
+    	System.out.println("\nRemovendo "+rmItems.size()+" não frequentes.\n");
+    	
     }
     
     @Override
@@ -390,18 +452,7 @@ public class Map1 extends Mapper<LongWritable, Text, Text, Text>{
 		}
     }
     
-    private static Comparator<Object> ALPHABETICAL_ORDER = new Comparator<Object>()  {
-		public int compare(Object ob1, Object ob2) {
-			String name1 = "";
-			String name2 = "";
-			Collator collator = Collator.getInstance(Locale.getDefault());
-	        collator.setStrength(Collator.PRIMARY);
-			
-			return collator.compare(name1, name2);
-		}
-	};
-	
-	private static Comparator<Object> NUMERICAL_ORDER = new Comparator<Object>()  {
+    private static Comparator<Object> NUMERICAL_ORDER = new Comparator<Object>()  {
 		public int compare(Object ob1, Object ob2) {
 			int val1 = Integer.parseInt((String)ob1);
 			int val2 = Integer.parseInt((String)ob2);
@@ -413,7 +464,7 @@ public class Map1 extends Mapper<LongWritable, Text, Text, Text>{
 	
 	public void printCadidates(ArrayList<String> can, int n){
 		System.out.println("\n*************************************\n");
-		System.out.println("Print "+n+"-itemsets candidates: ");
+		System.out.println("Print "+n+"-itemsets frequents: ");
 		if(!can.isEmpty()){
 			for(String s: can){
 				System.out.println(s);
