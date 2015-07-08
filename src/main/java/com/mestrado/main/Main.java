@@ -38,12 +38,12 @@ public class Main {
     private Log log = LogFactory.getLog(Main.class);
     public static int countDir;
     private int timeTotal;
-    public static double supportPercentage = 0.2;
+    public static double supportPercentage = 0.005;
     public static String support;
     private int k = 1;
     public static int totalBlockCount;
     public static String user = "/user/eduardo/";
-    public static String inputEntry = "input/very2k";
+    public static String inputEntry = "input/T100";
     public static String clusterUrl = "hdfs://master/";
     public static long totalTransactionCount;
     public ArrayList<String> blocksIds;
