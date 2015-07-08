@@ -38,13 +38,19 @@ public class Reduce2 extends Reducer<Text, Text, Text, Text> {
     
     @Override
     public void reduce(Text key, Iterable<Text> values, Context context){
-    	String[] firstValue = values.iterator().next().toString().split("#");
+    	int count = 0;
+    	
+    	for (Iterator<Text> it = values.iterator(); it.hasNext();) {
+            count += Integer.parseInt(it.next().toString());
+        }
+    	
+    	/*String[] firstValue = values.iterator().next().toString().split("#");
     	int count = Integer.parseInt(firstValue[0]); //suporte da fase 1
     	count += Integer.parseInt(firstValue[1]);//suporte count da fase 2
     	
     	for (Iterator<Text> it = values.iterator(); it.hasNext();) {
             count += Integer.parseInt(it.next().toString().split("#")[1]);
-        }
+        }*/
 
     	if(count >= support){
         	valueOut.set(String.valueOf(count));
@@ -53,7 +59,7 @@ public class Reduce2 extends Reducer<Text, Text, Text, Text> {
             } catch (IOException | InterruptedException ex) {
                 Logger.getLogger(Reduce1.class.getName()).log(Level.SEVERE, null, ex);
             }
-        }
+    	}
     }
     
     @Override

@@ -78,9 +78,12 @@ public class Reduce1 extends Reducer<Text, Text, Text, IntWritable>{
         ArrayList<String> diList = new ArrayList<String>();
 //        ArrayList<Integer> diSize = new ArrayList<Integer>();
         int di = 0;
-        //verificar o calculo desse suporte do satanás
+        String rm;
+        log.info("Obtém a lista de valores para a chave "+key);
     	for (Iterator<Text> it = values.iterator(); it.hasNext();) {
-    		splitValues = it.next().toString().split(":");
+    		rm = it.next().toString();
+    		splitValues = rm.split(":");
+    		log.info(rm);
             partialSupport += Integer.valueOf(splitValues[0]);
             diList.add(splitValues[1]);
             di += Integer.parseInt(splitValues[2]);

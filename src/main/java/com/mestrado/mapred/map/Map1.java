@@ -30,31 +30,18 @@ import org.apache.hadoop.mapreduce.Mapper;
  */
 public class Map1 extends Mapper<LongWritable, Text, Text, Text>{
     
-    Log log = LogFactory.getLog(Map1.class);
-    IntWritable count = new IntWritable(1);
-    Text keyOut = new Text();
-    double support;
-    int totalBlockCount;
-    ArrayList<String> frequents;
-    HashMap<String, Integer> itemSup;
+    private Log log = LogFactory.getLog(Map1.class);
+    private double support;
+    private ArrayList<String> frequents;
+    private HashMap<String, Integer> itemSup;
     
-    PrefixTree prefixTree;
-    ArrayList<String> blocksIds;
-    
+    private PrefixTree prefixTree;
     String splitName;
     
-    int start;
-    int len;
     
     @Override
     public void setup(Context context){
     	String sup = context.getConfiguration().get("supportPercentage");
-    	totalBlockCount = Integer.parseInt(context.getConfiguration().get("totalMaps"));
-    	blocksIds = new ArrayList<String>();
-    	for(int i = 1; i <= totalBlockCount; i++){
-    		blocksIds.add(context.getConfiguration().get("blockId"+i));
-    	}
-    	
     	support = Double.parseDouble(sup);
     	log.info("Iniciando Map 1...");
     	    	
@@ -73,9 +60,10 @@ public class Map1 extends Mapper<LongWritable, Text, Text, Text>{
     	String[] itemset;
     	String[] tr;
     	int itemsetIndex;
-    	int pos;
     	boolean endBlock = false;
-    	start = 0;
+    	int pos;
+    	int start = 0;
+    	int len;
     	do{
     		System.out.println("Gerando itens de tamanho "+k);
     		generateCandidates(key, k, value, context);
@@ -219,7 +207,6 @@ public class Map1 extends Mapper<LongWritable, Text, Text, Text>{
         	System.out.println("Quantidade de frequentes de tamanho "+n+": "+frequents.size());
     		
     	}else if(n==2) {
-    		itemSup.clear();
     		for(int i=0; i<frequents.size(); i++){
     			tmpItem = new StringBuilder();
     			tmpItem.append(frequents.get(i).trim()).append(" ");
@@ -296,7 +283,8 @@ public class Map1 extends Mapper<LongWritable, Text, Text, Text>{
 	 */
 	private void generateCandidates1(LongWritable offset, Text value) {
 		String[] tmpItemsets;
-		start = 0;
+		int start = 0;
+    	int len;
 		int pos;
 		itemSup = new HashMap<String, Integer>();
 		int blockSize = 0;
@@ -388,24 +376,23 @@ public class Map1 extends Mapper<LongWritable, Text, Text, Text>{
 		Text val = new Text();
     	for(String item: frequents){
     		value = itemSup.get(item);
-    		
-    		if(value == null || value <= support){
+    		System.out.println("item: "+item+" sup: "+value);
+    		if(value == null || value < support){
     			rmItems.add(item);
     		}else{
     			//envia para o reduce
     			key.set(item);
-    			val.set(String.valueOf(value));
+    			val.set(String.valueOf(value)+":"+splitName);
     			try {
 					context.write(key, val);
 				} catch (IOException | InterruptedException e) {
 					e.printStackTrace();
 				}
     		}
-    		itemSup.remove(item);
     	}
     	
     	System.out.println("\nRemovendo "+rmItems.size()+" não frequentes.\n");
-    	
+    	itemSup.clear();
     	frequents.removeAll(rmItems);
     }
     
@@ -422,21 +409,21 @@ public class Map1 extends Mapper<LongWritable, Text, Text, Text>{
     	for(String item: keys){
     		value = itemSup.get(item);
     		
-    		if(value == null || value <= support){
+    		if(value == null || value < support){
     			rmItems.add(item);
     		}else{
     			//envia para o reduce
     			frequents.add(item);
     			key.set(item);
-    			val.set(String.valueOf(value));
+    			val.set(String.valueOf(value)+":"+splitName);
     			try {
 					context.write(key, val);
 				} catch (IOException | InterruptedException e) {
 					e.printStackTrace();
 				}
     		}
-    		itemSup.remove(item);
     	}
+    	itemSup.clear();
     	
     	System.out.println("\nRemovendo "+rmItems.size()+" não frequentes.\n");
     	
