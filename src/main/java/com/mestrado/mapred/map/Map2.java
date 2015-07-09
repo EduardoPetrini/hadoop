@@ -15,10 +15,8 @@ import java.util.Set;
 
 import main.java.com.mestrado.app.HashNode;
 import main.java.com.mestrado.app.HashPrefixTree;
-import main.java.com.mestrado.app.PrefixTree;
 import main.java.com.mestrado.utils.MrUtils;
 
-import org.apache.commons.configuration.ConfigurationFactory.AdditionalConfigurationData;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.Path;
@@ -56,7 +54,6 @@ public class Map2 extends Mapper<LongWritable, Text, Text, Text> {
 		int totalPartitions = Integer.parseInt(context.getConfiguration().get(
 				"totalPartitions"));
 		inputPartialName = context.getConfiguration().get("outputPartialName");
-		String count = context.getConfiguration().get("count");
 
 		blocksIds = new ArrayList<String>();
 		for (int i = 1; i <= totalPartitions; i++) {
@@ -119,7 +116,7 @@ public class Map2 extends Mapper<LongWritable, Text, Text, Text> {
 				}
 				start = pos + 1;
 				if (start >= value.getLength()) {
-					System.out.println("Break... " + value.getLength());
+					// System.out.println("Break... " + value.getLength());
 					endBlock = true;
 					break;
 				}
@@ -168,7 +165,7 @@ public class Map2 extends Mapper<LongWritable, Text, Text, Text> {
 	 * @param itemset
 	 * @return
 	 */
-	public int count(String[] transactions, String itemset) {
+	public int count2(String[] transactions, String itemset) {
 		int count;
 		int occurrenceCount = 0;
 		int i, j;
@@ -230,7 +227,7 @@ public class Map2 extends Mapper<LongWritable, Text, Text, Text> {
 			return;
 		}
 		
-		HashNode son = hNode.hashNode.get(transaction[i]);
+		HashNode son = hNode.getHashNode().get(transaction[i]);
 		
 		if(son == null){
 			return;
@@ -245,7 +242,7 @@ public class Map2 extends Mapper<LongWritable, Text, Text, Text> {
 			}
 			addToHashItemSup(sb.toString().trim());
 			
-			System.out.println("Encontrou: "+sb.toString().trim());
+			// System.out.println("Encontrou: "+sb.toString().trim());
 			i++;
 			itemsetIndex++;
 			while(i < transaction.length){

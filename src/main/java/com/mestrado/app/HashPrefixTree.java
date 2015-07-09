@@ -27,15 +27,15 @@ public class HashPrefixTree {
 			return;
 		}
 		
-		HashNode son = hNode.hashNode.get(itemset[i]);
+		HashNode son = hNode.getHashNode().get(itemset[i]);
 		
 		if(son == null){
 			//Cria um novo registro na hash
-			hNode.hashNode.put(itemset[i], new HashNode(i+1));
+			hNode.getHashNode().put(itemset[i], new HashNode(i+1));
 			if(i >= itemset.length-1){
 				return;
 			}
-			add(hNode.hashNode.get(itemset[i]), itemset, i+1);
+			add(hNode.getHashNode().get(itemset[i]), itemset, i+1);
 		}else{
 			//percorre a hashTree
 			i++;
@@ -57,7 +57,7 @@ public class HashPrefixTree {
 			return;
 		}
 		
-		HashNode son = hNode.hashNode.get(transaction[i]);
+		HashNode son = hNode.getHashNode().get(transaction[i]);
 		
 		if(son == null){
 			return;
@@ -89,13 +89,13 @@ public class HashPrefixTree {
 			return;
 		}
 		
-		HashNode son = hNode.hashNode.get(transaction[i]);
+		HashNode son = hNode.getHashNode().get(transaction[i]);
 		
 		if(son == null){
 			return;
 		}else{
 			itemset[itemIndex] = transaction[i];
-			if(hNode.level == k-1){
+			if(hNode.getLevel() == k-1){
 				StringBuilder sb = new StringBuilder();
 				for(String item: itemset){
 					if(item != null){

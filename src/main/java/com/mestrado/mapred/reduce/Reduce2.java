@@ -13,8 +13,6 @@ import java.util.logging.Logger;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
 
@@ -39,7 +37,9 @@ public class Reduce2 extends Reducer<Text, Text, Text, Text> {
     @Override
     public void reduce(Text key, Iterable<Text> values, Context context){
     	int count = 0;
-    	
+    	if(key.toString().equals("1090")){
+    		System.out.println("Debuga aqui...");
+    	}
     	for (Iterator<Text> it = values.iterator(); it.hasNext();) {
             count += Integer.parseInt(it.next().toString());
         }

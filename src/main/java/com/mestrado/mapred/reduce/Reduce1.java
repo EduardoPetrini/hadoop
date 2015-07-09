@@ -76,18 +76,13 @@ public class Reduce1 extends Reducer<Text, Text, Text, IntWritable>{
         String[] splitValues;
         Double partialGlobalSupport = new Double(0);
         ArrayList<String> diList = new ArrayList<String>();
-//        ArrayList<Integer> diSize = new ArrayList<Integer>();
         int di = 0;
-        String rm;
-        log.info("Obtém a lista de valores para a chave "+key);
+//        log.info("Obtém a lista de valores para a chave "+key);
     	for (Iterator<Text> it = values.iterator(); it.hasNext();) {
-    		rm = it.next().toString();
-    		splitValues = rm.split(":");
-    		log.info(rm);
+    		splitValues = it.next().toString().split(":");
             partialSupport += Integer.valueOf(splitValues[0]);
             diList.add(splitValues[1]);
             di += Integer.parseInt(splitValues[2]);
-//            diSize.add(Integer.valueOf(splitValues[2]));
             numMapsOfX++;
         }
     	
@@ -95,7 +90,8 @@ public class Reduce1 extends Reducer<Text, Text, Text, IntWritable>{
     	valueOut.set(partialSupport);
     	
     	if(numMapsOfX >= totalMaps){
-    		if(partialSupport > (support*totalTransactions)){
+    		double rm = (partialSupport/((double) totalTransactions));
+    		if((partialSupport/((double) totalTransactions)) >= support){
 //	    		System.out.println("Item processado em todos os Maps, enviar para a partição global de itens frequentes");
 	    		try {
 	                context.write(key, valueOut);
@@ -106,7 +102,8 @@ public class Reduce1 extends Reducer<Text, Text, Text, IntWritable>{
     	}else{
 	    	partialGlobalSupport = calcPartialGlobalSupport(di,numMapsOfX, partialSupport);
 //	    	System.out.println("Suporte Parcialmente Global: "+partialGlobalSupport);
-	        if(partialGlobalSupport >= (support*totalTransactions)){
+	    	double rm = (partialGlobalSupport/((double) totalTransactions));
+	        if((partialGlobalSupport/((double) totalTransactions)) >= support){
 	        
 	        	//Item parcialmente frequente, enviá-lo para partições em que não foi frequente]
 //	        	System.out.println("IEM parcialmente FREQUENTE---|");
