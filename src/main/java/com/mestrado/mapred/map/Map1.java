@@ -14,6 +14,8 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Set;
 
+import main.java.com.mestrado.app.HashNode;
+import main.java.com.mestrado.app.HashPrefixTree;
 import main.java.com.mestrado.app.PrefixTree;
 
 import org.apache.commons.logging.Log;
@@ -35,7 +37,7 @@ public class Map1 extends Mapper<LongWritable, Text, Text, Text>{
     private ArrayList<String> frequents;
     private HashMap<String, Integer> itemSup;
     
-    private PrefixTree prefixTree;
+    private HashPrefixTree hpt;
     String splitName;
     
     
@@ -53,7 +55,7 @@ public class Map1 extends Mapper<LongWritable, Text, Text, Text>{
     	System.out.println("\n*****************/////// KEY: "+key);
 
     	frequents = new ArrayList<String>();
-    	prefixTree = new PrefixTree(0);
+    	hpt = new HashPrefixTree();
     	System.out.println("Procentagem do suporte: "+support+"%");
     	
     	int k = 1;
@@ -77,7 +79,7 @@ public class Map1 extends Mapper<LongWritable, Text, Text, Text>{
     					for(int i = 0; i < tr.length; i++){
     						itemset = new String[k];
 	    					itemsetIndex = 0;
-	    					subSet(tr, prefixTree, i, k, itemset, itemsetIndex);
+	    					subSet(tr, hpt.getHashNode(), i, k, itemset, itemsetIndex);
     					}
     				} catch (CharacterCodingException e) {
     					e.printStackTrace();
@@ -98,7 +100,7 @@ public class Map1 extends Mapper<LongWritable, Text, Text, Text>{
     					for(int i = 0; i < tr.length; i++){
     						itemset = new String[k];
 	    					itemsetIndex = 0;
-	    					subSet(tr, prefixTree, i, k, itemset, itemsetIndex);
+	    					subSet(tr, hpt.getHashNode(), i, k, itemset, itemsetIndex);
     					}
     				} catch (CharacterCodingException e) {
     					e.printStackTrace();
@@ -106,7 +108,7 @@ public class Map1 extends Mapper<LongWritable, Text, Text, Text>{
     				}
     			}
     			//limpar prefixTree
-    			prefixTree = new PrefixTree(0);
+    			hpt = new HashPrefixTree();
 //    			/*Adicionar os itemsets frequentes e os envia para o Reduce*/
     			addFrequentsItemsAndSendToReduce(context);
     		}
@@ -133,62 +135,39 @@ public class Map1 extends Mapper<LongWritable, Text, Text, Text>{
      * @param itemset
      * @param itemsetIndex
      */
-    private void subSet(String[] transaction, PrefixTree pt, int i,
+    private void subSet(String[] transaction, HashNode hNode, int i,
 			int k, String[] itemset, int itemsetIndex) {
     	if(i >= transaction.length){
 			return;
 		}
-		int index = -1;
 		
-		try{
-			index = pt.getPrefix().indexOf(transaction[i]);
-		}catch(Exception e){
-			e.printStackTrace();
-			System.out.println("Prefix: "+pt.getPrefix()+" item: "+transaction[i]);
-			System.out.println("Error");
-		}
+		HashNode son = hNode.getHashNode().get(transaction[i]);
 		
-		if(index == -1){
+		if(son == null){
 			return;
 		}else{
 			itemset[itemsetIndex] = transaction[i];
-			/*if(i == transaction.length-1 && i == k-1){
+			if(hNode.getLevel() == k-1){
 				StringBuilder sb = new StringBuilder();
-				System.out.println("Achou1 "+Arrays.asList(itemset));
-				for(String s: itemset){
-					if(s != null)
-						sb.append(s).append(" ");
+				for(String item: itemset){
+					if(item != null){
+						sb.append(item).append(" ");
+					}
 				}
-				
+				System.out.println("Encontrou: "+sb.toString().trim());
 				itemset[itemsetIndex] = "";
-				addToHashItemSup(sb.toString().trim());
 				return;
-			}else{*/
+			}
+			
+			i++;
+			itemsetIndex++;
+			while(i < transaction.length){
+				subSet(transaction, son, i, k, itemset, itemsetIndex);
+				for(int j = itemsetIndex; j < itemset.length; j++){
+					itemset[j] = "";
+				}
 				i++;
-				if(pt.getLevel() == k-1){
-					StringBuilder sb = new StringBuilder();
-//					System.out.println("Achou2 "+Arrays.asList(itemset));
-					for(String s: itemset){
-						if(s != null)
-							sb.append(s).append(" ");
-					}
-					addToHashItemSup(sb.toString().trim());
-					itemset[itemsetIndex] = "";
-					return;
-				}
-				
-				if(pt.getPrefixTree().isEmpty() || pt.getPrefixTree().size() <= index || pt.getPrefixTree().get(index) == null){
-					itemset[itemsetIndex] = "";
-					return;
-				}else{
-					itemsetIndex++;
-					while(i < transaction.length){
-						subSet(transaction, pt.getPrefixTree().get(index),i, k, itemset, itemsetIndex);
-						i++;
-					}
-				}
-				
-//			}
+			}
 		}
 	}
 	public void generateCandidates(LongWritable offset, int n, Text value, Context context){
@@ -211,7 +190,7 @@ public class Map1 extends Mapper<LongWritable, Text, Text, Text>{
     			tmpItem = new StringBuilder();
     			tmpItem.append(frequents.get(i).trim()).append(" ");
     			for(int j=i+1; j<frequents.size(); j++){
-    				prefixTree.add(prefixTree,(tmpItem.toString()+frequents.get(j).trim()).split(" "),0);
+    				hpt.add(hpt.getHashNode(),(tmpItem.toString()+frequents.get(j).trim()).split(" "),0);
     			}
     		}
     		frequents.clear();
@@ -239,7 +218,7 @@ public class Map1 extends Mapper<LongWritable, Text, Text, Text>{
 	    					//add to prefixTree
 	    					//System.out.println("tmpSize in K = "+n+": candidate size "+tempCandidates.size()+", Adicionando na hash "+tempCandidates.get(tempCandidates.size()-1));
 	    					try{
-	    						prefixTree.add(prefixTree,newItemSet.split(" "),0);
+	    						hpt.add(hpt.getHashNode(),newItemSet.split(" "),0);
 	    					}catch(Exception e){
 	    						e.printStackTrace();
 	    					}

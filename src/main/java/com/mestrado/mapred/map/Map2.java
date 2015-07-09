@@ -13,9 +13,12 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Set;
 
+import main.java.com.mestrado.app.HashNode;
+import main.java.com.mestrado.app.HashPrefixTree;
 import main.java.com.mestrado.app.PrefixTree;
 import main.java.com.mestrado.utils.MrUtils;
 
+import org.apache.commons.configuration.ConfigurationFactory.AdditionalConfigurationData;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.Path;
@@ -39,7 +42,7 @@ public class Map2 extends Mapper<LongWritable, Text, Text, Text> {
 	private String splitName;
 	private String inputPartialName;
 	private HashMap<String, Integer> itemSup;
-	private PrefixTree prefixTree;
+	private HashPrefixTree hpt;
 	private int maxK;
 	/**
 	 * Le o arquivo invertido para a memória.
@@ -90,7 +93,7 @@ public class Map2 extends Mapper<LongWritable, Text, Text, Text> {
 			System.out
 					.println("A partição atual será processada: " + splitName);
 			itemSup = new HashMap<String, Integer>();
-			prefixTree = new PrefixTree(0);
+			hpt = new HashPrefixTree();
 			openFile(context);// Ler o arquivo da partição para a prefixTree
 
 			String[] itemset;
@@ -108,7 +111,7 @@ public class Map2 extends Mapper<LongWritable, Text, Text, Text> {
 					for (int i = 0; i < tr.length; i++) {
 						itemset = new String[maxK];
 						itemsetIndex = 0;
-						subSet(tr, prefixTree, i, itemset, itemsetIndex);
+						subSet(tr, hpt.getHashNode(), i, itemset, itemsetIndex);
 					}
 				} catch (CharacterCodingException e) {
 					e.printStackTrace();
@@ -130,7 +133,7 @@ public class Map2 extends Mapper<LongWritable, Text, Text, Text> {
 					for (int i = 0; i < tr.length; i++) {
 						itemset = new String[maxK];
 						itemsetIndex = 0;
-						subSet(tr, prefixTree, i, itemset, itemsetIndex);
+						subSet(tr, hpt.getHashNode(), i, itemset, itemsetIndex);
 					}
 				} catch (CharacterCodingException e) {
 					e.printStackTrace();
@@ -138,20 +141,6 @@ public class Map2 extends Mapper<LongWritable, Text, Text, Text> {
 				}
 			}
 			sendItemsetsToReduce(context); 
-			// for(ItemSup item: lPartialItemsets){
-			// supportLocal = count(transacions, item.getItemset().toString());
-			//
-			// if(supportLocal > 0){
-			// try{
-			// valueOut.set(String.valueOf(item.getSupport())+"#"+supportLocal);
-			// keyOut.set(item.getItemset());
-			//
-			// context.write(keyOut, valueOut);
-			// }catch(IOException | InterruptedException e){
-			// e.printStackTrace();
-			// }
-			// }
-			// }
 		}
 	}
 
@@ -234,50 +223,38 @@ public class Map2 extends Mapper<LongWritable, Text, Text, Text> {
 	 * @param itemset
 	 * @param itemsetIndex
 	 */
-	private void subSet(String[] transaction, PrefixTree pt, int i,
+	private void subSet(String[] transaction, HashNode hNode, int i,
 			String[] itemset, int itemsetIndex) {
-		if (i >= transaction.length) {
+		
+		if(i >= transaction.length){
 			return;
 		}
-		int index = -1;
-
-		try {
-			index = pt.getPrefix().indexOf(transaction[i]);
-		} catch (Exception e) {
-			e.printStackTrace();
-			System.out.println("Prefix: " + pt.getPrefix() + " item: "
-					+ transaction[i]);
-			System.out.println("Error");
-		}
-
-		if (index == -1) {
+		
+		HashNode son = hNode.hashNode.get(transaction[i]);
+		
+		if(son == null){
 			return;
-		} else {
+		}else{
 			itemset[itemsetIndex] = transaction[i];
-			i++;
 			
 			StringBuilder sb = new StringBuilder();
-			// System.out.println("Achou2 "+Arrays.asList(itemset));
-			for (String s : itemset) {
-				if (s != null)
-					sb.append(s).append(" ");
-			}
-			addToHashItemSup(sb.toString().trim());
-//			itemset[itemsetIndex] = "";
-		
-			if (pt.getPrefixTree().isEmpty()
-					|| pt.getPrefixTree().size() <= index
-					|| pt.getPrefixTree().get(index) == null) {
-				itemset[itemsetIndex] = "";
-				return;
-			} else {
-				itemsetIndex++;
-				while (i < transaction.length) {
-					subSet(transaction, pt.getPrefixTree().get(index), i, itemset, itemsetIndex);
-					i++;
+			for(String item: itemset){
+				if(item != null){
+					sb.append(item).append(" ");
 				}
 			}
-
+			addToHashItemSup(sb.toString().trim());
+			
+			System.out.println("Encontrou: "+sb.toString().trim());
+			i++;
+			itemsetIndex++;
+			while(i < transaction.length){
+				subSet(transaction, son, i, itemset, itemsetIndex);
+				for(int j = itemsetIndex; j < itemset.length; j++){
+					itemset[j] = "";
+				}
+				i++;
+			}
 		}
 	}
 
@@ -306,7 +283,7 @@ public class Map2 extends Mapper<LongWritable, Text, Text, Text> {
 				k = key.toString();
 				kSpt = k.split(" ");
 				itemSup.put(k, value.get());
-				prefixTree.add(prefixTree, kSpt, 0);
+				hpt.add(hpt.getHashNode(), kSpt, 0);
 				if(kSpt.length > maxK){
 					maxK = kSpt.length; 
 				}
