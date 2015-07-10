@@ -25,23 +25,26 @@ public class Reduce2 extends Reducer<Text, Text, Text, Text> {
     Log log = LogFactory.getLog(Reduce2.class);
     double support;
     Text valueOut = new Text();
+    long totalTransaction;
     
     @Override
     public void setup(Context context) throws IOException{
-        String count = context.getConfiguration().get("count");
-        support = Double.parseDouble(context.getConfiguration().get("support"));//Definido no initial config
-        log.info("Iniciando o REDUCE 2. Count dir: "+count);
+    	String sup = context.getConfiguration().get("supportPercentage");
+    	support = Double.parseDouble(sup);
+    	totalTransaction= Long.parseLong(context.getConfiguration().get("totalTransactions"));
+        log.info("Iniciando o REDUCE 2. ");
         System.out.println("Support global: "+support);
     }
     
     @Override
     public void reduce(Text key, Iterable<Text> values, Context context){
-    	int count = 0;
-    	if(key.toString().equals("1090")){
-    		System.out.println("Debuga aqui...");
-    	}
-    	for (Iterator<Text> it = values.iterator(); it.hasNext();) {
-            count += Integer.parseInt(it.next().toString());
+    	Iterator<Text> it = values.iterator();
+    	String[] valueItem = it.next().toString().split(":");
+    	int count = Integer.parseInt(valueItem[0]);
+    	count += Integer.parseInt(valueItem[1]);
+    	
+    	while (it.hasNext()) {
+            count += Integer.parseInt(it.next().toString().split(":")[1]);
         }
     	
     	/*String[] firstValue = values.iterator().next().toString().split("#");
@@ -51,8 +54,8 @@ public class Reduce2 extends Reducer<Text, Text, Text, Text> {
     	for (Iterator<Text> it = values.iterator(); it.hasNext();) {
             count += Integer.parseInt(it.next().toString().split("#")[1]);
         }*/
-
-    	if(count >= support){
+    	
+    	if(((count/((double) totalTransaction)) >= support)){
         	valueOut.set(String.valueOf(count));
             try {
                 context.write(key, valueOut);

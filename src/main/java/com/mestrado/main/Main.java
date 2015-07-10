@@ -43,7 +43,7 @@ public class Main {
     private int k = 1;
     public static int totalBlockCount;
     public static String user = "/user/eduardo/";
-    public static String inputEntry = "input/T100";
+    public static String inputEntry = "input/T10I4D10N1000K.10x.ok";
     public static String clusterUrl = "hdfs://master/";
     public static long totalTransactionCount;
     public ArrayList<String> blocksIds;
@@ -148,6 +148,8 @@ public class Main {
         job.getConfiguration().set("support", support);
         job.getConfiguration().set("totalPartitions", String.valueOf(blocksIds.size()));
         job.getConfiguration().set("outputPartialName", outputPartialName);
+        job.getConfiguration().set("totalTransactions", String.valueOf(totalTransactionCount));
+        job.getConfiguration().set("supportPercentage", String.valueOf(supportPercentage));
         
         for(int i = 1; i <= this.blocksIds.size(); i++){
         	job.getConfiguration().set("blockId"+i, this.blocksIds.get(i-1));

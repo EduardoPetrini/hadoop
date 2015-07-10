@@ -39,9 +39,11 @@ public class Map2 extends Mapper<LongWritable, Text, Text, Text> {
 	private ArrayList<String> blocksIds;
 	private String splitName;
 	private String inputPartialName;
-	private HashMap<String, Integer> itemSup;
+	private HashMap<String, Integer[]> itemSup;
 	private HashPrefixTree hpt;
 	private int maxK;
+	private Text valueOut;
+	private Text keyOut;
 	/**
 	 * Le o arquivo invertido para a memória.
 	 * 
@@ -89,7 +91,7 @@ public class Map2 extends Mapper<LongWritable, Text, Text, Text> {
 			// A partição atual será processada
 			System.out
 					.println("A partição atual será processada: " + splitName);
-			itemSup = new HashMap<String, Integer>();
+			itemSup = new HashMap<String, Integer[]>();
 			hpt = new HashPrefixTree();
 			openFile(context);// Ler o arquivo da partição para a prefixTree
 
@@ -100,7 +102,8 @@ public class Map2 extends Mapper<LongWritable, Text, Text, Text> {
 			int pos;
 			int start = 0;
 			int len;
-
+			valueOut = new Text();
+			keyOut = new Text();
 			while ((pos = value.find("\n", start)) != -1) {
 				len = pos - start;
 				try {
@@ -108,7 +111,7 @@ public class Map2 extends Mapper<LongWritable, Text, Text, Text> {
 					for (int i = 0; i < tr.length; i++) {
 						itemset = new String[maxK];
 						itemsetIndex = 0;
-						subSet(tr, hpt.getHashNode(), i, itemset, itemsetIndex);
+						subSet(tr, hpt.getHashNode(), i, itemset, itemsetIndex, context);
 					}
 				} catch (CharacterCodingException e) {
 					e.printStackTrace();
@@ -130,85 +133,14 @@ public class Map2 extends Mapper<LongWritable, Text, Text, Text> {
 					for (int i = 0; i < tr.length; i++) {
 						itemset = new String[maxK];
 						itemsetIndex = 0;
-						subSet(tr, hpt.getHashNode(), i, itemset, itemsetIndex);
+						subSet(tr, hpt.getHashNode(), i, itemset, itemsetIndex, context);
 					}
 				} catch (CharacterCodingException e) {
 					e.printStackTrace();
 					System.exit(1);
 				}
 			}
-			sendItemsetsToReduce(context); 
 		}
-	}
-
-	private void sendItemsetsToReduce(Context context) {
-		Set<String> keys = itemSup.keySet();
-		Text valueOut = new Text();
-		Text keyOut = new Text();
-		
-		for(String k: keys){
-			keyOut.set(k);
-			valueOut.set(String.valueOf(itemSup.get(k)));
-			try {
-				context.write(keyOut, valueOut);
-			} catch (IOException | InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-		
-	}
-
-	/**
-	 * 
-	 * @param transactions
-	 * @param itemset
-	 * @return
-	 */
-	public int count2(String[] transactions, String itemset) {
-		int count;
-		int occurrenceCount = 0;
-		int i, j;
-		String[] tSplit;
-		String[] itemsetSplit = itemset.split(" ");
-		boolean checkOccurrence = true;
-		for_trans: for (String transaction : transactions) {
-			i = 0;
-			j = 0;
-			count = 0;
-			tSplit = transaction.split(" ");
-
-			if (tSplit.length >= itemsetSplit.length) {
-				while (checkOccurrence) {
-
-					try {
-						if (itemsetSplit[i].equals(tSplit[j])) {
-							count++;
-							if (++i >= itemsetSplit.length
-									|| ++j >= tSplit.length) {
-								break;
-							}
-
-						} else {
-							if (++j >= tSplit.length) {
-								continue for_trans;
-							}
-						}
-					} catch (Exception e) {
-						System.out.println(Arrays.asList(itemsetSplit) + " == "
-								+ Arrays.asList(tSplit));
-						System.out.println(i + " " + j);
-						e.printStackTrace();
-						System.exit(0);
-					}
-				}
-				if (count == itemsetSplit.length) {
-					occurrenceCount++;
-				}
-			}
-		}
-
-		return occurrenceCount;
 	}
 
 	/**
@@ -221,7 +153,7 @@ public class Map2 extends Mapper<LongWritable, Text, Text, Text> {
 	 * @param itemsetIndex
 	 */
 	private void subSet(String[] transaction, HashNode hNode, int i,
-			String[] itemset, int itemsetIndex) {
+			String[] itemset, int itemsetIndex, Context context) {
 		
 		if(i >= transaction.length){
 			return;
@@ -240,13 +172,13 @@ public class Map2 extends Mapper<LongWritable, Text, Text, Text> {
 					sb.append(item).append(" ");
 				}
 			}
-			addToHashItemSup(sb.toString().trim());
+			addToHashItemSupAndSendToReduce(sb.toString().trim(), context);
 			
 			// System.out.println("Encontrou: "+sb.toString().trim());
 			i++;
 			itemsetIndex++;
 			while(i < transaction.length){
-				subSet(transaction, son, i, itemset, itemsetIndex);
+				subSet(transaction, son, i, itemset, itemsetIndex, context);
 				for(int j = itemsetIndex; j < itemset.length; j++){
 					itemset[j] = "";
 				}
@@ -275,11 +207,15 @@ public class Map2 extends Mapper<LongWritable, Text, Text, Text> {
 			String k;
 			String[] kSpt;
 			maxK = 0;
+			Integer vHash[];
 			while (reader.next(key, value)) {
 				// System.out.println("Add Key: "+key.toString());
 				k = key.toString();
 				kSpt = k.split(" ");
-				itemSup.put(k, value.get());
+				vHash = new Integer[2];
+				vHash[0] = value.get();
+				vHash[1] = 0;
+				itemSup.put(k, vHash);
 				hpt.add(hpt.getHashNode(), kSpt, 0);
 				if(kSpt.length > maxK){
 					maxK = kSpt.length; 
@@ -291,16 +227,19 @@ public class Map2 extends Mapper<LongWritable, Text, Text, Text> {
 		}
 	}
 
-	public boolean addToHashItemSup(String item) {
-		Integer value = 0;
-
-		if ((value = itemSup.get(item)) == null) {
-			itemSup.put(item, 1);
-			return true;
-		} else {
-			value++;
-			itemSup.put(item, value);
-			return false;
+	public void addToHashItemSupAndSendToReduce(String item, Context context) {
+		Integer[] value;
+		
+		if ((value = itemSup.get(item)) != null) {
+			valueOut.set(String.valueOf(value[0])+":1");
+			keyOut.set(item);
+			
+			try {
+				context.write(keyOut, valueOut);
+			} catch (IOException | InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 	}
 }
