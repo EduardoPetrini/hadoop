@@ -8,3 +8,4 @@ ssh master "rm -rf /home/eduardo/jar/*"
 echo "Copying jar files to master..."
 scp -r target/hadoop* master:/home/eduardo/jar/
 
+date
