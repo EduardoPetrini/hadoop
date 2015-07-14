@@ -38,13 +38,13 @@ public class Main {
     private Log log = LogFactory.getLog(Main.class);
     public static int countDir;
     private int timeTotal;
-    public static double supportPercentage = 0.005;
+    public static double supportPercentage = 0.0001;
     public static String support;
     private int k = 1;
     public static int totalBlockCount;
     public static String user = "/user/eduardo/";
-    public static String inputEntry = "input/T105";
-    public static String clusterUrl = "hdfs://master/";
+    public static String inputEntry = "input/T104";
+    public static String clusterUrl = "hdfs://licesa1/";
     public static long totalTransactionCount;
     public ArrayList<String> blocksIds;
     public String outputPartialName = user+"partitions-fase-1/partition";
@@ -66,7 +66,7 @@ public class Main {
         } catch (IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
-          job.getConfiguration().set("fs.defaultFS", "hdfs://master/");
+//          job.getConfiguration().set("fs.defaultFS", "hdfs://master/");
         job.setJobName("Fase 1");
         
         job.setJarByClass(Main.class);
@@ -131,7 +131,7 @@ public class Main {
         } catch (IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
-          job.getConfiguration().set("fs.defaultFS", "hdfs://master/");
+//          job.getConfiguration().set("fs.defaultFS", "hdfs://master/");
         job.setJobName("Fase 2");
         
         job.setJarByClass(Main.class);
