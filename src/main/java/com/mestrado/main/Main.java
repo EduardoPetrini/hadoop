@@ -44,7 +44,7 @@ public class Main {
     public static int totalBlockCount;
     public static String user = "/user/eduardo/";
     public static String inputEntry = "input/T104";
-    public static String clusterUrl = "hdfs://licesa1/";
+    public static String clusterUrl = "hdfs://master/";
     public static long totalTransactionCount;
     public ArrayList<String> blocksIds;
     public String outputPartialName = user+"partitions-fase-1/partition";
