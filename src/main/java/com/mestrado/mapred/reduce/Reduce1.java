@@ -39,7 +39,7 @@ public class Reduce1 extends Reducer<Text, IntWritable, Text, IntWritable>{
         Path path = new Path(fileCachedPath);
         log.info("Iniciando o REDUCE 1. Count Dir: "+count);
         log.info("Reduce1 support = "+support);
-        
+        log.info("Reduce 1 file = "+fileCachedPath);
         writer = SequenceFile.createWriter(context.getConfiguration(), SequenceFile.Writer.file(path),
                 SequenceFile.Writer.keyClass(Text.class), SequenceFile.Writer.valueClass(IntWritable.class));
     }

@@ -46,7 +46,6 @@ public class Reduce2 extends Reducer<Text, IntWritable, Text, IntWritable> {
     
     @Override
     public void reduce(Text key, Iterable<IntWritable> values, Context context){
-    	Text keyOut = new Text(key.toString().replaceAll("\\[+|\\]+|,+", ""));
     	int count = 0;
     	for (Iterator<IntWritable> it = values.iterator(); it.hasNext();) {
             count += it.next().get();
@@ -55,8 +54,8 @@ public class Reduce2 extends Reducer<Text, IntWritable, Text, IntWritable> {
         if(count >= support){
         	valueOut.set(count);
             try {
-            	saveInCache(keyOut, valueOut);
-                context.write(keyOut, valueOut);
+            	saveInCache(key, valueOut);
+                context.write(key, valueOut);
             } catch (IOException | InterruptedException ex) {
                 Logger.getLogger(Reduce1.class.getName()).log(Level.SEVERE, null, ex);
             }

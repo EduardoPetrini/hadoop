@@ -72,7 +72,7 @@ public class Main {
         } catch (IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
-//         job.getConfiguration().set("fs.defaultFS", clusterUrl);
+         job.getConfiguration().set("fs.defaultFS", clusterUrl);
         job.setJobName("Fase 1");
         
         job.setJarByClass(Main.class);
@@ -129,7 +129,7 @@ public class Main {
         } catch (IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
-//         job.getConfiguration().set("fs.defaultFS", clusterUrl);
+         job.getConfiguration().set("fs.defaultFS", clusterUrl);
         job.setJobName("Fase 2");
         
         job.setJarByClass(Main.class);
@@ -194,7 +194,7 @@ public class Main {
         } catch (IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
-//         job.getConfiguration().set("fs.defaultFS", clusterUrl);
+         job.getConfiguration().set("fs.defaultFS", clusterUrl);
         job.setJobName("Fase 3");
         
         job.setJarByClass(Main.class);
@@ -204,7 +204,7 @@ public class Main {
         job.setReducerClass(Reduce3.class);
         
         job.setOutputKeyClass(Text.class);
-        job.setOutputValueClass(IntWritable.class);
+        job.setOutputValueClass(Text.class);
         
         job.getConfiguration().set("count", String.valueOf(Main.countDir));
         job.getConfiguration().set("support", String.valueOf(support));
@@ -270,10 +270,6 @@ public class Main {
             m.k = MrUtils.getK(m.k);
         }
 
-        /*Remover os arquivos invertidos anteriores*/
-//        m.delOutDirs(user);
-//        m.delContentFiles("invert");
-        
         double seg = ((double)m.timeTotal/1000);
         
         System.out.println("Tempo total: "+m.timeTotal+" mile ou "+seg+" segundos! ou "+seg/60+" minutos");

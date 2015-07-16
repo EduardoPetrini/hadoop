@@ -9,8 +9,11 @@ package main.java.com.mestrado.mapred.map;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 
-import main.java.com.mestrado.app.HashTree;
+import main.java.com.mestrado.app.HashNode;
+import main.java.com.mestrado.app.HashPrefixTree;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -32,8 +35,10 @@ public class Map2  extends Mapper<LongWritable, Text, Text, IntWritable>{
     IntWritable countOut = new IntWritable(1);
     SequenceFile.Reader reader;
     ArrayList<String> fileCached;
-    HashTree hashTree;
+    HashPrefixTree hpt;
     int k;
+    private Text keyOut;
+    private IntWritable valueOut;
     /**
      * Le o arquivo invertido para a memória.
      * @param context
@@ -57,22 +62,18 @@ public class Map2  extends Mapper<LongWritable, Text, Text, IntWritable>{
         
         //Gerar combinações dos itens de acordo com k
         
-        hashTree = new HashTree(k);
+        hpt = new HashPrefixTree();
         //System.out.println("K is "+k);
-        String itemsetC;
+        String[] itemsetC = new String[2];
         for (int i = 0; i < fileCached.size(); i++){
+        	itemsetC[0] = fileCached.get(i);
         	for (int j = i+1; j < fileCached.size(); j++){
-        		String[] itemA = fileCached.get(i).split(" ");
-        		String[] itemB = fileCached.get(j).split(" ");
-        		if(isSamePrefix(itemA, itemB, i, j)){
-        			itemsetC = combine(itemA, itemB);
-        			//System.out.println(itemsetC);
-        			//Building HashTree
-        			hashTree.add(itemsetC);
-        		}
+        		itemsetC[1] = fileCached.get(j);
+        		hpt.add(hpt.getHashNode(),itemsetC,0);
         	}
         }
-        System.out.println();
+        keyOut = new Text();
+        valueOut = new IntWritable(1);
     }
     
     /**
@@ -101,63 +102,81 @@ public class Map2  extends Mapper<LongWritable, Text, Text, IntWritable>{
      * @param itemB
      * @return
      */
-    public String combine(String[] itemA, String[] itemB){
-        StringBuilder sb = new StringBuilder();
+    public String[] combine(String[] itemA, String[] itemB){
+        String[] item = new String[itemB.length+1];
         
         for(int i = 0; i < itemA.length; i++){
-            sb.append(itemA[i]).append(" ");
+            item[i] = itemA[i];
         }
-        sb.append(itemB[itemB.length-1]);
-        return sb.toString();
+        item[item.length-1] = itemB[itemB.length-1];
+        return item;
     }
     
     /**
+    /**
      * 
      * @param transaction
-     * @param hasht
+     * @param pt
      * @param i
+     * @param k
      * @param itemset
-     * @param context
+     * @param itemsetIndex
      */
-    public void subset(String[] transaction, HashTree hasht, int i, ArrayList<String> itemset,Context context){
-    	if(hasht == null){
+    private void subSet(String[] transaction, HashNode hNode, int i,
+			int k, String[] itemset, int itemsetIndex, Context context) {
+    	if(i >= transaction.length){
 			return;
 		}
 		
-		if(hasht.getLevel() > hasht.getK()){
-//			System.out.println("\nAchou -> Itemset: "+itemset.toString());
-			try{
-				context.write(new Text(itemset.toString()), new IntWritable(1));
-			}catch(IOException | InterruptedException e){
-				e.printStackTrace();
-			}
-			return;
-		}
+		HashNode son = hNode.getHashNode().get(transaction[i]);
 		
-		if(i >= transaction.length){
+		if(son == null){
 			return;
-		}
-		
-		while(i < transaction.length){
-			int hash = Integer.parseInt(transaction[i]) % 9;
+		}else{
+			itemset[itemsetIndex] = transaction[i];
 			
-			if(hasht.getNodes()[hash] != null){
-				itemset.add(transaction[i]);
-				subset(transaction, hasht.getNodes()[hash], i+1, itemset, context);
-				itemset.remove(itemset.size()-1);
+			if(hNode.getLevel() == k-1){
+				StringBuilder sb = new StringBuilder();
+				for(String item: itemset){
+					if(item != null){
+						sb.append(item).append(" ");
+					}
+				}
+				// System.out.println("Encontrou: "+sb.toString().trim());
+				keyOut.set(sb.toString().trim());
+				try {
+					context.write(keyOut, valueOut);
+				} catch (IOException | InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				itemset[itemsetIndex] = "";
+				return;
 			}
+			
 			i++;
+			itemsetIndex++;
+			while(i < transaction.length){
+				subSet(transaction, son, i, k, itemset, itemsetIndex, context);
+				for(int j = itemsetIndex; j < itemset.length; j++){
+					itemset[j] = "";
+				}
+				i++;
+			}
 		}
-		
-		return;
-    }
+	}
     
     @Override
     public void map(LongWritable key, Text value, Context context){
     	
 		//Aplica a função subset e envia o itemset para o reduce
-    	ArrayList<String> itemset = new ArrayList();
-		subset(value.toString().split(" "), hashTree, 0, itemset, context);
+    	String[] transaction = value.toString().split(" ");
+    	String[] itemset;
+    	for(int i = 0; i < transaction.length; i++){
+    		itemset = new String[2];
+    		subSet(transaction, hpt.getHashNode(), i, 2,itemset, 0,context);
+    		
+    	}
     }
     
     /**
@@ -166,7 +185,7 @@ public class Map2  extends Mapper<LongWritable, Text, Text, IntWritable>{
      * @param context
      * @return
      */
-    public ArrayList<String> openFile(String path, Context context){
+    public void openFile(String path, Context context){
     	fileCached = new ArrayList<String>();
     	try {
 			
@@ -182,6 +201,15 @@ public class Map2  extends Mapper<LongWritable, Text, Text, IntWritable>{
 			e.printStackTrace();
 		}
     	
-    	return fileCached;
+    	Collections.sort(fileCached, NUMERICAL_ORDER);
     }
+    
+    private static Comparator<Object> NUMERICAL_ORDER = new Comparator<Object>()  {
+		public int compare(Object ob1, Object ob2) {
+			int val1 = Integer.parseInt((String)ob1);
+			int val2 = Integer.parseInt((String)ob2);
+			
+			return val1 > val2? 1: val1 < val2? -1 : 0;
+		}
+	};
 }

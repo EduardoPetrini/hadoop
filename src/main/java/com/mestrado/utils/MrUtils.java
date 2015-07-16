@@ -53,7 +53,7 @@ public class MrUtils {
         
         log.info("Excluindo diretórios anteriores...");
         Configuration c = new Configuration();
-//         c.set("fs.defaultFS", Main.clusterUrl);
+         c.set("fs.defaultFS", Main.clusterUrl);
         Path p = new Path(d);
         try {
             FileSystem fs = FileSystem.get(c);
@@ -89,7 +89,7 @@ public class MrUtils {
         
         System.out.println("Excluindo diretórios anteriores...");
         Configuration c = new Configuration();
-//         c.set("fs.defaultFS", Main.clusterUrl);
+         c.set("fs.defaultFS", Main.clusterUrl);
         Path p = new Path(d);
         Path aux;
         
@@ -124,7 +124,7 @@ public class MrUtils {
     
     public void createTempDir(String d){
     	 Configuration c = new Configuration();
-//          c.set("fs.defaultFS", Main.clusterUrl);
+          c.set("fs.defaultFS", Main.clusterUrl);
         try {
             FileSystem fs = FileSystem.get(c);
             
@@ -143,7 +143,7 @@ public class MrUtils {
     public void delContentFiles(String dir){
         Path p = new Path(dir);
         Configuration c = new Configuration();
-//         c.set("fs.defaultFS", Main.clusterUrl);
+         c.set("fs.defaultFS", Main.clusterUrl);
         try {
             FileSystem fs = FileSystem.get(c);
             
@@ -186,7 +186,7 @@ public class MrUtils {
         Path p = new Path(dir);
         Path aux;
         Configuration c = new Configuration();
-//         c.set("fs.defaultFS", Main.clusterUrl);
+         c.set("fs.defaultFS", Main.clusterUrl);
         System.out.println("Verificando diretório: "+dir);
         
         try{
@@ -227,7 +227,7 @@ public class MrUtils {
         Path p = new Path(dir);
         
         Configuration c = new Configuration();
-//         c.set("fs.defaultFS", Main.clusterUrl);
+         c.set("fs.defaultFS", Main.clusterUrl);
         System.out.println("Verificando diretório: "+dir);
         
         try {
@@ -256,7 +256,7 @@ public class MrUtils {
     	
     	Path inputPath = new Path(inputPathUri);
     	Configuration c = new Configuration();
-//         c.set("fs.defaultFS", Main.clusterUrl);
+         c.set("fs.defaultFS", Main.clusterUrl);
         
         try {
         	
@@ -293,7 +293,7 @@ public class MrUtils {
     	String inputPathUri = Main.user+Main.inputEntry;
         Path inputPath = new Path(inputPathUri);
     	Configuration c = new Configuration();
-//         c.set("fs.defaultFS", Main.clusterUrl);
+         c.set("fs.defaultFS", Main.clusterUrl);
         ArrayList<String> blocksIds = new ArrayList<String>();
         
         try{
@@ -317,7 +317,7 @@ public class MrUtils {
     	String inputPathUri = Main.user+Main.inputEntry;
         Path inputPath = new Path(inputPathUri);
     	Configuration c = new Configuration();
-//         c.set("fs.defaultFS", Main.clusterUrl);
+         c.set("fs.defaultFS", Main.clusterUrl);
         
         try{
         	FileSystem fs = FileSystem.get(c);
@@ -340,7 +340,7 @@ public class MrUtils {
     public static void createIfNotExistOrClean(String pathName){
     	Path path = new Path(pathName.substring(0,pathName.length()-9));
     	Configuration c = new Configuration();
-//         c.set("fs.defaultFS", Main.clusterUrl);
+         c.set("fs.defaultFS", Main.clusterUrl);
     	
         try{
         	FileSystem fs = FileSystem.get(c);
@@ -371,7 +371,7 @@ public class MrUtils {
     	
     	Path path = new Path(pathName.substring(0,pathName.length()-9));
     	Configuration c = new Configuration();
-//         c.set("fs.defaultFS", Main.clusterUrl);
+         c.set("fs.defaultFS", Main.clusterUrl);
         
         try{
         	FileSystem fs = FileSystem.get(c);
@@ -422,7 +422,7 @@ public class MrUtils {
     	
     	Path inputPath = new Path(inputPathUri);
     	Configuration c = new Configuration();
-//         c.set("fs.defaultFS", Main.clusterUrl);
+         c.set("fs.defaultFS", Main.clusterUrl);
         
         try {
         	
