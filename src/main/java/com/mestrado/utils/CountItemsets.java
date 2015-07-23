@@ -19,7 +19,7 @@ public class CountItemsets {
 		
 			Configuration c = new Configuration();
 			try {
-	          c.set("fs.defaultFS", Main.clusterUrl);
+	          c.set("fs.defaultFS", "hdfs://177.105.60.151/");
 			FileSystem fs = FileSystem.get(c);
 			BufferedReader br = new BufferedReader(new InputStreamReader(
 					fs.open(path)));

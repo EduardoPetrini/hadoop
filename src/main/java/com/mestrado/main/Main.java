@@ -38,7 +38,7 @@ public class Main {
     private Log log = LogFactory.getLog(Main.class);
     public static int countDir;
     private int timeTotal;
-    public static double supportPercentage = 0.005;
+    public static double supportPercentage = 0.0005;
     public static String support;
     private int k = 1;
     public static int totalBlockCount;
