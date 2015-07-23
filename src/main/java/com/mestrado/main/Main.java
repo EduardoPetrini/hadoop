@@ -43,7 +43,7 @@ public class Main {
     private int k = 1;
     public static int totalBlockCount;
     public static String user = "/user/eduardo/";
-    public static String inputEntry = "input/T105";
+    public static String inputEntry = "input/T104";
     public static String clusterUrl = "hdfs://master/";
     public static long totalTransactionCount;
     public ArrayList<String> blocksIds;
@@ -66,7 +66,7 @@ public class Main {
         } catch (IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
-          job.getConfiguration().set("fs.defaultFS", "hdfs://master/");
+//          job.getConfiguration().set("fs.defaultFS", "hdfs://master/");
         job.setJobName("Fase 1");
         
         job.setJarByClass(Main.class);
@@ -131,7 +131,7 @@ public class Main {
         } catch (IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
-          job.getConfiguration().set("fs.defaultFS", "hdfs://master/");
+//          job.getConfiguration().set("fs.defaultFS", "hdfs://master/");
         job.setJobName("Fase 2");
         
         job.setJarByClass(Main.class);
