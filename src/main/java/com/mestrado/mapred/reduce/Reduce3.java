@@ -23,13 +23,15 @@ import org.apache.hadoop.mapreduce.Reducer;
  *
  * @author eduardo
  */
-public class Reduce3 extends Reducer<Text, IntWritable, Text, IntWritable> {
+public class Reduce3 extends Reducer<Text, Text, Text, Text> {
     
-    Log log = LogFactory.getLog(Reduce3.class);
-    SequenceFile.Writer writer;
-    String count;
-    double support;
-    int maxk;
+	private Log log = LogFactory.getLog(Reduce3.class);
+    private SequenceFile.Writer writer;
+    private String count;
+    private double support;
+    private int maxk;
+    private Text valueOut;
+    private IntWritable valueToCache;
     
     @Override
     public void setup(Context context) throws IOException{
@@ -44,25 +46,32 @@ public class Reduce3 extends Reducer<Text, IntWritable, Text, IntWritable> {
                SequenceFile.Writer.keyClass(Text.class), SequenceFile.Writer.valueClass(IntWritable.class));
         
         System.out.println("Support total: "+support+", maxK: "+maxk);
+        valueOut = new Text();
+        valueToCache = new IntWritable();
     }
     
     @Override
-    public void reduce(Text key, Iterable<IntWritable> values, Context context){
+    public void reduce(Text key, Iterable<Text> values, Context context){
         
     	int count = 0;
+    	Iterator<Text> it = values.iterator();
+    	int maxk = Integer.parseInt(it.next().toString().split(":")[0]);
     	
-    	for (Iterator<IntWritable> it = values.iterator(); it.hasNext();) {
-            count += it.next().get();
+    	for (;it.hasNext();it.next()) {
+            count ++;
         }
-    	
+    	if(key.toString().trim().equals("1004 3191 8494")){
+    		System.out.println("break here...");
+    	}
     	if(count >= support){
 	        try {
-	        	/*Divide as saídas pelo k. Maior k para sequence file*/
-	        	String auxKey = key.toString();
-	        	if(auxKey.split(" ").length < maxk){
-	        		context.write(key, new IntWritable(count));
+	        	/*Divide as saídas pelo k.*/
+	        	valueOut.set(String.valueOf(count));
+	        	valueToCache.set(count);
+	        	if(key.toString().split(" ").length < maxk){
+	        		context.write(key, valueOut);
 	        	}else{
-	        		save(key, new IntWritable(count));
+	        		save(key, valueToCache);
 	        	}
 	        } catch (IOException | InterruptedException ex) {
 	            Logger.getLogger(Reduce3.class.getName()).log(Level.SEVERE, null, ex);

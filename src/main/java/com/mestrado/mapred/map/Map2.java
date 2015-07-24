@@ -9,6 +9,8 @@ package main.java.com.mestrado.mapred.map;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import main.java.com.mestrado.app.HashNode;
+import main.java.com.mestrado.app.HashPrefixTree;
 import main.java.com.mestrado.app.HashTree;
 
 import org.apache.commons.logging.Log;
@@ -27,12 +29,15 @@ import org.apache.hadoop.util.ReflectionUtils;
  */
 public class Map2  extends Mapper<LongWritable, Text, Text, IntWritable>{
     
-    Log log = LogFactory.getLog(Map2.class);
-    IntWritable countOut = new IntWritable(1);
-    SequenceFile.Reader reader;
-    ArrayList<String> fileCached;
-    HashTree hashTree;
-    int k;
+    private Log log = LogFactory.getLog(Map2.class);
+    private IntWritable countOut = new IntWritable(1);
+    private SequenceFile.Reader reader;
+    private ArrayList<String> fileCached;
+    private HashPrefixTree hpt;
+    private int k;
+    private Text keyOut;
+    private IntWritable valueOut;
+    
     /**
      * Le o arquivo invertido para a memória.
      * @param context
@@ -51,57 +56,78 @@ public class Map2  extends Mapper<LongWritable, Text, Text, IntWritable>{
         Path path = new Path(fileSequenceInput);
         reader = new SequenceFile.Reader(context.getConfiguration(), SequenceFile.Reader.file(path));
         
-        hashTree = new HashTree(k);
+        hpt = new HashPrefixTree();
         openFile(context);
+        
+        keyOut = new Text();
+        valueOut = new IntWritable(1);
     }
     
     /**
      * 
      * @param transaction
-     * @param hasht
+     * @param hNode
      * @param i
+     * @param k
      * @param itemset
+     * @param itemsetIndex
      * @param context
      */
-    public void subset(String[] transaction, HashTree hasht, int i, ArrayList<String> itemset,Context context){
-    	if(hasht == null){
+    private void subSet(String[] transaction, HashNode hNode, int i,
+			int k, String[] itemset, int itemsetIndex, Context context) {
+    	if(i >= transaction.length){
 			return;
 		}
 		
-		if(hasht.getLevel() > hasht.getK()){
-//			System.out.println("\nAchou -> Itemset: "+itemset.toString());
-			try{
-				context.write(new Text(itemset.toString()), new IntWritable(1));
-			}catch(IOException | InterruptedException e){
-				e.printStackTrace();
-			}
-			return;
-		}
+		HashNode son = hNode.getHashNode().get(transaction[i]);
 		
-		if(i >= transaction.length){
+		if(son == null){
 			return;
-		}
-		
-		while(i < transaction.length){
-			int hash = Integer.parseInt(transaction[i]) % 9;
+		}else{
+			itemset[itemsetIndex] = transaction[i];
 			
-			if(hasht.getNodes()[hash] != null){
-				itemset.add(transaction[i]);
-				subset(transaction, hasht.getNodes()[hash], i+1, itemset, context);
-				itemset.remove(itemset.size()-1);
+			if(hNode.getLevel() == k-1){
+				StringBuilder sb = new StringBuilder();
+				for(String item: itemset){
+					if(item != null){
+						sb.append(item).append(" ");
+					}
+				}
+				// System.out.println("Encontrou: "+sb.toString().trim());
+				keyOut.set(sb.toString().trim());
+				try {
+					context.write(keyOut, valueOut);
+				} catch (IOException | InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				itemset[itemsetIndex] = "";
+				return;
 			}
+			
 			i++;
+			itemsetIndex++;
+			while(i < transaction.length){
+				subSet(transaction, son, i, k, itemset, itemsetIndex, context);
+				for(int j = itemsetIndex; j < itemset.length; j++){
+					itemset[j] = "";
+				}
+				i++;
+			}
 		}
-		
-		return;
-    }
+	}
     
     @Override
     public void map(LongWritable key, Text value, Context context){
     	
 		//Aplica a função subset e envia o itemset para o reduce
-    	ArrayList<String> itemset = new ArrayList();
-		subset(value.toString().split(" "), hashTree, 0, itemset, context);
+    	String[] transaction = value.toString().split(" ");
+    	String[] itemset;
+    	for(int i = 0; i < transaction.length; i++){
+    		itemset = new String[2];
+    		subSet(transaction, hpt.getHashNode(), i, 2,itemset, 0,context);
+    		
+    	}
     }
     
     /**
@@ -119,7 +145,7 @@ public class Map2  extends Mapper<LongWritable, Text, Text, IntWritable>{
 			while (reader.next(key, value)) {
 				//System.out.println("Add Key: "+key.toString());
 //	            fileCached.add(key.toString());
-				hashTree.add(key.toString());
+				hpt.add(hpt.getHashNode(),key.toString().split(" "),0);
 	        }
 		} catch (IllegalArgumentException | IOException e) {
 			// TODO Auto-generated catch block

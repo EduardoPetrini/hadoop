@@ -8,7 +8,8 @@ package main.java.com.mestrado.mapred.map;
 
 import java.io.IOException;
 
-import main.java.com.mestrado.app.PrefixTree;
+import main.java.com.mestrado.app.HashNode;
+import main.java.com.mestrado.app.HashPrefixTree;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -24,13 +25,16 @@ import org.apache.hadoop.util.ReflectionUtils;
  * Gerar itemsets de tamanho k, k+1 e k+3 em uma única instância Map/Reduce.
  * @author eduardo
  */
-public class Map3  extends Mapper<LongWritable, Text, Text, IntWritable>{
+public class Map3  extends Mapper<LongWritable, Text, Text, Text>{
     
-    Log log = LogFactory.getLog(Map3.class);
-    IntWritable countOut = new IntWritable(1);
-    SequenceFile.Reader reader;
-    PrefixTree prefixTree;
-    int mink, maxk;
+	private Log log = LogFactory.getLog(Map3.class);
+	private IntWritable countOut = new IntWritable(1);
+	private SequenceFile.Reader reader;
+	private HashPrefixTree hpt;
+	private int mink, maxk;
+    private Text keyOut;
+    private Text valueOut;
+    
     /**
      * Le o arquivo invertido para a memória.
      * @param context
@@ -52,63 +56,60 @@ public class Map3  extends Mapper<LongWritable, Text, Text, IntWritable>{
         openFile(fileSequenceInput, context);
         
         System.out.println("MinK "+mink+" maxK "+maxk);
+        keyOut = new Text();
+        valueOut = new Text(maxk+":"+1);
     }
     
     /**
      * 
      * @param transaction
-     * @param pt
+     * @param hNode
      * @param i
      * @param itemset
      * @param itemsetIndex
      * @param context
      */
-    private void subSet(String[] transaction, PrefixTree pt, int i, String[] itemset, int itemsetIndex, Context context) {
-    	
+    private void subSet(String[] transaction, HashNode hNode, int i,
+			String[] itemset, int itemsetIndex, Context context) {
     	if(i >= transaction.length){
 			return;
 		}
-
-		if(pt.getLevel() > maxk){
-			return;
-		}
-
-		int index =  pt.getPrefix().indexOf(transaction[i]);
 		
-		if(index == -1){
+		HashNode son = hNode.getHashNode().get(transaction[i]);
+		
+		if(son == null){
 			return;
 		}else{
+			if(son.getLevel() > maxk) return;
 			itemset[itemsetIndex] = transaction[i];
-			i++;
-			if(pt.getLevel() >= mink-1){
-				StringBuilder sb = new StringBuilder();
-
-				for(String s: itemset){
-					if(s != null && !s.isEmpty())
-						sb.append(s).append(" ");
-				}
-				
-				//envia para o reduce
-				try{
-					context.write(new Text(sb.toString().trim()), new IntWritable(1));
-				}catch(IOException | InterruptedException e){
-					e.printStackTrace();
-					System.exit(1);
-				}
-				
-//				itemset[itemsetIndex] = "";
-//				return;
-			}
 			
-			if(pt.getPrefixTree().isEmpty() || pt.getPrefixTree().size() <= index || pt.getPrefixTree().get(index) == null){
+			if(son.getLevel() >= mink){
+				StringBuilder sb = new StringBuilder();
+				for(String item: itemset){
+					if(item != null){
+						sb.append(item).append(" ");
+					}
+				}
+				// System.out.println("Encontrou: "+sb.toString().trim());
+				keyOut.set(sb.toString().trim());
+				try {
+					context.write(keyOut, valueOut);
+				} catch (IOException | InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 				itemset[itemsetIndex] = "";
 				return;
-			}else{
-				itemsetIndex++;
-				while(i < transaction.length){
-					subSet(transaction, pt.getPrefixTree().get(index),i, itemset, itemsetIndex, context);
-					i++;
+			}
+			
+			i++;
+			itemsetIndex++;
+			while(i < transaction.length){
+				subSet(transaction, son, i, itemset, itemsetIndex, context);
+				for(int j = itemsetIndex; j < itemset.length; j++){
+					itemset[j] = "";
 				}
+				i++;
 			}
 		}
 	}
@@ -116,14 +117,13 @@ public class Map3  extends Mapper<LongWritable, Text, Text, IntWritable>{
     @Override
     public void map(LongWritable key, Text value, Context context){
     	
-		//Aplica a função subset e envia o itemset para o reduce
     	String[] transaction = value.toString().split(" ");
-    	String[] itemset = new String[maxk];
+    	String[] itemset;
 
     	if(transaction.length >= mink){
-
     		for(int i = 0; i < transaction.length; i++){
-    			subSet(transaction, prefixTree, i, itemset, 0, context);
+    			itemset = new String[maxk];
+    			subSet(transaction, hpt.getHashNode(), i, itemset, 0, context);
     		}
     	}
     }
@@ -136,22 +136,13 @@ public class Map3  extends Mapper<LongWritable, Text, Text, IntWritable>{
      */
     public void openFile(String path, Context context){
     	try {
-			prefixTree =  new PrefixTree(0);
+			hpt =  new HashPrefixTree();
 			Text key = (Text) ReflectionUtils.newInstance(reader.getKeyClass(), context.getConfiguration());
 			IntWritable value = (IntWritable) ReflectionUtils.newInstance(reader.getValueClass(), context.getConfiguration());
 			
 			while (reader.next(key, value)) {
-				//System.out.println("Add Key: "+key.toString());
-//	            fileCached.add(key.toString());
-				prefixTree.add(prefixTree, key.toString().split(" "), 0);
+				hpt.add(hpt.getHashNode(), key.toString().split(" "), 0);
 	        }
-//			long begin = System.currentTimeMillis();
-//			Collections.sort(fileCached, NUMERIC_ORDER);
-//			long end = System.currentTimeMillis();
-//			double total = end-begin;
-//			if((total/1000) > 1){
-//				System.out.println("Tempo gasto para ordenação: "+total+" milis ou "+total/1000+" segundos...");
-//			}
 		} catch (IllegalArgumentException | IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
