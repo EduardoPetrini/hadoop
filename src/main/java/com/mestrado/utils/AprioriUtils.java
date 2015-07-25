@@ -52,9 +52,9 @@ public class AprioriUtils {
         }else{
         	ct = (int)Math.round(lkSize * 1.2);
         }
-		mink = maxk;
 		roundGeneration(itemsets, newItemsets);
 		maxk++;
+		mink = maxk;
 		if(!checkItemsetArray(newItemsets)){
 			return false;
 		}

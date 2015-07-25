@@ -56,7 +56,7 @@ public class Reduce3 extends Reducer<Text, Text, Text, Text> {
     	int count = 0;
     	Iterator<Text> it = values.iterator();
     	int maxk = Integer.parseInt(it.next().toString().split(":")[0]);
-    	
+    	count++;
     	for (;it.hasNext();it.next()) {
             count ++;
         }

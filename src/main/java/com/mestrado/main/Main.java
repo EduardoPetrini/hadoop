@@ -41,7 +41,7 @@ public class Main {
     public static String support;
     public static int k = 1;
     public static String user = "/user/eduardo/";
-    public static String inputEntry = "input/T10I4D10N1000K.05.ok";
+    public static String inputEntry = "input/T100";
     public static String clusterUrl = "hdfs://master/";
     public static String fileSequenceOutput = user+"outputCached/outputMR";
     public static String fileSequenceInput = user+"inputCached/inputMR";
@@ -207,7 +207,7 @@ public class Main {
         job.setReducerClass(Reduce3.class);
         
         job.setOutputKeyClass(Text.class);
-        job.setOutputValueClass(IntWritable.class);
+        job.setOutputValueClass(Text.class);
         
         job.getConfiguration().set("count", String.valueOf(Main.countDir));
         job.getConfiguration().set("support", String.valueOf(support));
