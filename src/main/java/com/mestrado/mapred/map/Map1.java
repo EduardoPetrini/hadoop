@@ -62,6 +62,7 @@ public class Map1 extends Mapper<LongWritable, Text, Text, Text>{
     	int k = 1;
     	String[] itemset;
     	String[] tr;
+    	String trTmp;
     	int itemsetIndex;
     	boolean endBlock = false;
     	int pos;
@@ -74,10 +75,13 @@ public class Map1 extends Mapper<LongWritable, Text, Text, Text>{
     		//Verificar existência e contar o support de cada itemset
     		if(k > 1){
     			start = 0;
+    			System.out.println("Iniciando a verificação dos candidatos C"+k);
     			while((pos = value.find("\n",start)) != -1){
     				len = pos-start;
     				try {
-    					tr = Text.decode(value.getBytes(), start, len).split(" ");
+    					trTmp =Text.decode(value.getBytes(), start, len);
+    					System.out.println(trTmp);
+    					tr = trTmp.split(" ");
     					for(int i = 0; i < tr.length; i++){
     						itemset = new String[k];
 	    					itemsetIndex = 0;
@@ -112,6 +116,7 @@ public class Map1 extends Mapper<LongWritable, Text, Text, Text>{
     			//limpar prefixTree
     			hpt = new HashPrefixTree();
 //    			/*Adicionar os itemsets frequentes e os envia para o Reduce*/
+    			System.out.println("Enviando os L"+k+" itemsets frequentes para Reduce...");
     			addFrequentsItemsAndSendToReduce(context,k);
     		}
     		
@@ -198,7 +203,7 @@ public class Map1 extends Mapper<LongWritable, Text, Text, Text>{
     				count++;
     				item = new ItemSup(tmpItem.toString()+frequents.get(j).trim(),0);
     				newFrquents.add(item);
-    				if(count%2000==0)System.out.println("Para k = "+n+" gerando "+count+" itemsets... ");
+//    				if(count%2000==0)System.out.println("Para k = "+n+" gerando "+count+" itemsets... ");
     				hpt.add(hpt.getHashNode(),item.getItemset().split(" "),0);
     			}
     		}
