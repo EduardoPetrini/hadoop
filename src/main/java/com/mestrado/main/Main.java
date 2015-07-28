@@ -274,10 +274,20 @@ public class Main {
         MrUtils.delOutDirs(user);
         MrUtils.initialConfig();
         
-        Main.countDir++;
+        Main.countDir++;//1
         MrUtils.printConfigs(m);
         
         m.job1();
+        
+        /*
+         * job1 para encontrar L1
+         * Encontrar L2 de alguma forma
+         * A partir de L2:
+         * loop
+         *   jobGen para encontrar Ck
+         *   job2 para contar e gerar Lk
+         */
+        
         checkOutputSequence();
         long ini = System.currentTimeMillis();
         AprioriUtils.generate2ItemsetCandidates();
