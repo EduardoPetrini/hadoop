@@ -44,7 +44,7 @@ public class GenMap extends Mapper<LongWritable, Text, Text, Text>{
         	sb.append(tokens[i]).append(" ");
         }
     	keyOut.set(sb.toString().trim());
-    	valueOut.set(tokens[tokens.length-1]);
+    	valueOut.set(tokens[tokens.length-1].split("\\t")[0]);//split para ignorar a frequencia
         try {
             context.write(keyOut, valueOut);
         } catch (InterruptedException ex) {

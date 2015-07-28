@@ -12,9 +12,11 @@ import java.net.URISyntaxException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import main.java.com.mestrado.mapred.map.GenMap;
 import main.java.com.mestrado.mapred.map.Map1;
 import main.java.com.mestrado.mapred.map.Map2;
 import main.java.com.mestrado.mapred.map.Map3;
+import main.java.com.mestrado.mapred.reduce.GenReduce;
 import main.java.com.mestrado.mapred.reduce.Reduce1;
 import main.java.com.mestrado.mapred.reduce.Reduce2;
 import main.java.com.mestrado.mapred.reduce.Reduce3;
@@ -41,12 +43,11 @@ public class Main {
     public static String support;
     public static int k = 1;
     public static String user = "/user/eduardo/";
-    public static String inputEntry = "input/T100";
+    public static String inputEntry = "input/T10I4D10N1000K.05.ok";
     public static String clusterUrl = "hdfs://master/";
-    public static String fileSequenceOutput = user+"outputCached/outputMR";
-    public static String fileSequenceInput = user+"inputCached/inputMR";
+    public static String outputCandidates = user+"outputCandidates/C";
+    public static String inputCandidates = user+"inputCandidates/C";
     public static long totalTransactionCount;
-    public static double earlierTime;
 
     /*
     Valor do suporte para 1.000.000
@@ -89,7 +90,6 @@ public class Main {
         
         job.getConfiguration().set("count", String.valueOf(Main.countDir));
         job.getConfiguration().set("support", String.valueOf(support));
-        job.getConfiguration().set("fileSequenceOutput", fileSequenceOutput+(Main.countDir));
         
         try {
             FileInputFormat.setInputPaths(job, new Path(user+"input"));
@@ -122,7 +122,7 @@ public class Main {
     /**
      * 
      */
-    public void job2(){
+    public void jobCount(){
         
         Configuration c = new Configuration();
         
@@ -144,17 +144,15 @@ public class Main {
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(IntWritable.class);
         
-        k++;
         job.getConfiguration().set("count", String.valueOf(Main.countDir));
         job.getConfiguration().set("support", String.valueOf(support));
         job.getConfiguration().set("k", String.valueOf(k));
-        job.getConfiguration().set("fileSequenceInput", fileSequenceInput+(Main.countDir-1));
-        job.getConfiguration().set("fileSequenceOutput", fileSequenceOutput+(Main.countDir));
+        job.getConfiguration().set("inputCandidates", inputCandidates+(Main.countDir));//Contém Ck
           
         System.out.println("Job 2 - CountDir: "+Main.countDir);
         
         try {
-           job.addCacheFile(new URI(fileSequenceOutput+(Main.countDir-1)));
+           job.addCacheFile(new URI(inputCandidates+(Main.countDir)));
         } catch (URISyntaxException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -171,10 +169,9 @@ public class Main {
             long fim = System.currentTimeMillis();
             
             long t = fim - ini;
-            earlierTime += ((double)t/1000);
-            System.out.println("Tempo da fase 2: "+earlierTime);
-            
+            System.out.println("Tempo da fase de contagem (k = "+k+"): "+((double)t/1000));
             timeTotal += t;
+            
             if(st == 1){
                 System.exit(st);
             }
@@ -187,7 +184,7 @@ public class Main {
     /**
      * 
      */
-    public void job3(){
+    public void jobGen(){
         
         Configuration c = new Configuration();
         
@@ -198,47 +195,35 @@ public class Main {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
          job.getConfiguration().set("fs.defaultFS", clusterUrl);
-        job.setJobName("Fase 3");
+        job.setJobName("Job para candidate generation");
         
         job.setJarByClass(Main.class);
         
-        job.setMapperClass(Map3.class);
+        job.setMapperClass(GenMap.class);
 //        job.setCombinerClass(Reduce2.class);
-        job.setReducerClass(Reduce3.class);
+        job.setReducerClass(GenReduce.class);
         
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(Text.class);
         
-        job.getConfiguration().set("count", String.valueOf(Main.countDir));
-        job.getConfiguration().set("support", String.valueOf(support));
-        job.getConfiguration().set("maxk", String.valueOf(k));
-        job.getConfiguration().set("mink", String.valueOf(AprioriUtils.mink));
-        job.getConfiguration().set("fileSequenceInput", fileSequenceInput+(Main.countDir-1));
-        job.getConfiguration().set("fileSequenceOutput", fileSequenceOutput+(Main.countDir));
-        System.out.println("Job 3 - CountDir: "+Main.countDir);
+        job.getConfiguration().set("inputCandidates", inputCandidates+Main.countDir);
+        System.out.println("Job para geração de candidatos - CountDir: "+Main.countDir);
         
         try {
-           job.addCacheFile(new URI(fileSequenceOutput+(Main.countDir-1)));
-        } catch (URISyntaxException ex) {
-            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        
-        try {
-        	FileInputFormat.setInputPaths(job, new Path(user+"input"));
+        	FileInputFormat.setInputPaths(job, new Path(user+"inputToGen"));//Entra Lk, do job count
         } catch (IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
-        FileOutputFormat.setOutputPath(job, new Path(user+"output"+Main.countDir));
+        FileOutputFormat.setOutputPath(job, new Path(user+"candidatosTxt"+Main.countDir));//Sai Ck
         try {
             long ini = System.currentTimeMillis();
             int st = (job.waitForCompletion(true) ? 0 : 1);
             long fim = System.currentTimeMillis();
             
             long t = fim - ini;
-            earlierTime += ((double)t/1000);
-            System.out.println("Tempo da fase 3: "+earlierTime);
-            
+            System.out.println("Tempo da fase de geração (k = "+k+"): "+ ((double)t/1000));
             timeTotal += t;
+            
             if(st == 1){
                 System.exit(st);
             }
@@ -253,20 +238,37 @@ public class Main {
         System.out.println("Tempo total: "+timeTotal+" mile ou "+seg+" segundos! ou "+seg/60+" minutos");
     }
     
-    public static void checkOutputSequence(){
+    public static boolean checkOutputSequence(){
     	if(!MrUtils.checkOutputMR()){
         	System.out.println("Arquivo gerado na fase "+countDir+" é vazio!!!\n");
     		endTime();
-    		System.exit(0);
+//    		System.exit(0);
+    		return false;
         }
+    	return true;
     }
     
-    public static void checkInputSequence(){
+    public static boolean checkCountOutput(){
+    	if(!MrUtils.checkOutput(user+"output"+Main.countDir)){
+        	System.out.println("Arquivo gerado na fase "+countDir+" é vazio!!!\n");
+    		endTime();
+//    		System.exit(0);
+    		return false;
+        }
+    	return true;
+    }
+    
+    public static boolean checkInputSequence(){
     	if(!MrUtils.checkInputMR()){
         	System.out.println("Arquivo gerado na fase "+countDir+" é vazio!!!\n");
     		endTime();
-    		System.exit(0);
+    		return false;
         }
+    	return true;
+    }
+    
+    public static void copyToInputGen(){
+    	MrUtils.copyToInputGen(user+"output"+(Main.countDir-1)+"/part-r-00000");
     }
     
     public static void main(String[] args) throws IOException {
@@ -276,8 +278,13 @@ public class Main {
         
         Main.countDir++;//1
         MrUtils.printConfigs(m);
-        
+        //Main.k == 1
         m.job1();
+        checkOutputSequence();
+        long ini = System.currentTimeMillis();
+        AprioriUtils.generate2ItemsetCandidates();//salva em intputCandidates/C2
+        long fim = System.currentTimeMillis();
+        timeTotal += (fim - ini)/1000;
         
         /*
          * job1 para encontrar L1
@@ -288,33 +295,21 @@ public class Main {
          *   job2 para contar e gerar Lk
          */
         
-        checkOutputSequence();
-        long ini = System.currentTimeMillis();
-        AprioriUtils.generate2ItemsetCandidates();
-        long fim = System.currentTimeMillis();
-        earlierTime = ((timeTotal += (int)(fim - ini))/1000);
-        
-        Main.countDir++;
-        m.job2();
-        checkOutputSequence();
-        
+        //colocar no loop
+        Main.k++; //Main.k == 2;
+        Main.countDir++;//2
         do{
-        	
-        	ini = System.currentTimeMillis();
-        	if(!AprioriUtils.gerateDynamicKItemsets()){
-        		checkInputSequence();
-        	}
-        	fim = System.currentTimeMillis();
-        	earlierTime = ((timeTotal += (int)(fim - ini))/1000);
-            
-        	Main.countDir++;
-        	Main.k = AprioriUtils.maxk;
-        	System.out.println("Map 3 com k = "+Main.k);
-        	m.job3();
-        	checkOutputSequence();
-        }while(m.k != -1);
+	        m.jobCount();//Contar a corrência de Ck na base. Le Ck e salva Lk
+	        checkCountOutput();
+	        //copia Lk do output do jobCount para o input do jobGen
+	        Main.k++; //Main.k == 3;
+	        Main.countDir++;//3
+	        copyToInputGen();
+	        //gera lk+1
+	        m.jobGen();
+	        
+        }while(checkOutputSequence());
+       
         endTime();
     }
-    
-   
 }

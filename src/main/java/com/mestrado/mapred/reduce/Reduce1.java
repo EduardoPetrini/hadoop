@@ -27,24 +27,24 @@ import org.apache.hadoop.mapreduce.Reducer;
  */
 public class Reduce1 extends Reducer<Text, IntWritable, Text, IntWritable>{
     
-    Log log = LogFactory.getLog(Reduce1.class);
-    double support;
-    IntWritable valueOut = new IntWritable();
-    SequenceFile.Writer writer;
-    
+    private Log log;
+    private double support;
+    private IntWritable valueOut;
+    private SequenceFile.Writer writer;
     
     @Override
     public void setup(Context context) throws IOException{
-        String count = context.getConfiguration().get("count");
+    	log = LogFactory.getLog(Reduce1.class);
+    	valueOut = new IntWritable();
         support = Double.parseDouble(context.getConfiguration().get("support"));
-        log.info("Iniciando o REDUCE 1. Count Dir: "+count);
+        log.info("Iniciando o Reduce 1");
         log.info("Reduce1 support = "+support);
         
-        String fileSequenceOutput = context.getConfiguration().get("fileSequenceOutput");
-        Path path = new Path(fileSequenceOutput);
-        
-        writer = SequenceFile.createWriter(context.getConfiguration(), SequenceFile.Writer.file(path),
-                SequenceFile.Writer.keyClass(Text.class), SequenceFile.Writer.valueClass(IntWritable.class));
+//        String outputL = context.getConfiguration().get("outputL");
+//        Path path = new Path(outputL);
+//        
+//        writer = SequenceFile.createWriter(context.getConfiguration(), SequenceFile.Writer.file(path),
+//                SequenceFile.Writer.keyClass(Text.class), SequenceFile.Writer.valueClass(IntWritable.class));
     }
     
     @Override
@@ -58,7 +58,6 @@ public class Reduce1 extends Reducer<Text, IntWritable, Text, IntWritable>{
         	valueOut.set(count);
         	try {
 				context.write(key, valueOut);
-				saveInCache(key, valueOut);
 			} catch (IOException | InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -76,11 +75,13 @@ public class Reduce1 extends Reducer<Text, IntWritable, Text, IntWritable>{
     
     @Override
     public void cleanup(Context c){
-        log.info("Finalizando o REDUCE 1.");
-		try {
-			writer.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+        log.info("Finalizando o Reduce 1.");
+        log = null;
+        valueOut = null;
+//        try {
+//			writer.close();
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
     }
 }

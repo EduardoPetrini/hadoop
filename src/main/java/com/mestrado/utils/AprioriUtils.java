@@ -13,11 +13,11 @@ public class AprioriUtils {
 	 * A partir do arquivo de saída, com 1-itemset por linha, gera-se 2-itemset
 	 */
 	public static void generate2ItemsetCandidates(){
-		String inputFile = Main.fileSequenceOutput+Main.countDir;
-		ArrayList<String> itemsets = MrUtils.readSequenfileInHDFS(inputFile);
+		String inputFile = Main.user+"output"+Main.countDir+"/part-r-00000";
+		ArrayList<String> itemsets = MrUtils.readFromHDFS(inputFile);
 		Collections.sort(itemsets,NUMERIC_ORDER);
 		ArrayList<String> itemset2k = get2itemset(itemsets);
-		MrUtils.saveSequenceInHDFS(itemset2k, Main.fileSequenceInput+Main.countDir);
+		MrUtils.saveSequenceInHDFS(itemset2k, Main.inputCandidates+(Main.countDir+1));
 	}
 	
 	private static ArrayList<String> get2itemset(ArrayList<String> itemset){
@@ -31,80 +31,6 @@ public class AprioriUtils {
 		
 		return newItemsets;
 	}
-	
-	public static boolean gerateDynamicKItemsets(){
-		maxk = Main.k;
-		boolean success = true;
-		String inputFile = Main.fileSequenceOutput+Main.countDir;
-		ArrayList<String> itemsets = MrUtils.readSequenfileInHDFS(inputFile);
-		ArrayList<String> newItemsets = new ArrayList<String>();
-		ArrayList<String> tmp1 = new ArrayList<String>();
-		ArrayList<String> tmp2 = new ArrayList<String>();
-		int lkSize = itemsets.size();
-		int ct;
-		int cSetSize;
-		if(!checkItemsetArray(itemsets)){
-			return false;
-		}
-		
-		if(Main.earlierTime >= 60){
-        	ct = lkSize * 1;
-        }else{
-        	ct = (int)Math.round(lkSize * 1.2);
-        }
-		roundGeneration(itemsets, newItemsets);
-		maxk++;
-		mink = maxk;
-		if(!checkItemsetArray(newItemsets)){
-			return false;
-		}
-		cSetSize = newItemsets.size();
-		tmp1.addAll(newItemsets);
-		
-		while( cSetSize <= ct){
-			
-			roundGeneration(tmp1, tmp2);
-			maxk++;
-			if(tmp2.size() <= 0){
-				maxk--;
-				success = false;
-				break;
-			}
-			tmp1.clear();
-			tmp1.addAll(tmp2);
-			newItemsets.addAll(tmp2);
-			tmp2.clear();
-			roundGeneration(tmp1, tmp2);
-			maxk++;
-			if(tmp2.size() <= 0){
-				maxk--;
-				success = false;
-				break;
-			}
-			tmp1.clear();
-			tmp1.addAll(tmp2);
-			newItemsets.addAll(tmp2);
-			tmp2.clear();
-			
-			cSetSize += newItemsets.size();
-		}
-
-		MrUtils.saveSequenceInHDFS(newItemsets, Main.fileSequenceInput+Main.countDir);
-		return success;
-	}
-	
-	private static void saveItemsets(ArrayList<String> itemsets ){
-		ArrayList<String> kitemset = new ArrayList<String>();
-		for(String item: itemsets){
-			if(item.split(" ").length == maxk){
-				kitemset.add(item);
-			}
-		}
-		
-		MrUtils.saveSequenceInHDFS(kitemset, "/user/eduardo/tmp/"+maxk+"itemset");
-		MrUtils.saveSequenceInHDFS(itemsets, "/user/eduardo/tmp/"+maxk+"."+maxk+"itemset");
-	}
-	
 	
 	public static void roundGeneration(ArrayList<String> itemsets, ArrayList<String> newItemsets){
 		String[] itemA;

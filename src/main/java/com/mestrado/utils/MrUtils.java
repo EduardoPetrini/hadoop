@@ -18,6 +18,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.SequenceFile;
@@ -105,7 +106,8 @@ public class MrUtils {
                 for(FileStatus f: ff){
                     aux = f.getPath();
                     
-                    if(aux.getName().contains("output") || aux.getName().contains("inputCached")){
+                    if(aux.getName().contains("output") || aux.getName().contains("inputCached") ||
+                    		aux.getName().contains("candidatosTxt")){
                         
                         if(fs.delete(aux, true)){
                         	System.out.println("Excluido diretório -> "+aux.getName());
@@ -142,8 +144,10 @@ public class MrUtils {
     
     }
     
-    public void delContentFiles(String dir){
-        Path p = new Path(dir);
+    /**
+     * @param p
+     */
+    public static void delContentFiles(Path p){
         Configuration c = new Configuration();
          c.set("fs.defaultFS", Main.clusterUrl);
         try {
@@ -151,27 +155,23 @@ public class MrUtils {
             
             if(fs.isDirectory(p)){
                 
-                log.info(p.getName()+" eh um diretorio!");
+                System.out.println(p.getName()+" eh um diretorio!");
                 
                 FileStatus[] f = fs.listStatus(p);
-                log.info("Conteudo do diretorio: ");
+                System.out.println("Conteudo do diretorio: ");
                 
                 for(FileStatus ff: f){
                                         
-                    log.info(ff.getPath().getName());
-                    
-                    if(ff.toString().contains("confIn")) continue;
+                	System.out.println(ff.getPath().getName());
                     
                     p = ff.getPath();
                     
-                    if(fs.isFile(p)){
-                        log.info("Deletando: "+p.getName());
-                        if(fs.delete(p, true)){
-                            
-                            log.info("Deletado!");
-                        }else{
-                            log.info("Falha ao deletar.");
-                        }
+                	System.out.println("Deletando: "+p.getName());
+                    if(fs.delete(p, true)){
+                        
+                    	System.out.println("Deletado!");
+                    }else{
+                    	System.out.println("Falha ao deletar.");
                     }
                 }
             }
@@ -183,7 +183,7 @@ public class MrUtils {
         
     }
     
-    public boolean checkOutput(String dir){
+    public static boolean checkOutput(String dir){
         
         Path p = new Path(dir);
         Path aux;
@@ -206,7 +206,6 @@ public class MrUtils {
                              
                              if(f.getLen() > 0){
                                 return true;
-                                 
                              }else{
                                  return false;
                              }
@@ -225,7 +224,7 @@ public class MrUtils {
     }
     
     public static boolean checkOutputMR(){
-        String dir = Main.fileSequenceOutput+Main.countDir;
+        String dir = Main.inputCandidates+Main.countDir;
         Path p = new Path(dir);
         
         Configuration c = new Configuration();
@@ -254,31 +253,31 @@ public class MrUtils {
     }
     
     public static boolean checkInputMR(){
-        String dir = Main.fileSequenceInput+Main.countDir;
-        Path p = new Path(dir);
-        
-        Configuration c = new Configuration();
-         c.set("fs.defaultFS", Main.clusterUrl);
-        System.out.println("Verificando diretório: "+dir);
-        
-        try {
-            FileSystem fs = FileSystem.get(c);
-            if(fs.exists(p)){
-	            FileStatus conf = fs.getFileStatus(p);
-	            long len = conf.getLen();
-	            if(conf.getLen() > 128){
-	                System.out.println("O arquivo "+dir+" não é vazio! "+conf.getLen());
-	                return true;
-	            }
-	            System.out.println("O arquivo "+dir+" é vazio! "+conf.getLen());
-            }else{
-            	System.out.println("Arquivo "+dir+" não existe!");
-            }
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-        
+//        String dir = Main.inputL+Main.countDir;
+//        Path p = new Path(dir);
+//        
+//        Configuration c = new Configuration();
+//         c.set("fs.defaultFS", Main.clusterUrl);
+//        System.out.println("Verificando diretório: "+dir);
+//        
+//        try {
+//            FileSystem fs = FileSystem.get(c);
+//            if(fs.exists(p)){
+//	            FileStatus conf = fs.getFileStatus(p);
+//	            long len = conf.getLen();
+//	            if(conf.getLen() > 128){
+//	                System.out.println("O arquivo "+dir+" não é vazio! "+conf.getLen());
+//	                return true;
+//	            }
+//	            System.out.println("O arquivo "+dir+" é vazio! "+conf.getLen());
+//            }else{
+//            	System.out.println("Arquivo "+dir+" não existe!");
+//            }
+//        } catch (IOException e) {
+//            // TODO Auto-generated catch block
+//            e.printStackTrace();
+//        }
+//        
         return false;
     }
     
@@ -452,35 +451,6 @@ public class MrUtils {
     	System.out.println("\n******************************************************\n");
     }
     
-    public static int getK() {
-		String inputPathUri = Main.fileSequenceOutput+(Main.countDir);
-    	
-    	Path inputPath = new Path(inputPathUri);
-    	Configuration c = new Configuration();
-         c.set("fs.defaultFS", Main.clusterUrl);
-        
-        try {
-        	
-			FileSystem fs = inputPath.getFileSystem(c);
-			SequenceFile.Reader reader = new SequenceFile.Reader(c, SequenceFile.Reader.file(inputPath));
-				
-			Text key = (Text) ReflectionUtils.newInstance(reader.getKeyClass(), c);
-			IntWritable value = (IntWritable) ReflectionUtils.newInstance(reader.getValueClass(), c);
-			int kCount = 0;
-			while (reader.next(key, value)) {
-				System.out.println("Key: "+key.toString());
-	            kCount = key.toString().split(" ").length;
-	            break;
-	        }
-		
-			return kCount;
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return -1;
-	}
-    
     /**
      * 
      * @param fileName
@@ -498,7 +468,7 @@ public class MrUtils {
 			BufferedReader br=new BufferedReader(new InputStreamReader(fs.open(inputPath)));
 			String line;
 			while ((line = br.readLine()) != null){
-				data.add(line);
+				data.add(line.split("\\t")[0].trim());
 				
 			}
 			br.close();
@@ -626,5 +596,28 @@ public class MrUtils {
 			e.printStackTrace();
 		}
 		return itemsets;
+	}
+
+	public static void copyToInputGen(String outputCount) {
+		Path path = new Path(outputCount);
+		Path input = new Path(Main.user+"inputToGen/");
+		Configuration c = new Configuration();
+        c.set("fs.defaultFS", Main.clusterUrl);
+        
+        try{
+        	FileSystem fs = FileSystem.get(c);
+        	if(!fs.exists(input)){
+        		fs.create(input);
+        	}else{
+        		delContentFiles(input);
+        	}
+//          copy(FileSystem srcFS, FileStatus srcStatus, FileSystem dstFS, Path dst, boolean deleteSource, boolean overwrite, Configuration conf)
+        	FileUtil.copy(fs, fs.getFileStatus(path), fs, input, false, true, c);
+//        	fs.rename(new Path(Main.user+"inputToGen/"), new Path(""));
+        }catch(IOException e){
+        	e.printStackTrace();
+        }
+
+		
 	}
 }

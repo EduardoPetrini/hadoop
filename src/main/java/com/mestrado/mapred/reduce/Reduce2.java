@@ -32,15 +32,13 @@ public class Reduce2 extends Reducer<Text, IntWritable, Text, IntWritable> {
     
     @Override
     public void setup(Context context) throws IOException{
-        String count = context.getConfiguration().get("count");
-        String fileSequenceOutput = context.getConfiguration().get("fileSequenceOutput");
+        String strK = context.getConfiguration().get("k");
         support = Double.parseDouble(context.getConfiguration().get("support"));
         
-        Path path = new Path(fileSequenceOutput);
-        log.info("Iniciando o REDUCE 2. Count dir: "+count);
+        log.info("Iniciando o Reduce 2 para contar e podar C"+strK);
         
-         writer = SequenceFile.createWriter(context.getConfiguration(), SequenceFile.Writer.file(path),
-               SequenceFile.Writer.keyClass(Text.class), SequenceFile.Writer.valueClass(IntWritable.class));
+//         writer = SequenceFile.createWriter(context.getConfiguration(), SequenceFile.Writer.file(path),
+//               SequenceFile.Writer.keyClass(Text.class), SequenceFile.Writer.valueClass(IntWritable.class));
          System.out.println("Support total: "+support);
     }
     
@@ -54,7 +52,7 @@ public class Reduce2 extends Reducer<Text, IntWritable, Text, IntWritable> {
         if(count >= support){
         	valueOut.set(count);
             try {
-            	saveInCache(key, valueOut);
+//            	saveInCache(key, valueOut);
                 context.write(key, valueOut);
             } catch (IOException | InterruptedException ex) {
                 Logger.getLogger(Reduce1.class.getName()).log(Level.SEVERE, null, ex);
@@ -74,11 +72,11 @@ public class Reduce2 extends Reducer<Text, IntWritable, Text, IntWritable> {
     public void cleanup(Context c){
         log.info("Finalizando o REDUCE 2.");
         
-        try {
-            writer.close();
-        } catch (IOException ex) {
-            Logger.getLogger(Reduce2.class.getName()).log(Level.SEVERE, null, ex);
-        }
+//        try {
+//            writer.close();
+//        } catch (IOException ex) {
+//            Logger.getLogger(Reduce2.class.getName()).log(Level.SEVERE, null, ex);
+//        }
     }
     
     

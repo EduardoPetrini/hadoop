@@ -25,21 +25,42 @@ import org.apache.hadoop.mapreduce.Mapper;
  */
 public class Map1 extends Mapper<LongWritable, Text, Text, IntWritable>{
     
-    Log log = LogFactory.getLog(Map1.class);
-    IntWritable count = new IntWritable(1);
-    Text keyOut = new Text();
+    private Log log;
+    private IntWritable valueOut;
+    private Text keyOut;
     
     @Override
+	protected void setup(
+			Mapper<LongWritable, Text, Text, IntWritable>.Context context)
+			throws IOException, InterruptedException {
+    	log = LogFactory.getLog(Map1.class);
+    	valueOut = new IntWritable(1);
+    	keyOut = new Text();
+    	
+    	log.info("Execução do Map 1 para encontrar L1");
+    }
+
+	@Override
     public void map(LongWritable key, Text value, Context context) throws IOException{
         
         StringTokenizer token = new StringTokenizer(value.toString());
         while(token.hasMoreTokens()){
         	keyOut.set(token.nextToken());
             try {
-                context.write(keyOut, count);
+                context.write(keyOut, valueOut);
             } catch (InterruptedException ex) {
                 Logger.getLogger(Map1.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
             }
         }
     }
+
+	@Override
+	protected void cleanup(
+			Mapper<LongWritable, Text, Text, IntWritable>.Context context)
+			throws IOException, InterruptedException {
+		log.info("Fim do Map 1");
+		log = null;
+		valueOut = null;
+		keyOut = null;
+	}
 }

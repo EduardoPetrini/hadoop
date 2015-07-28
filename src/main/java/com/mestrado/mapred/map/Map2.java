@@ -45,15 +45,14 @@ public class Map2  extends Mapper<LongWritable, Text, Text, IntWritable>{
      */
     @Override
     public void setup(Context context) throws IOException{
-        String count = context.getConfiguration().get("count");
-        String fileSequenceInput = context.getConfiguration().get("fileSequenceInput");
+        String inputCand = context.getConfiguration().get("inputCandidates");
         String kStr = context.getConfiguration().get("k");
         k = Integer.parseInt(kStr);
         
-        log.info("Iniciando map 2v2 count = "+count);
-        log.info("Arquivo Cached = "+fileSequenceInput);
+        log.info("Iniciando Map 2  para contar a ocorrência de C"+k);
+        log.info("Arquivo de entrada no inputCandidates = "+inputCand);
         
-        Path path = new Path(fileSequenceInput);
+        Path path = new Path(inputCand);
         reader = new SequenceFile.Reader(context.getConfiguration(), SequenceFile.Reader.file(path));
         
         hpt = new HashPrefixTree();
@@ -74,7 +73,7 @@ public class Map2  extends Mapper<LongWritable, Text, Text, IntWritable>{
      * @param context
      */
     private void subSet(String[] transaction, HashNode hNode, int i,
-			int k, String[] itemset, int itemsetIndex, Context context) {
+			String[] itemset, int itemsetIndex, Context context) {
     	if(i >= transaction.length){
 			return;
 		}
@@ -108,7 +107,7 @@ public class Map2  extends Mapper<LongWritable, Text, Text, IntWritable>{
 			i++;
 			itemsetIndex++;
 			while(i < transaction.length){
-				subSet(transaction, son, i, k, itemset, itemsetIndex, context);
+				subSet(transaction, son, i, itemset, itemsetIndex, context);
 				for(int j = itemsetIndex; j < itemset.length; j++){
 					itemset[j] = "";
 				}
@@ -124,9 +123,8 @@ public class Map2  extends Mapper<LongWritable, Text, Text, IntWritable>{
     	String[] transaction = value.toString().split(" ");
     	String[] itemset;
     	for(int i = 0; i < transaction.length; i++){
-    		itemset = new String[2];
-    		subSet(transaction, hpt.getHashNode(), i, 2,itemset, 0,context);
-    		
+    		itemset = new String[k];
+    		subSet(transaction, hpt.getHashNode(), i, itemset, 0,context);
     	}
     }
     
@@ -143,12 +141,9 @@ public class Map2  extends Mapper<LongWritable, Text, Text, IntWritable>{
 			IntWritable value = (IntWritable) ReflectionUtils.newInstance(reader.getValueClass(), context.getConfiguration());
 			
 			while (reader.next(key, value)) {
-				//System.out.println("Add Key: "+key.toString());
-//	            fileCached.add(key.toString());
 				hpt.add(hpt.getHashNode(),key.toString().split(" "),0);
 	        }
 		} catch (IllegalArgumentException | IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
     }
