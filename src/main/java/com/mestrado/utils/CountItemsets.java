@@ -19,7 +19,7 @@ public class CountItemsets {
 		
 			Configuration c = new Configuration();
 			try {
-	          c.set("fs.defaultFS", "hdfs://177.105.60.151/");
+	          c.set("fs.defaultFS", "hdfs://master/");
 			FileSystem fs = FileSystem.get(c);
 			BufferedReader br = new BufferedReader(new InputStreamReader(
 					fs.open(path)));
@@ -33,8 +33,6 @@ public class CountItemsets {
 					itemsetsCounts[lineSpt.length-2]++;
 				}
 			}
-			
-			
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -51,7 +49,6 @@ public class CountItemsets {
 				System.out.println("Itemsets de tamanho "+(i+1)+": "+itemsetsCounts[i]);
 			}
 		}
-		
 		System.out.println("Total: "+total);
 	}
 }
