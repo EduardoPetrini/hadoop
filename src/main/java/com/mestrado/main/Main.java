@@ -278,7 +278,6 @@ public class Main {
         MrUtils.printConfigs(m);
         //Main.k == 1
         m.job1();
-        checkOutputSequence();
         long ini = System.currentTimeMillis();
         AprioriUtils.generate2ItemsetCandidates();//salva em intputCandidates/C2
         long fim = System.currentTimeMillis();
