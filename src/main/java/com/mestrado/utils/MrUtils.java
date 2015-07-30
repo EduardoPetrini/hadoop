@@ -275,7 +275,7 @@ public class MrUtils {
 			Main.totalBlockCount = totalBlocks;
 			
 //             FileSystem fs = FileSystem.get(new Configuration());
-			BufferedReader br=new BufferedReader(new InputStreamReader(fs.open(inputPath)));
+			BufferedReader br=new BufferedReader(new InputStreamReader(fs.open(conf.getPath())));
 			String line;
 			Main.totalTransactionCount = 0;
 			while (br.readLine() != null){
