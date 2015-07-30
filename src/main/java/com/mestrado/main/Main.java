@@ -15,11 +15,9 @@ import java.util.logging.Logger;
 import main.java.com.mestrado.mapred.map.GenMap;
 import main.java.com.mestrado.mapred.map.Map1;
 import main.java.com.mestrado.mapred.map.Map2;
-import main.java.com.mestrado.mapred.map.Map3;
 import main.java.com.mestrado.mapred.reduce.GenReduce;
 import main.java.com.mestrado.mapred.reduce.Reduce1;
 import main.java.com.mestrado.mapred.reduce.Reduce2;
-import main.java.com.mestrado.mapred.reduce.Reduce3;
 import main.java.com.mestrado.utils.AprioriUtils;
 import main.java.com.mestrado.utils.MrUtils;
 
@@ -43,7 +41,7 @@ public class Main {
     public static String support;
     public static int k = 1;
     public static String user = "/user/eduardo/";
-    public static String inputEntry = "input/T10I4D10N1000K.05.ok";
+    public static String inputEntry = "input/";
     public static String clusterUrl = "hdfs://master/";
     public static String outputCandidates = user+"outputCandidates/C";
     public static String inputCandidates = user+"inputCandidates/C";
@@ -274,7 +272,7 @@ public class Main {
     public static void main(String[] args) throws IOException {
         Main m = new Main();
         MrUtils.delOutDirs(user);
-        MrUtils.initialConfig();
+        MrUtils.initialConfig(args);
         
         Main.countDir++;//1
         MrUtils.printConfigs(m);
