@@ -164,9 +164,6 @@ public class Map3  extends Mapper<LongWritable, Text, Text, Text>{
 	        System.out.println("No loop dinamico, cSetSize: "+cSetSize+", ct: "+ct);
         }
        
-//        prefixTree.printStrArray(itemsetAux);
-//        prefixTree.printPrefixTree(prefixTree);
-        //System.out.println("Fim do setup, inicia função map para o k = "+k);
         maxk = k;
         System.out.println("MinK "+mink+" maxK "+maxk);
         keyOut = new Text();

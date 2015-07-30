@@ -251,7 +251,14 @@ public class MrUtils {
      * Calcula a quantidade de transações do arquivo de entrada
      * Calcula o suporte
      */
-    public static void initialConfig(){
+    public static void initialConfig(String[] args){
+    	
+    	for(String s: args){
+    		System.out.println("Args: "+s);
+    	}
+    	if(args.length != 0){
+    		Main.supportPercentage = Double.parseDouble(args[0]);
+    	}
     	String inputPathUri = Main.user+Main.inputEntry;
     	
     	Path inputPath = new Path(inputPathUri);
@@ -261,9 +268,10 @@ public class MrUtils {
         try {
         	
 			FileSystem fs = inputPath.getFileSystem(c);
-			
+			FileStatus[] subFiles = fs.listStatus(inputPath);
+			FileStatus conf = subFiles[0];
 						
-			BufferedReader br=new BufferedReader(new InputStreamReader(fs.open(inputPath)));
+			BufferedReader br=new BufferedReader(new InputStreamReader(fs.open(conf.getPath())));
 			Main.totalTransactionCount = 0;
 			while (br.readLine() != null){
 				Main.totalTransactionCount++;
@@ -284,55 +292,7 @@ public class MrUtils {
 			e.printStackTrace();
 		}
     }
-    
-    /**
-     * Obtem a lista de blocos ids (offset+length)
-     * @return
-     */
-    public static ArrayList<String> extractBlocksIds(){
-    	String inputPathUri = Main.user+Main.inputEntry;
-        Path inputPath = new Path(inputPathUri);
-    	Configuration c = new Configuration();
-         c.set("fs.defaultFS", Main.clusterUrl);
-        ArrayList<String> blocksIds = new ArrayList<String>();
-        
-        try{
-        	FileSystem fs = inputPath.getFileSystem(c);
-        	
-        	BlockLocation[] bl = fs.getFileBlockLocations(fs.getFileStatus(inputPath),0,Long.MAX_VALUE);
-        	for(BlockLocation b: bl){
-        		blocksIds.add(String.valueOf(b.getOffset()));
-        		
-        	}
-        	
-        }catch(IOException e){
-        	e.printStackTrace();
-        }
-        
-        return blocksIds;
-        
-    }
-    
-    public static void test(){
-    	String inputPathUri = Main.user+Main.inputEntry;
-        Path inputPath = new Path(inputPathUri);
-    	Configuration c = new Configuration();
-         c.set("fs.defaultFS", Main.clusterUrl);
-        
-        try{
-        	FileSystem fs = FileSystem.get(c);
-        	
-        	FileStatus[] splitFiles = fs.listStatus(inputPath);
-        	
-        	for(FileStatus f: splitFiles){
-        		System.out.println("Split Name: "+f.getPath().getName());
-        		
-        	}
-        }catch(IOException e){
-        	e.printStackTrace();
-        }
-    }
-
+  
     /**
      * 
      * @param pathName
