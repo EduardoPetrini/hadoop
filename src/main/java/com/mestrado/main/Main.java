@@ -43,7 +43,7 @@ public class Main {
     private int k = 1;
     public static int totalBlockCount;
     public static String user = "/user/eduardo/";
-    public static String inputEntry = "input/T10I4D10N1000K.05.ok";
+    public static String inputEntry = "input/";
     public static String clusterUrl = "hdfs://master/";
     public static long totalTransactionCount;
     public ArrayList<String> blocksIds;
@@ -193,7 +193,7 @@ public class Main {
         Main m = new Main();
 //        System.out.println(m.checkOutput(user+"output1"));
       
-        MrUtils.initialConfig();//Dentre outras coisas, define a quantidade total de transações
+        MrUtils.initialConfig(args);//Dentre outras coisas, define a quantidade total de transações
         m.blocksIds = MrUtils.extractBlocksIds();
         MrUtils.createIfNotExistOrClean(m.outputPartialName);
         MrUtils.printConfigs(m);
