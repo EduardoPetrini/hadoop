@@ -154,7 +154,7 @@ public class Map3  extends Mapper<LongWritable, Text, Text, Text>{
 	        		if(isSamePrefix(itemA, itemB, i, j)){
 	        			itemsetC = combine(itemA, itemB);
 	        			itemsetAux.add(itemsetC);
-//	        			System.out.println(itemsetC+" no segundp passo");
+//	        			System.out.println(itemsetC+" no segundo passo");
 	        			//Building HashTree
 	        			hpt.add(hpt.getHashNode(), itemsetC.split(" "), 0);
 	        		}
@@ -226,10 +226,9 @@ public class Map3  extends Mapper<LongWritable, Text, Text, Text>{
 		if(son == null){
 			return;
 		}else{
-			if(son.getLevel() > maxk) return;
 			itemset[itemsetIndex] = transaction[i];
 			
-			if(son.getLevel() >= mink){
+			if(hNode.getLevel() == k-1){
 				StringBuilder sb = new StringBuilder();
 				for(String item: itemset){
 					if(item != null){
@@ -268,11 +267,15 @@ public class Map3  extends Mapper<LongWritable, Text, Text, Text>{
     	String[] transaction = value.toString().split(" ");
     	String[] itemset;
 
-    	if(transaction.length >= mink){
-    		for(int i = 0; i < transaction.length; i++){
-    			itemset = new String[maxk];
-    			subSet(transaction, hpt.getHashNode(), i, itemset, 0, context);
-    		}
+    	k = mink;
+    	
+    	for(;k <= maxk; k++){
+	    	if(transaction.length >= k){
+	    		for(int i = 0; i < transaction.length; i++){
+	    			itemset = new String[k];
+	    			subSet(transaction, hpt.getHashNode(), i, itemset, 0, context);
+	    		}
+	    	}
     	}
     }
     

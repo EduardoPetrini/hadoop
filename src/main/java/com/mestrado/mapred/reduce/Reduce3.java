@@ -53,7 +53,7 @@ public class Reduce3 extends Reducer<Text, Text, Text, Text> {
     @Override
     public void reduce(Text key, Iterable<Text> values, Context context){
         
-    	int count = 0;
+    	int count = 1;
     	Iterator<Text> it = values.iterator();
     	int maxk = Integer.parseInt(it.next().toString().split(":")[0]);
     	

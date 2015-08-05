@@ -36,7 +36,7 @@ public class Main {
 
     public static int countDir;
     private int timeTotal;
-    public static double supportPercentage = 0.005;
+    public static double supportPercentage = 0.52;
     public static String support;
     int k = 1;
     public static String user = "/user/eduardo/";
@@ -262,10 +262,10 @@ public class Main {
         
         int l = 0;
         while(MrUtils.checkOutputMR() && m.k != -1){
-        	System.out.println("Map 3 com k = "+m.k);
-            System.out.println("LOOP "+ ++l);
             Main.countDir++;
             m.k++;
+            System.out.println("Map 3 com k = "+m.k);
+            System.out.println("LOOP "+ ++l);
             m.job3();
             m.k = MrUtils.getK(m.k);
         }
