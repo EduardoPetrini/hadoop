@@ -73,6 +73,7 @@ public class Map3  extends Mapper<LongWritable, Text, Text, Text>{
         mink = k;
         
         String itemsetC;
+        String[] itemsetCSpt;
 //        prefixTree.printStrArray(fileCached);
         
         if(fileCachedRead != null && fileCached.size() > 0){
@@ -105,11 +106,15 @@ public class Map3  extends Mapper<LongWritable, Text, Text, Text>{
         	for (int j = i+1; j < fileCached.size(); j++){
         		itemB = fileCached.get(j).split(" ");
         		if(isSamePrefix(itemA, itemB, i, j)){
-        			itemsetC = combine(itemA, itemB);
-        			itemsetAux.add(itemsetC);
-//        			System.out.println(itemsetC+" no primeiro passo");
-        			//Building HashTree
-        			hpt.add(hpt.getHashNode(), itemsetC.split(" "), 0);
+        			itemsetCSpt = new String[k];
+        			itemsetC = combine(itemA, itemB, itemsetCSpt);
+        			if(allSubsetIsFrequent(itemsetCSpt, fileCached)){
+	        			itemsetAux.add(itemsetC);
+	//        			System.out.println(itemsetC+" no primeiro passo");
+	        			//Building HashTree
+	        			hpt.add(hpt.getHashNode(), itemsetC.split(" "), 0);
+        			}
+        			
         		}
         	}
         }
@@ -132,11 +137,14 @@ public class Map3  extends Mapper<LongWritable, Text, Text, Text>{
 	        	for (int j = i+1; j < itemsetAux.size(); j++){
 	        		itemB = itemsetAux.get(j).split(" ");
 	        		if(isSamePrefix(itemA, itemB, i, j)){
-	        			itemsetC = combine(itemA, itemB);
-	        			fileCached.add(itemsetC);
+	        			itemsetCSpt = new String[k];
+	        			itemsetC = combine(itemA, itemB, itemsetCSpt);
+	        			
+	        			if(allSubsetIsFrequent(itemsetCSpt, itemsetAux)){
+	        				fileCached.add(itemsetC);
+	        				hpt.add(hpt.getHashNode(), itemsetC.split(" "), 0);
+	        			}
 //	        			System.out.println(itemsetC+" no primeiro passo");
-	        			//Building HashTree
-	        			hpt.add(hpt.getHashNode(), itemsetC.split(" "), 0);
 	        		}
 	        	}
 	        }
@@ -152,11 +160,13 @@ public class Map3  extends Mapper<LongWritable, Text, Text, Text>{
 	        	for (int j = i+1; j < fileCached.size(); j++){
 	        		itemB = fileCached.get(j).split(" ");
 	        		if(isSamePrefix(itemA, itemB, i, j)){
-	        			itemsetC = combine(itemA, itemB);
-	        			itemsetAux.add(itemsetC);
+	        			itemsetCSpt = new String[k];
+	        			itemsetC = combine(itemA, itemB, itemsetCSpt);
+	        			if(allSubsetIsFrequent(itemsetCSpt, fileCached)){
+	        				itemsetAux.add(itemsetC);
+	        				hpt.add(hpt.getHashNode(), itemsetC.split(" "), 0);
+	        			}
 //	        			System.out.println(itemsetC+" no segundo passo");
-	        			//Building HashTree
-	        			hpt.add(hpt.getHashNode(), itemsetC.split(" "), 0);
 	        		}
 	        	}
 	        }
@@ -196,15 +206,44 @@ public class Map3  extends Mapper<LongWritable, Text, Text, Text>{
      * @param itemB
      * @return
      */
-    public String combine(String[] itemA, String[] itemB){
+    public String combine(String[] itemA, String[] itemB, String[] itemsetCSpt){
         StringBuilder sb = new StringBuilder();
         
         for(int i = 0; i < itemA.length; i++){
             sb.append(itemA[i]).append(" ");
+            itemsetCSpt[i] = itemA[i]; 
         }
         sb.append(itemB[itemB.length-1]);
+        itemsetCSpt[k-1] = itemB[itemB.length-1];
         return sb.toString();
     }
+    
+    /**
+     * 
+     * @param itemset
+     * @param frequents
+     * @return
+     */
+    private boolean allSubsetIsFrequent(String[] itemset, ArrayList<String> frequents) { 
+		int indexToSkip = 0;
+		StringBuilder subItem;
+		for(int j = 0; j < itemset.length-1; j++){
+			subItem = new StringBuilder();
+			for(int i = 0; i < itemset.length; i++){
+				if(i != indexToSkip){
+					subItem.append(itemset[i]).append(" ");
+				}
+			}
+			//subItem gerado, verificar se é do conjunto frequente
+			
+			if(!frequents.contains(subItem.toString().trim())){
+				return false;
+			}
+			indexToSkip++;
+		}
+		
+		return true;
+	}
     
     /**
      * 
