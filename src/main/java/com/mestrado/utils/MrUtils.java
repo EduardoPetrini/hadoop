@@ -1,6 +1,9 @@
 package main.java.com.mestrado.utils;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -13,7 +16,6 @@ import main.java.com.mestrado.mapred.reduce.Reduce1;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -404,5 +406,46 @@ public class MrUtils {
 			e.printStackTrace();
 		}
 		return -1;
+	}
+    
+    /**
+	 * 
+	 * @param data
+	 * @param fileName
+	 */
+	public static void saveFileInLocal(String data, String fileName){
+		File file = new File(fileName);
+		if(file.exists()){
+			try{
+				file.delete();
+			}catch(Exception e){
+				e.printStackTrace();
+			}
+		}
+		FileWriter fw;
+		BufferedWriter bw;
+		try{
+			fw = new FileWriter(file.getAbsoluteFile(), false);
+			bw = new BufferedWriter(fw);
+			bw.write(data);
+			bw.close();
+		}catch(IOException e){
+			e.printStackTrace();
+		}
+	}
+	
+	/**
+	 * 
+	 * @param data
+	 */
+	public static void saveTimeLog(String data){
+		StringBuilder sb = new StringBuilder("/home/eduardo/times/");
+		File file = new File(sb.toString());
+		if(!file.isDirectory()){
+			file.mkdirs();
+		}
+		sb.append(data.split(" ")[0]).append("-").append(System.currentTimeMillis()).append(".log");
+		System.out.println("Saving: "+data+"\n into "+sb.toString());
+		saveFileInLocal(data, sb.toString());
 	}
 }
