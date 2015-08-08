@@ -234,7 +234,7 @@ public class Main {
     public static void endTime(){
     	double seg = ((double)timeTotal/1000);
     	StringBuilder sb = new StringBuilder();
-    	sb.append("ImrApriori - support ").append(supportPercentage).append(", transactions ").append(totalTransactionCount).append("\n\t");
+    	sb.append("AprioriCpa - support ").append(supportPercentage).append(", transactions ").append(totalTransactionCount).append("\n\t");
     	sb.append("Tempo total: ").append(timeTotal).append(" mile ou ").append(seg).append(" segundos ou ").append(seg/60).append(" minutos\n------------\n");
         System.out.println("Tempo total: "+timeTotal+" mile ou "+seg+" segundos! ou "+seg/60+" minutos");
         MrUtils.saveTimeLog(sb.toString());
