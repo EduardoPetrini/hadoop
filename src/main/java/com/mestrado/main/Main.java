@@ -233,7 +233,11 @@ public class Main {
     
     public static void endTime(){
     	double seg = ((double)timeTotal/1000);
+    	StringBuilder sb = new StringBuilder();
+    	sb.append("ImrApriori - support ").append(supportPercentage).append(", transactions ").append(totalTransactionCount).append("\n\t");
+    	sb.append("Tempo total: ").append(timeTotal).append(" mile ou ").append(seg).append(" segundos ou ").append(seg/60).append(" minutos\n------------\n");
         System.out.println("Tempo total: "+timeTotal+" mile ou "+seg+" segundos! ou "+seg/60+" minutos");
+        MrUtils.saveTimeLog(sb.toString());
     }
     
     public static boolean checkOutputSequence(){
@@ -268,8 +272,11 @@ public class Main {
     public static void copyToInputGen(){
     	MrUtils.copyToInputGen(user+"output"+(Main.countDir-1)+"/part-r-00000");
     }
-    
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
+		timeTotal = 999999;
+		endTime();
+	}
+    public static void main2(String[] args) throws IOException {
         Main m = new Main();
         MrUtils.delOutDirs(user);
         MrUtils.initialConfig(args);

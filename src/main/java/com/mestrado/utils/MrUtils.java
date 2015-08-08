@@ -2,6 +2,8 @@ package main.java.com.mestrado.utils;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
@@ -630,4 +632,46 @@ public class MrUtils {
 
 		
 	}
+	
+	/**
+	 * 
+	 * @param data
+	 * @param fileName
+	 */
+	public static void saveFileInLocal(String data, String fileName){
+		File file = new File(fileName);
+		if(file.exists()){
+			try{
+				file.delete();
+			}catch(Exception e){
+				e.printStackTrace();
+			}
+		}
+		FileWriter fw;
+		BufferedWriter bw;
+		try{
+			fw = new FileWriter(file.getAbsoluteFile(), false);
+			bw = new BufferedWriter(fw);
+			bw.write(data);
+			bw.close();
+		}catch(IOException e){
+			e.printStackTrace();
+		}
+	}
+	
+	/**
+	 * 
+	 * @param data
+	 */
+	public static void saveTimeLog(String data){
+		StringBuilder sb = new StringBuilder("/home/eduardo/times/");
+		File file = new File(sb.toString());
+		if(!file.isDirectory()){
+			file.mkdirs();
+		}
+		sb.append(data.split(" ")[0]).append("-").append(System.currentTimeMillis()).append(".log");
+		System.out.println("Saving: "+data+"\n into "+sb.toString());
+		saveFileInLocal(data, sb.toString());
+	}
+	
 }
