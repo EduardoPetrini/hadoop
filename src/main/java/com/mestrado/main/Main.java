@@ -272,11 +272,8 @@ public class Main {
     public static void copyToInputGen(){
     	MrUtils.copyToInputGen(user+"output"+(Main.countDir-1)+"/part-r-00000");
     }
-    public static void main(String[] args) {
-		timeTotal = 999999;
-		endTime();
-	}
-    public static void main2(String[] args) throws IOException {
+    
+    public static void main(String[] args) throws IOException {
         Main m = new Main();
         MrUtils.delOutDirs(user);
         MrUtils.initialConfig(args);
