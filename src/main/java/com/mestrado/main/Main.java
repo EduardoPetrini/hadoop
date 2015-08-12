@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -18,6 +19,7 @@ import main.java.com.mestrado.mapred.map.Map1;
 import main.java.com.mestrado.mapred.map.Map2;
 import main.java.com.mestrado.mapred.reduce.Reduce1;
 import main.java.com.mestrado.mapred.reduce.Reduce2;
+import main.java.com.mestrado.utils.CountItemsets;
 import main.java.com.mestrado.utils.MrUtils;
 
 import org.apache.commons.logging.Log;
@@ -192,8 +194,11 @@ public class Main {
     public static void endTime(){
         double seg = ((double)timeTotal/1000);
     	StringBuilder sb = new StringBuilder();
-    	sb.append("ImrApriori - support ").append(supportPercentage).append(", transactions ").append(totalTransactionCount).append("\n\t");
+    	sb.append("ImrApriori - support ").append(supportPercentage).append(", transactions ").append(totalTransactionCount).append(" -- ").append(new Date()).append("\n\t");
     	sb.append("Tempo total: ").append(timeTotal).append(" mile ou ").append(seg).append(" segundos ou ").append(seg/60).append(" minutos\n------------\n");
+    	sb.append("Quantidade de itemsets gerados: \n\t");
+    	sb.append(CountItemsets.countItemsets());
+    	sb.append("\n-----------\n");
         System.out.println("Tempo total: "+timeTotal+" mile ou "+seg+" segundos! ou "+seg/60+" minutos");
         MrUtils.saveTimeLog(sb.toString());
     }
