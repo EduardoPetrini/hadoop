@@ -75,7 +75,11 @@ public class CountItemsets {
 		CountItemsets.countBySequence("/user/eduardo/outputCached/outputMR4");
 		CountItemsets.countBySequence("/user/eduardo/outputCached/outputMR5");
 		CountItemsets.countBySequence("/user/eduardo/outputCached/outputMR6");
+		CountItemsets.countBySequence("/user/eduardo/outputCached/outputMR7");
+		CountItemsets.countBySequence("/user/eduardo/outputCached/outputMR8");
 		CountItemsets.countByOutputDir("/user/eduardo/output7/part-r-00000");
+		CountItemsets.countByOutputDir("/user/eduardo/output8/part-r-00000");
+		CountItemsets.countByOutputDir("/user/eduardo/output6/part-r-00000");
 		int total = 0;
 		for(int i = 0; i < itemsetsCounts.length; i++){
 			if(itemsetsCounts[i] != null){
