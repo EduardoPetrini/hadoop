@@ -65,28 +65,25 @@ public class CountItemsets {
 		}
 	}
 	
-	public static void main(String[] args) {
+	public static String countItemsets() {
 		itemsetsCounts = new Integer[20];
-//		CountItemsets.countByOutputDir("/user/eduardo/output5/part-r-00000");
-//		CountItemsets.countByOutputDir("/user/eduardo/output2/part-r-00000");
-		CountItemsets.countBySequence("/user/eduardo/outputCached/outputMR1");
-		CountItemsets.countBySequence("/user/eduardo/outputCached/outputMR2");
-		CountItemsets.countBySequence("/user/eduardo/outputCached/outputMR3");
-		CountItemsets.countBySequence("/user/eduardo/outputCached/outputMR4");
-		CountItemsets.countBySequence("/user/eduardo/outputCached/outputMR5");
-		CountItemsets.countBySequence("/user/eduardo/outputCached/outputMR6");
-		CountItemsets.countBySequence("/user/eduardo/outputCached/outputMR7");
-		CountItemsets.countBySequence("/user/eduardo/outputCached/outputMR8");
-		CountItemsets.countByOutputDir("/user/eduardo/output7/part-r-00000");
-		CountItemsets.countByOutputDir("/user/eduardo/output8/part-r-00000");
-		CountItemsets.countByOutputDir("/user/eduardo/output6/part-r-00000");
+		for(int i = 1; i <= Main.countDir; i++){
+			CountItemsets.countByOutputDir("/user/eduardo/output"+i+"/part-r-00000");
+			if(i >= 3)
+				CountItemsets.countBySequence("/user/eduardo/outputCached/outputMR"+i);
+		}
+		StringBuilder sb = new StringBuilder();
 		int total = 0;
 		for(int i = 0; i < itemsetsCounts.length; i++){
 			if(itemsetsCounts[i] != null){
 				total+=itemsetsCounts[i];
+				sb.append((i + 1)).append("-itemsets: ")
+				.append(itemsetsCounts[i]).append("\n\t");
 				System.out.println("Itemsets de tamanho "+(i+1)+": "+itemsetsCounts[i]);
 			}
 		}
-		System.out.println("Total: "+total);
+		sb.append(total).append("\n");
+		System.out.println("Total: " + total);
+		return sb.toString();
 	}
 }

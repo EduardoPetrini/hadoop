@@ -9,6 +9,7 @@ package main.java.com.mestrado.main;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -18,6 +19,7 @@ import main.java.com.mestrado.mapred.map.Map3;
 import main.java.com.mestrado.mapred.reduce.Reduce1;
 import main.java.com.mestrado.mapred.reduce.Reduce2;
 import main.java.com.mestrado.mapred.reduce.Reduce3;
+import main.java.com.mestrado.utils.CountItemsets;
 import main.java.com.mestrado.utils.MrUtils;
 
 import org.apache.hadoop.conf.Configuration;
@@ -249,9 +251,12 @@ public class Main {
     	double seg = ((double)timeTotal/1000);
         
         StringBuilder sb = new StringBuilder();
-    	sb.append("AprioriDpc - support ").append(supportPercentage).append(", transactions ").append(totalTransactionCount).append("\n\t");
+    	sb.append("AprioriDpc - support ").append(supportPercentage).append(", transactions ").append(totalTransactionCount).append(" -- ").append(new Date()).append("\n\t");
     	sb.append("Tempo total: ").append(timeTotal).append(" mile ou ").append(seg).append(" segundos ou ").append(seg/60).append(" minutos\n------------\n");
         System.out.println("Tempo total: "+timeTotal+" mile ou "+seg+" segundos! ou "+seg/60+" minutos");
+        sb.append("Quantidade de itemsets gerados: \n\t");
+    	sb.append(CountItemsets.countItemsets());
+    	sb.append("\n-----------\n");
         MrUtils.saveTimeLog(sb.toString());
     }
     
