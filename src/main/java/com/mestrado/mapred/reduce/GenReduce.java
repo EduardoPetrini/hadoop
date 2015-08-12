@@ -42,10 +42,10 @@ public class GenReduce extends Reducer<Text, Text, Text, Text>{
         log = LogFactory.getLog(GenReduce.class);
         log.info("Iniciando o reduce para a geração de candidatos");
         keyOut = new Text();
-        valueOut = new Text("1");
         valueOutInt = new IntWritable(1);
         suffix = new ArrayList<String>();
         String outputCand = context.getConfiguration().get("inputCandidates");
+        valueOut = new Text(outputCand);
         Path path = new Path(outputCand);
         log.info("Salvar candidatos gerados em "+outputCand);
         writer = SequenceFile.createWriter(context.getConfiguration(), SequenceFile.Writer.file(path),
@@ -59,19 +59,21 @@ public class GenReduce extends Reducer<Text, Text, Text, Text>{
         }
     	Collections.sort(suffix, NUMERIC_ORDER);
     	String prefix;
+    	int count = 0;
     	for(int i = 0; i < suffix.size()-1; i++){
     		prefix = key.toString()+" "+suffix.get(i)+" ";
     		for(int j = i+1; j < suffix.size(); j++){
-    			try {
     				keyOut.set(prefix+suffix.get(j));
-    				context.write(keyOut, valueOut);
+    				count++;
     				saveInCache(keyOut, valueOutInt);
-    			} catch (IOException | InterruptedException e) {
-    				// TODO Auto-generated catch block
-    				e.printStackTrace();
-    			}
         	}
     	}
+    	try{
+    		keyOut.set(count+" candidatos em ");
+    		context.write(key, valueOut);
+    	} catch (IOException | InterruptedException e) {
+			e.printStackTrace();
+		}
     }
        
     public void saveInCache(Text key, IntWritable value){
