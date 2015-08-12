@@ -9,6 +9,7 @@ package main.java.com.mestrado.main;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -19,6 +20,7 @@ import main.java.com.mestrado.mapred.reduce.GenReduce;
 import main.java.com.mestrado.mapred.reduce.Reduce1;
 import main.java.com.mestrado.mapred.reduce.Reduce2;
 import main.java.com.mestrado.utils.AprioriUtils;
+import main.java.com.mestrado.utils.CountItemsets;
 import main.java.com.mestrado.utils.MrUtils;
 
 import org.apache.hadoop.conf.Configuration;
@@ -234,26 +236,33 @@ public class Main {
     public static void endTime(){
     	double seg = ((double)timeTotal/1000);
     	StringBuilder sb = new StringBuilder();
-    	sb.append("AprioriCpa - support ").append(supportPercentage).append(", transactions ").append(totalTransactionCount).append("\n\t");
+    	sb.append("AprioriCpa - support ").append(supportPercentage).append(", transactions ").append(totalTransactionCount).append(" -- ").append(new Date()).append("\n\t");
     	sb.append("Tempo total: ").append(timeTotal).append(" mile ou ").append(seg).append(" segundos ou ").append(seg/60).append(" minutos\n------------\n");
         System.out.println("Tempo total: "+timeTotal+" mile ou "+seg+" segundos! ou "+seg/60+" minutos");
+        sb.append("Quantidade de itemsets gerados: \n\t");
+    	sb.append(CountItemsets.countItemsets());
+    	sb.append("\n-----------\n");
         MrUtils.saveTimeLog(sb.toString());
     }
     
     public static boolean checkOutputSequence(){
     	if(!MrUtils.checkOutputMR()){
         	System.out.println("Arquivo gerado na fase "+countDir+" é vazio!!!\n");
-    		endTime();
+//    		endTime();
 //    		System.exit(0);
     		return false;
         }
     	return true;
     }
     
+    /**
+     * 
+     * @return
+     */
     public static boolean checkCountOutput(){
     	if(!MrUtils.checkOutput(user+"output"+Main.countDir)){
         	System.out.println("Arquivo gerado na fase "+countDir+" é vazio!!!\n");
-    		endTime();
+//    		endTime();
 //    		System.exit(0);
     		return false;
         }
@@ -301,7 +310,9 @@ public class Main {
         Main.countDir++;//2
         do{
 	        m.jobCount();//Contar a corrência de Ck na base. Le Ck e salva Lk
-	        checkCountOutput();
+	        if(!checkCountOutput()){
+	        	break;
+	        }
 	        //copia Lk do output do jobCount para o input do jobGen
 	        Main.k++; //Main.k == 3;
 	        Main.countDir++;//3
