@@ -12,12 +12,18 @@ public class AprioriUtils {
 	/**
 	 * A partir do arquivo de saída, com 1-itemset por linha, gera-se 2-itemset
 	 */
-	public static void generate2ItemsetCandidates(){
+	public static long generate2ItemsetCandidates(){
 		String inputFile = Main.user+"output"+Main.countDir+"/part-r-00000";
 		ArrayList<String> itemsets = MrUtils.readFromHDFS(inputFile);
+		long ini = System.currentTimeMillis();
 		Collections.sort(itemsets,NUMERIC_ORDER);
 		ArrayList<String> itemset2k = get2itemset(itemsets);
+		long fim = System.currentTimeMillis();
 		MrUtils.saveSequenceInHDFS(itemset2k, Main.inputCandidates+(Main.countDir+1));
+		if(itemset2k.size() == 0){
+			return 0;
+		}
+		return (fim - ini)/1000;
 	}
 	
 	private static ArrayList<String> get2itemset(ArrayList<String> itemset){

@@ -185,6 +185,11 @@ public class MrUtils {
         
     }
     
+    /**
+     * 
+     * @param dir
+     * @return
+     */
     public static boolean checkOutput(String dir){
         
         Path p = new Path(dir);

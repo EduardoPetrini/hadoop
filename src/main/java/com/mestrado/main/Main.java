@@ -289,10 +289,18 @@ public class Main {
         MrUtils.printConfigs(m);
         //Main.k == 1
         m.job1();
-        long ini = System.currentTimeMillis();
-        AprioriUtils.generate2ItemsetCandidates();//salva em intputCandidates/C2
-        long fim = System.currentTimeMillis();
-        timeTotal += (fim - ini)/1000;
+        
+        //check output dir
+        if(!MrUtils.checkOutput(user+"output"+Main.countDir)){
+        	endTime();
+        	System.exit(0);
+        }
+        long time2k = 0;
+        if((time2k = AprioriUtils.generate2ItemsetCandidates()) == 0){
+        	endTime();
+        	System.exit(0);
+        }
+        timeTotal += time2k;
         
         /*
          * job1 para encontrar L1
