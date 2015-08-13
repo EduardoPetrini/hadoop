@@ -49,7 +49,7 @@ public class Map2  extends Mapper<LongWritable, Text, Text, IntWritable>{
         String kStr = context.getConfiguration().get("k");
         k = Integer.parseInt(kStr);
         
-        log.info("Iniciando Map 2  para contar a ocorrência de C"+k);
+        log.info("AprioriCpa Map contagem de C"+k);
         log.info("Arquivo de entrada no inputCandidates = "+inputCand);
         
         Path path = new Path(inputCand);

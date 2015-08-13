@@ -37,7 +37,7 @@ public class Reduce1 extends Reducer<Text, IntWritable, Text, IntWritable>{
     	log = LogFactory.getLog(Reduce1.class);
     	valueOut = new IntWritable();
         support = Double.parseDouble(context.getConfiguration().get("support"));
-        log.info("Iniciando o Reduce 1");
+        log.info("AprioriCpa Reduce Fase 1");
         log.info("Reduce1 support = "+support);
         
 //        String outputL = context.getConfiguration().get("outputL");
@@ -75,7 +75,7 @@ public class Reduce1 extends Reducer<Text, IntWritable, Text, IntWritable>{
     
     @Override
     public void cleanup(Context c){
-        log.info("Finalizando o Reduce 1.");
+        log.info("AprioriCpa Finalizando o Reduce 1.");
         log = null;
         valueOut = null;
 //        try {

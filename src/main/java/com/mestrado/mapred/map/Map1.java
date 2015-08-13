@@ -37,7 +37,7 @@ public class Map1 extends Mapper<LongWritable, Text, Text, IntWritable>{
     	valueOut = new IntWritable(1);
     	keyOut = new Text();
     	
-    	log.info("Execução do Map 1 para encontrar L1");
+    	log.info("AprioriCpa Map para encontrar L1");
     }
 
 	@Override
@@ -58,7 +58,6 @@ public class Map1 extends Mapper<LongWritable, Text, Text, IntWritable>{
 	protected void cleanup(
 			Mapper<LongWritable, Text, Text, IntWritable>.Context context)
 			throws IOException, InterruptedException {
-		log.info("Fim do Map 1");
 		log = null;
 		valueOut = null;
 		keyOut = null;

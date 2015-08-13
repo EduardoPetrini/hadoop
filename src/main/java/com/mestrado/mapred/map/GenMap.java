@@ -33,6 +33,8 @@ public class GenMap extends Mapper<LongWritable, Text, Text, Text>{
     	log = LogFactory.getLog(GenMap.class);
     	valueOut = new Text();
     	keyOut = new Text();
+    	
+    	log.info("AprioriCpa Map geração");
 	}
 
 	@Override

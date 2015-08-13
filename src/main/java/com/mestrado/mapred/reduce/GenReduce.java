@@ -40,14 +40,14 @@ public class GenReduce extends Reducer<Text, Text, Text, Text>{
     @Override
     public void setup(Context context) throws IOException{
         log = LogFactory.getLog(GenReduce.class);
-        log.info("Iniciando o reduce para a geração de candidatos");
+        log.info("AprioriCpa Reduce geração");
         keyOut = new Text();
         valueOutInt = new IntWritable(1);
         suffix = new ArrayList<String>();
         String outputCand = context.getConfiguration().get("inputCandidates");
         valueOut = new Text(outputCand);
         Path path = new Path(outputCand);
-        log.info("Salvar candidatos gerados em "+outputCand);
+        log.info("AprioriCpa Salvar candidatos gerados em "+outputCand);
         writer = SequenceFile.createWriter(context.getConfiguration(), SequenceFile.Writer.file(path),
                 SequenceFile.Writer.keyClass(Text.class), SequenceFile.Writer.valueClass(IntWritable.class));
     }
@@ -86,7 +86,7 @@ public class GenReduce extends Reducer<Text, Text, Text, Text>{
     
     @Override
     public void cleanup(Context c){
-        log.info("Finalizando o REDUCE para a geração de candiadtos");
+        log.info("AprioriCpa Finalizando o REDUCE geração");
 		try {
 			writer.close();
 		} catch (IOException e) {

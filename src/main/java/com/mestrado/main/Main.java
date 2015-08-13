@@ -78,7 +78,7 @@ public class Main {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
          job.getConfiguration().set("fs.defaultFS", clusterUrl);
-        job.setJobName("Fase 1");
+        job.setJobName("AprioriCpa Fase 1");
         
         job.setJarByClass(Main.class);
         
@@ -98,8 +98,6 @@ public class Main {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
         
-        System.out.println("Job 1 - CountDir: "+Main.countDir);
-        
         FileOutputFormat.setOutputPath(job, new Path(user+"output"+Main.countDir));
         
         try {
@@ -108,7 +106,7 @@ public class Main {
             long fim = System.currentTimeMillis();
             
             long t = fim - ini;
-            System.out.println("Tempo da fase 1: "+((double)t/1000));
+            System.out.println("Tempo AprioriCpa Fase 1: "+((double)t/1000));
             
             timeTotal += t;
             if(st == 1){
@@ -134,7 +132,7 @@ public class Main {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
          job.getConfiguration().set("fs.defaultFS", clusterUrl);
-        job.setJobName("Fase 2");
+        job.setJobName("AprioriCpa Contagem");
         
         job.setJarByClass(Main.class);
         
@@ -150,8 +148,6 @@ public class Main {
         job.getConfiguration().set("k", String.valueOf(k));
         job.getConfiguration().set("inputCandidates", inputCandidates+(Main.countDir));//Contém Ck
           
-        System.out.println("Job 2 - CountDir: "+Main.countDir);
-        
         try {
            job.addCacheFile(new URI(inputCandidates+(Main.countDir)));
         } catch (URISyntaxException ex) {
@@ -170,7 +166,7 @@ public class Main {
             long fim = System.currentTimeMillis();
             
             long t = fim - ini;
-            System.out.println("Tempo da fase de contagem (k = "+k+"): "+((double)t/1000));
+            System.out.println("Tempo AprioriCpa Fase de contagem (k = "+k+"): "+((double)t/1000));
             timeTotal += t;
             
             if(st == 1){
@@ -196,7 +192,7 @@ public class Main {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
          job.getConfiguration().set("fs.defaultFS", clusterUrl);
-        job.setJobName("Job para candidate generation");
+        job.setJobName("AprioriCpa Geracao");
         
         job.setJarByClass(Main.class);
         
@@ -208,7 +204,7 @@ public class Main {
         job.setOutputValueClass(Text.class);
         
         job.getConfiguration().set("inputCandidates", inputCandidates+Main.countDir);
-        System.out.println("Job para geração de candidatos - CountDir: "+Main.countDir);
+        System.out.println("AprioriCpa geração de candidatos - CountDir: "+Main.countDir);
         
         try {
         	FileInputFormat.setInputPaths(job, new Path(user+"inputToGen"));//Entra Lk, do job count
@@ -222,7 +218,7 @@ public class Main {
             long fim = System.currentTimeMillis();
             
             long t = fim - ini;
-            System.out.println("Tempo da fase de geração (k = "+k+"): "+ ((double)t/1000));
+            System.out.println("Tempo AprioriCpa Fase de geração (k = "+k+"): "+ ((double)t/1000));
             timeTotal += t;
             
             if(st == 1){

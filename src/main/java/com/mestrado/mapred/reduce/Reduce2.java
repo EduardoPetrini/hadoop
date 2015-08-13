@@ -35,11 +35,11 @@ public class Reduce2 extends Reducer<Text, IntWritable, Text, IntWritable> {
         String strK = context.getConfiguration().get("k");
         support = Double.parseDouble(context.getConfiguration().get("support"));
         
-        log.info("Iniciando o Reduce 2 para contar e podar C"+strK);
+        log.info("AprioriCpa o Reduce para contar e podar C"+strK);
         
 //         writer = SequenceFile.createWriter(context.getConfiguration(), SequenceFile.Writer.file(path),
 //               SequenceFile.Writer.keyClass(Text.class), SequenceFile.Writer.valueClass(IntWritable.class));
-         System.out.println("Support total: "+support);
+         System.out.println("Support: "+support);
     }
     
     @Override
@@ -70,7 +70,7 @@ public class Reduce2 extends Reducer<Text, IntWritable, Text, IntWritable> {
     
     @Override
     public void cleanup(Context c){
-        log.info("Finalizando o REDUCE 2.");
+        log.info("AprioriCpa Finalizando o REDUCE contagem.");
         
 //        try {
 //            writer.close();
