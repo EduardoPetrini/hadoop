@@ -70,7 +70,7 @@ public class Main {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
         job.getConfiguration().set("fs.defaultFS", "hdfs://master/");
-        job.setJobName("Fase 1");
+        job.setJobName("ImrApriori Fase 1");
         
         job.setJarByClass(Main.class);
         
@@ -99,8 +99,6 @@ public class Main {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
         
-        System.out.println("Job 1 - CountDir: "+Main.countDir);
-        
         FileOutputFormat.setOutputPath(job, new Path(user+"output"+Main.countDir));
         
         try {
@@ -109,7 +107,7 @@ public class Main {
             long fim = System.currentTimeMillis();
             
             long t = fim - ini;
-            System.out.println("Tempo da fase 1: "+((double)t/1000));
+            System.out.println("Tempo do ImrApriori Fase 1: "+((double)t/1000));
             
             timeTotal += t;
             if(st == 1){
@@ -135,7 +133,7 @@ public class Main {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
           job.getConfiguration().set("fs.defaultFS", "hdfs://master/");
-        job.setJobName("Fase 2");
+        job.setJobName("ImrApriori Fase 2");
         
         job.setJarByClass(Main.class);
         
@@ -158,8 +156,6 @@ public class Main {
         	job.getConfiguration().set("blockId"+i, this.blocksIds.get(i-1));
         }
           
-        System.out.println("Job 2 - CountDir: "+Main.countDir);
-        
         try {
             for(int i = 1; i <= this.blocksIds.size(); i++){
             	job.addCacheFile(new URI(user+"partitions-fase-1/"+this.blocksIds.get(i-1)));
@@ -180,7 +176,7 @@ public class Main {
             long fim = System.currentTimeMillis();
             
             long t = fim - ini;
-            System.out.println("Tempo da fase 2: "+((double)t/1000));
+            System.out.println("Tempo do ImrApriori Fase 2: "+((double)t/1000));
             
             timeTotal += t;
             if(st == 1){

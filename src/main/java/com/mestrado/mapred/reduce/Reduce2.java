@@ -32,8 +32,8 @@ public class Reduce2 extends Reducer<Text, Text, Text, Text> {
     	String sup = context.getConfiguration().get("supportPercentage");
     	support = Double.parseDouble(sup);
     	totalTransaction= Long.parseLong(context.getConfiguration().get("totalTransactions"));
-        log.info("Iniciando o REDUCE 2. ");
-        System.out.println("Support global: "+support);
+        log.info("Iniciando o REDUCE ImrApriori Fase 2. ");
+        System.out.println("Support: "+support);
     }
     
     @Override

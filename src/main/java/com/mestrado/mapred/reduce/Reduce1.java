@@ -58,12 +58,11 @@ public class Reduce1 extends Reducer<Text, Text, Text, IntWritable>{
     	               SequenceFile.Writer.keyClass(Text.class), SequenceFile.Writer.valueClass(IntWritable.class));
     	}
         
-        log.info("Iniciando o REDUCE 1. Count Dir: "+count);
-        log.info("Reduce1 support = "+support);
-        
+        log.info("Iniciando REDUCE ImrApriori Fase 1");
+        log.info("Support = "+support);
         log.info("Total Maps = "+totalMaps);
+
         System.out.println("\n*********-**********-************-*****************-**********");
-        
     }
     
     /**
