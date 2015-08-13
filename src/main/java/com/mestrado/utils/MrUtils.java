@@ -307,7 +307,7 @@ public class MrUtils {
 			FileSystem fs = inputPath.getFileSystem(c);
 			FileStatus[] subFiles = fs.listStatus(inputPath);
 			Path inputFile = subFiles[0].getPath();
-			
+			Main.inputFileName = inputFile.getName();
 			BufferedReader br=new BufferedReader(new InputStreamReader(fs.open(inputFile)));
 			Main.totalTransactionCount = 0;
 			while (br.readLine() != null){
