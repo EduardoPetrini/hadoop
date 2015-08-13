@@ -444,7 +444,7 @@ public class MrUtils {
 		if(!file.isDirectory()){
 			file.mkdirs();
 		}
-		sb.append(data.split(" ")[0]).append("-").append(System.currentTimeMillis()).append(".log");
+		sb.append(data.split(" ")[0]).append("-").append("-").append(Main.inputFileName).append("_").append(System.currentTimeMillis()).append(".log");
 		System.out.println("Saving: "+data+"\n into "+sb.toString());
 		saveFileInLocal(data, sb.toString());
 	}
