@@ -267,11 +267,17 @@ public class Main {
         MrUtils.printConfigs(m);
         
         m.job1();
-        MrUtils.checkOutputMR();
+        if(!MrUtils.checkOutputMR()){
+        	endTime();
+        	System.exit(0);
+        }
         
         Main.countDir++;
         m.job2();
-        MrUtils.checkOutputMR();
+        if(!MrUtils.checkOutputMR()){
+        	endTime();
+        	System.exit(0);
+        }
         
         int l = 0;
         while(MrUtils.checkOutputMR() && m.k != -1){
@@ -283,6 +289,5 @@ public class Main {
             m.k = MrUtils.getK(m.k);
         }
         endTime();
-        
     }
 }

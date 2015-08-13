@@ -224,6 +224,10 @@ public class MrUtils {
         return false;
     }
     
+    /**
+     * 
+     * @return false if empty file
+     */
     public static boolean checkOutputMR(){
         String dir = Main.user+"outputCached/outputMR"+Main.countDir;
         Path p = new Path(dir);
