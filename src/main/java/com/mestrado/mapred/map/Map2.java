@@ -51,7 +51,7 @@ public class Map2  extends Mapper<LongWritable, Text, Text, IntWritable>{
         String kStr = context.getConfiguration().get("k");
         k = Integer.parseInt(kStr);
         
-        log.info("Iniciando map 2v2 count = "+count);
+        log.info("AprioriDpc Map 2");
         log.info("Arquivo Cached = "+fileCachedRead);
         URI[] patternsFiles = context.getCacheFiles();
         

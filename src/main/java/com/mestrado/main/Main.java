@@ -76,7 +76,7 @@ public class Main {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
          job.getConfiguration().set("fs.defaultFS", clusterUrl);
-        job.setJobName("Fase 1");
+        job.setJobName("AprioriDpc Fase 1");
         
         job.setJarByClass(Main.class);
         
@@ -97,8 +97,6 @@ public class Main {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
         
-        System.out.println("Job 1 - CountDir: "+Main.countDir);
-        
         FileOutputFormat.setOutputPath(job, new Path(user+"output"+Main.countDir));
         
         try {
@@ -107,7 +105,7 @@ public class Main {
             long fim = System.currentTimeMillis();
             
             long t = fim - ini;
-            System.out.println("Tempo da fase 1: "+((double)t/1000));
+            System.out.println("Tempo AprioriDpc Fase 1: "+((double)t/1000));
             
             timeTotal += t;
             if(st == 1){
@@ -133,7 +131,7 @@ public class Main {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
          job.getConfiguration().set("fs.defaultFS", clusterUrl);
-        job.setJobName("Fase 2");
+        job.setJobName("AprioriDpc Fase 2");
         
         job.setJarByClass(Main.class);
         
@@ -151,8 +149,6 @@ public class Main {
         job.getConfiguration().set("fileCachedRead", fileCached+(Main.countDir-1));
         job.getConfiguration().set("fileCachedWrited", fileCached+(Main.countDir));
           
-        System.out.println("Job 2 - CountDir: "+Main.countDir);
-        
         try {
            job.addCacheFile(new URI(fileCached+(Main.countDir-1)));
         } catch (URISyntaxException ex) {
@@ -172,7 +168,7 @@ public class Main {
             
             long t = fim - ini;
             earlierTime = ((double)t/1000);
-            System.out.println("Tempo da fase 2: "+earlierTime);
+            System.out.println("Tempo AprioriDpc Fase 2: "+earlierTime);
             
             timeTotal += t;
             if(st == 1){
@@ -198,7 +194,7 @@ public class Main {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
          job.getConfiguration().set("fs.defaultFS", clusterUrl);
-        job.setJobName("Fase 3");
+        job.setJobName("AprioriDpc Fase 3");
         
         job.setJarByClass(Main.class);
         
@@ -215,7 +211,7 @@ public class Main {
         job.getConfiguration().set("fileCachedRead", fileCached+(Main.countDir-1));
         job.getConfiguration().set("fileCachedWrited", fileCached+(Main.countDir));
         job.getConfiguration().set("earlierTime", String.valueOf(earlierTime));
-        System.out.println("Job 3 - CountDir: "+Main.countDir);
+        System.out.println("AprioriDpc Fase 3 - CountDir: "+Main.countDir);
         
         try {
            job.addCacheFile(new URI(fileCached+(Main.countDir-1)));
@@ -236,7 +232,7 @@ public class Main {
             
             long t = fim - ini;
             earlierTime = ((double)t/1000);
-            System.out.println("Tempo da fase 3: "+earlierTime);
+            System.out.println("Tempo AprioriDpc Fase 3: "+earlierTime);
             
             timeTotal += t;
             if(st == 1){

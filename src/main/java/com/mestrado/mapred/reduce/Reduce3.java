@@ -37,7 +37,7 @@ public class Reduce3 extends Reducer<Text, Text, Text, Text> {
     public void setup(Context context) throws IOException{
         count = context.getConfiguration().get("count");
         support = Double.parseDouble(context.getConfiguration().get("support"));
-        log.info("Iniciando o REDUCE 3. Count dir: "+count);
+        log.info("AprioriDpc REDUCE 3. Count dir: "+count);
         String kStr = context.getConfiguration().get("k");
         k = Integer.parseInt(kStr);
         String fileCachedPath = context.getConfiguration().get("fileCachedWrited");
@@ -45,7 +45,7 @@ public class Reduce3 extends Reducer<Text, Text, Text, Text> {
         writer = SequenceFile.createWriter(context.getConfiguration(), SequenceFile.Writer.file(new Path(fileCachedPath)),
                SequenceFile.Writer.keyClass(Text.class), SequenceFile.Writer.valueClass(IntWritable.class));
         
-        System.out.println("Support total: "+support);
+        System.out.println("Support: "+support);
         valueOut = new Text();
         valueToCache = new IntWritable();
     }
@@ -60,9 +60,7 @@ public class Reduce3 extends Reducer<Text, Text, Text, Text> {
     	for (;it.hasNext();it.next()) {
             count ++;
         }
-    	if(key.toString().trim().equals("1004 3191 8494")){
-    		System.out.println("break here...");
-    	}
+
     	if(count >= support){
 	        try {
 	        	/*Divide as saídas pelo k.*/
@@ -94,7 +92,7 @@ public class Reduce3 extends Reducer<Text, Text, Text, Text> {
     
     @Override
     public void cleanup(Context c){
-        log.info("Finalizando o REDUCE 3.");
+        log.info("AprioriDpc Finalizando o REDUCE 3.");
         try {
             writer.close();
         } catch (IOException ex) {

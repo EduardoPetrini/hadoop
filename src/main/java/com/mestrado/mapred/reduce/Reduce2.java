@@ -37,11 +37,11 @@ public class Reduce2 extends Reducer<Text, IntWritable, Text, IntWritable> {
         support = Double.parseDouble(context.getConfiguration().get("support"));
         
         Path path = new Path(fileCachedPath);
-        log.info("Iniciando o REDUCE 2. Count dir: "+count);
+        log.info("AprioriDpc REDUCE 2");
         
          writer = SequenceFile.createWriter(context.getConfiguration(), SequenceFile.Writer.file(path),
                SequenceFile.Writer.keyClass(Text.class), SequenceFile.Writer.valueClass(IntWritable.class));
-         System.out.println("Support total: "+support);
+         System.out.println("Support: "+support);
     }
     
     @Override
@@ -72,7 +72,7 @@ public class Reduce2 extends Reducer<Text, IntWritable, Text, IntWritable> {
     
     @Override
     public void cleanup(Context c){
-        log.info("Finalizando o REDUCE 2.");
+        log.info("AprioriDpc Finalizando o REDUCE 2.");
         
         try {
             writer.close();

@@ -53,9 +53,8 @@ public class Map3  extends Mapper<LongWritable, Text, Text, Text>{
         k = Integer.parseInt(kStr);
         double earlierTime = Double.parseDouble(context.getConfiguration().get("earlierTime"));
         
-        log.info("Iniciando map 3 count = "+count);
+        log.info("AprioriDpc Map 3 count = "+count);
         log.info("Arquivo Cached = "+fileCachedRead);
-        
         log.info("Tempo da fase anterior é "+earlierTime);
         
         URI[] patternsFiles = context.getCacheFiles();
