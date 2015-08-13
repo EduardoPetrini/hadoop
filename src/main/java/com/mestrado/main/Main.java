@@ -46,6 +46,7 @@ public class Main {
     public static int totalBlockCount;
     public static String user = "/user/eduardo/";
     public static String inputEntry = "input/";
+    public static String inputFileName = "";
     public static String clusterUrl = "hdfs://master/";
     public static long totalTransactionCount;
     public ArrayList<String> blocksIds;
@@ -194,7 +195,8 @@ public class Main {
     public static void endTime(){
         double seg = ((double)timeTotal/1000);
     	StringBuilder sb = new StringBuilder();
-    	sb.append("ImrApriori - support ").append(supportPercentage).append(", transactions ").append(totalTransactionCount).append(" -- ").append(new Date()).append("\n\t");
+    	sb.append("ImrApriori - support ").append(supportPercentage).append(", transactions ").append(totalTransactionCount).append(" -- ").append(new Date()).append("\n");
+    	sb.append("Arquivo ").append(inputFileName).append("\n\t"); 
     	sb.append("Tempo total: ").append(timeTotal).append(" mile ou ").append(seg).append(" segundos ou ").append(seg/60).append(" minutos\n------------\n");
     	sb.append("Quantidade de itemsets gerados: \n\t");
     	sb.append(CountItemsets.countItemsets());

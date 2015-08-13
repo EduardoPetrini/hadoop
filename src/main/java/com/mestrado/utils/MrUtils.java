@@ -265,7 +265,7 @@ public class MrUtils {
 			FileSystem fs = inputPath.getFileSystem(c);
 			FileStatus[] subFiles = fs.listStatus(inputPath);
 			FileStatus conf = subFiles[0];
-			
+			Main.inputFileName = conf.getPath().getName();
 			long blockSize = conf.getLen();
 			long defaultSize = conf.getBlockSize();
 			
