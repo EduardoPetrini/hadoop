@@ -43,6 +43,7 @@ public class Main {
     int k = 1;
     public static String user = "/user/eduardo/";
     public static String inputEntry = "input/";
+    public static String inputFileName = "";
     public static String clusterUrl = "hdfs://master/";
     public static 	String fileCached = user+"outputCached/outputMR";
     public static long totalTransactionCount;
@@ -251,7 +252,8 @@ public class Main {
     	double seg = ((double)timeTotal/1000);
         
         StringBuilder sb = new StringBuilder();
-    	sb.append("AprioriDpc - support ").append(supportPercentage).append(", transactions ").append(totalTransactionCount).append(" -- ").append(new Date()).append("\n\t");
+    	sb.append("AprioriDpc - support ").append(supportPercentage).append(", transactions ").append(totalTransactionCount).append(" -- ").append(new Date()).append("\n");
+    	sb.append("Arquivo ").append(inputFileName).append("\n\t");
     	sb.append("Tempo total: ").append(timeTotal).append(" mile ou ").append(seg).append(" segundos ou ").append(seg/60).append(" minutos\n------------\n");
         System.out.println("Tempo total: "+timeTotal+" mile ou "+seg+" segundos! ou "+seg/60+" minutos");
         sb.append("Quantidade de itemsets gerados: \n\t");
