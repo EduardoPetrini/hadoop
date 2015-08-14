@@ -296,7 +296,7 @@ public class Main {
         	System.exit(0);
         }
         long time2k = 0;
-        if((time2k = AprioriUtils.generate2ItemsetCandidates()) == 0){
+        if((time2k = AprioriUtils.generate2ItemsetCandidates()) == -1){
         	endTime();
         	System.exit(0);
         }

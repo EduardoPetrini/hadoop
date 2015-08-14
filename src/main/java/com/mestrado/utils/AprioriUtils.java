@@ -21,7 +21,7 @@ public class AprioriUtils {
 		long fim = System.currentTimeMillis();
 		MrUtils.saveSequenceInHDFS(itemset2k, Main.inputCandidates+(Main.countDir+1));
 		if(itemset2k.size() == 0){
-			return 0;
+			return -1;
 		}
 		return (fim - ini)/1000;
 	}
