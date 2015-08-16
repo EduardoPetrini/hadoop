@@ -109,7 +109,8 @@ public class MrUtils {
                     aux = f.getPath();
                     
                     if(aux.getName().contains("output") || aux.getName().contains("inputCached") ||
-                    		aux.getName().contains("candidatosTxt")){
+                    		aux.getName().contains("candidatosTxt") || aux.getName().contains("outputCandidates") || 
+                    		aux.getName().contains("inputCandidates")){
                         
                         if(fs.delete(aux, true)){
                         	System.out.println("Excluido diretório -> "+aux.getName());
@@ -228,35 +229,59 @@ public class MrUtils {
     }
     
     public static boolean checkOutputMR(){
-        String dir = Main.inputCandidates+Main.countDir;
-        Path p = new Path(dir);
+        Path path;
         
         Configuration c = new Configuration();
-         c.set("fs.defaultFS", Main.clusterUrl);
-        System.out.println("Verificando diretório: "+dir);
-        
+        c.set("fs.defaultFS", Main.clusterUrl);
+
         try {
             FileSystem fs = FileSystem.get(c);
-            if(fs.exists(p)){
-	            FileStatus conf = fs.getFileStatus(p);
-	            long len = conf.getLen();
-	            if(conf.getLen() > 128){
-	                System.out.println("O arquivo "+dir+" não é vazio! "+conf.getLen());
-	                return true;
-	            }
-	            System.out.println("O arquivo "+dir+" é vazio! "+conf.getLen());
-            }else{
-            	System.out.println("Arquivo "+dir+" não existe!");
+            
+            //obter todos os arquivos dos candidatos atuais
+            Main.candFilesNames = getAllCandidatesFilesNames();
+            ArrayList<String> filesEmpty = new ArrayList<String>();
+            for(String fileName: Main.candFilesNames){
+            	path = new Path(fileName);
+            	FileStatus conf = fs.getFileStatus(path);
+            	if(conf.getLen() > 128){
+            		System.out.println("O arquivo "+path.getName()+" não é vazio! "+conf.getLen());
+            	}else{
+            		filesEmpty.add(fileName);
+            		System.out.println("O arquivo "+path.getName()+" é vazio! "+conf.getLen());
+            	}
             }
+            Main.candFilesNames.removeAll(filesEmpty);
         } catch (IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
-        
         return false;
     }
     
-    public static boolean checkInputMR(){
+    private static ArrayList<String> getAllCandidatesFilesNames() {
+    	ArrayList<String> candNames = new ArrayList<String>();
+    	
+    	Path p = new Path(Main.inputCandidatesDir);
+    	Path aux;
+        Configuration c = new Configuration();
+        c.set("fs.defaultFS", Main.clusterUrl);
+        try{
+            FileSystem fs = FileSystem.get(c);
+            FileStatus[] ff = fs.listStatus(p);
+
+			 for(FileStatus f: ff){
+			     aux = f.getPath();
+			     if(aux.getName().contains("C"+Main.countDir)){
+			    	 candNames.add(Main.inputCandidatesDir+"/"+aux.getName());
+			     }
+			 }
+
+        }catch(IOException e){
+            System.out.println("ERROR: "+e);
+        }
+		return candNames;
+	}
+
+	public static boolean checkInputMR(){
 //        String dir = Main.inputL+Main.countDir;
 //        Path p = new Path(dir);
 //        
@@ -658,8 +683,19 @@ public class MrUtils {
         	}else{
         		delContentFiles(input);
         	}
-//          copy(FileSystem srcFS, FileStatus srcStatus, FileSystem dstFS, Path dst, boolean deleteSource, boolean overwrite, Configuration conf)
-        	FileUtil.copy(fs, fs.getFileStatus(path), fs, input, false, true, c);
+        	FileStatus[] files = fs.listStatus(path);
+        	int index = 0;
+        	for(FileStatus fst: files){
+        		if(fst.getPath().getName().startsWith("part")){
+	// 		        copy(FileSystem srcFS, FileStatus srcStatus, FileSystem dstFS, Path dst, boolean deleteSource, boolean overwrite, Configuration conf)
+        			if(index == 0)
+        				FileUtil.copy(fs, fs.getFileStatus(fst.getPath()), fs, input, false, true, c);
+        			else
+        				FileUtil.copy(fs, fs.getFileStatus(fst.getPath()), fs, input, false, false, c);
+        			index++;
+        		}
+        		
+        	}
 //        	fs.rename(new Path(Main.user+"inputToGen/"), new Path(""));
         }catch(IOException e){
         	e.printStackTrace();

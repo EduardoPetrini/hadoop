@@ -9,9 +9,18 @@ package main.java.com.mestrado.main;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 import main.java.com.mestrado.mapred.map.GenMap;
 import main.java.com.mestrado.mapred.map.Map1;
@@ -22,14 +31,6 @@ import main.java.com.mestrado.mapred.reduce.Reduce2;
 import main.java.com.mestrado.utils.AprioriUtils;
 import main.java.com.mestrado.utils.CountItemsets;
 import main.java.com.mestrado.utils.MrUtils;
-
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.Job;
-import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
-import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 /**
  *
@@ -48,7 +49,9 @@ public class Main {
     public static String clusterUrl = "hdfs://master/";
     public static String outputCandidates = user+"outputCandidates/C";
     public static String inputCandidates = user+"inputCandidates/C";
+    public static String inputCandidatesDir = user+"inputCandidates";
     public static long totalTransactionCount;
+    public static ArrayList<String> candFilesNames;
 
     /*
     Valor do suporte para 1.000.000
@@ -148,7 +151,10 @@ public class Main {
         job.getConfiguration().set("count", String.valueOf(Main.countDir));
         job.getConfiguration().set("support", String.valueOf(support));
         job.getConfiguration().set("k", String.valueOf(k));
-        job.getConfiguration().set("inputCandidates", inputCandidates+(Main.countDir));//Contém Ck
+        job.getConfiguration().set("candsize", String.valueOf(candFilesNames.size()));
+        for(int i =0; i < candFilesNames.size(); i++){
+        	job.getConfiguration().set("inputCandidates"+i, candFilesNames.get(i));//Contém Ck
+        }
         
         job.setNumReduceTasks(4);
         
@@ -283,7 +289,7 @@ public class Main {
     }
     
     public static void copyToInputGen(){
-    	MrUtils.copyToInputGen(user+"output"+(Main.countDir-1)+"/part-r-00000");
+    	MrUtils.copyToInputGen(user+"output"+(Main.countDir-1));
     }
     
     public static void main(String[] args) throws IOException {

@@ -44,7 +44,7 @@ public class GenReduce extends Reducer<Text, Text, Text, Text>{
         keyOut = new Text();
         valueOutInt = new IntWritable(1);
         suffix = new ArrayList<String>();
-        String outputCand = context.getConfiguration().get("inputCandidates");
+        String outputCand = context.getConfiguration().get("inputCandidates")+"-"+String.valueOf(System.currentTimeMillis());
         valueOut = new Text(outputCand);
         Path path = new Path(outputCand);
         log.info("AprioriCpa Salvar candidatos gerados em "+outputCand);

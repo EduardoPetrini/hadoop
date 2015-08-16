@@ -7,11 +7,6 @@
 package main.java.com.mestrado.mapred.map;
 
 import java.io.IOException;
-import java.util.ArrayList;
-
-import main.java.com.mestrado.app.HashNode;
-import main.java.com.mestrado.app.HashPrefixTree;
-import main.java.com.mestrado.app.HashTree;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -23,6 +18,9 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.util.ReflectionUtils;
 
+import main.java.com.mestrado.app.HashNode;
+import main.java.com.mestrado.app.HashPrefixTree;
+
 /**
  * Gerar itemsets de tamanho 2.
  * @author eduardo
@@ -30,9 +28,7 @@ import org.apache.hadoop.util.ReflectionUtils;
 public class Map2  extends Mapper<LongWritable, Text, Text, IntWritable>{
     
     private Log log = LogFactory.getLog(Map2.class);
-    private IntWritable countOut = new IntWritable(1);
     private SequenceFile.Reader reader;
-    private ArrayList<String> fileCached;
     private HashPrefixTree hpt;
     private int k;
     private Text keyOut;
@@ -45,18 +41,26 @@ public class Map2  extends Mapper<LongWritable, Text, Text, IntWritable>{
      */
     @Override
     public void setup(Context context) throws IOException{
-        String inputCand = context.getConfiguration().get("inputCandidates");
+    	int candSize = Integer.parseInt(context.getConfiguration().get("candsize"));
+    	String[] filesName = new String[candSize];
+    	
+    	log.info("AprioriCpa Map contagem de C"+k);
+    	log.info("Arquivo de entrada no inputCandidates: ");
+    	hpt = new HashPrefixTree();
+    	Path path;
+    	for(int i = 0; i < candSize; i++){
+    		filesName[i] = context.getConfiguration().get("inputCandidates"+i);
+    		log.info(filesName[i]);
+    		path = new Path(filesName[i]);
+    		reader = new SequenceFile.Reader(context.getConfiguration(), SequenceFile.Reader.file(path));
+    		
+    		openFile(context);
+    	}
+    	
         String kStr = context.getConfiguration().get("k");
         k = Integer.parseInt(kStr);
         
-        log.info("AprioriCpa Map contagem de C"+k);
-        log.info("Arquivo de entrada no inputCandidates = "+inputCand);
         
-        Path path = new Path(inputCand);
-        reader = new SequenceFile.Reader(context.getConfiguration(), SequenceFile.Reader.file(path));
-        
-        hpt = new HashPrefixTree();
-        openFile(context);
         
         keyOut = new Text();
         valueOut = new IntWritable(1);
