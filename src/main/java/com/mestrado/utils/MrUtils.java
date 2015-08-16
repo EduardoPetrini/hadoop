@@ -250,9 +250,13 @@ public class MrUtils {
             		System.out.println("O arquivo "+path.getName()+" é vazio! "+conf.getLen());
             	}
             }
-            Main.candFilesNames.removeAll(filesEmpty);
+            if(!filesEmpty.isEmpty())
+            	Main.candFilesNames.removeAll(filesEmpty);
         } catch (IOException e) {
             e.printStackTrace();
+        }
+        if(Main.candFilesNames.size() > 0){
+        	return true;
         }
         return false;
     }
