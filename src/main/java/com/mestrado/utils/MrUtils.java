@@ -688,15 +688,10 @@ public class MrUtils {
         		delContentFiles(input);
         	}
         	FileStatus[] files = fs.listStatus(path);
-        	int index = 0;
         	for(FileStatus fst: files){
         		if(fst.getPath().getName().startsWith("part")){
 	// 		        copy(FileSystem srcFS, FileStatus srcStatus, FileSystem dstFS, Path dst, boolean deleteSource, boolean overwrite, Configuration conf)
-        			if(index == 0)
-        				FileUtil.copy(fs, fs.getFileStatus(fst.getPath()), fs, input, false, true, c);
-        			else
-        				FileUtil.copy(fs, fs.getFileStatus(fst.getPath()), fs, input, false, false, c);
-        			index++;
+    				FileUtil.copy(fs, fs.getFileStatus(fst.getPath()), fs, input, false, true, c);
         		}
         		
         	}

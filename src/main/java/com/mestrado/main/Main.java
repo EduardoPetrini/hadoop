@@ -154,15 +154,15 @@ public class Main {
         job.getConfiguration().set("candsize", String.valueOf(candFilesNames.size()));
         for(int i =0; i < candFilesNames.size(); i++){
         	job.getConfiguration().set("inputCandidates"+i, candFilesNames.get(i));//Contém Ck
+        	try {
+        		job.addCacheFile(new URI(candFilesNames.get(i)));
+        	} catch (URISyntaxException ex) {
+        		Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+        	}
         }
         
         job.setNumReduceTasks(4);
         
-        try {
-           job.addCacheFile(new URI(inputCandidates+(Main.countDir)));
-        } catch (URISyntaxException ex) {
-            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
-        }
         
         try {
             FileInputFormat.setInputPaths(job, new Path(user+"input"));
