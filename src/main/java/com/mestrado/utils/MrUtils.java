@@ -284,6 +284,31 @@ public class MrUtils {
         }
 		return candNames;
 	}
+    
+    public static ArrayList<String> getAllOuputFilesNames(String outName) {
+    	ArrayList<String> candNames = new ArrayList<String>();
+    	
+    	Path p = new Path(outName);
+    	Path aux;
+        Configuration c = new Configuration();
+        c.set("fs.defaultFS", Main.clusterUrl);
+        try{
+            FileSystem fs = FileSystem.get(c);
+            if(fs.exists(p)){
+	            FileStatus[] ff = fs.listStatus(p);
+	
+				 for(FileStatus f: ff){
+				     aux = f.getPath();
+				     if(aux.getName().startsWith("part")){
+				    	 candNames.add(outName+"/"+aux.getName());
+				     }
+				 }
+            }
+        }catch(IOException e){
+            System.out.println("ERROR: "+e);
+        }
+		return candNames;
+	}
 
 	public static boolean checkInputMR(){
 //        String dir = Main.inputL+Main.countDir;

@@ -3,8 +3,7 @@ package main.java.com.mestrado.utils;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-
-import main.java.com.mestrado.main.Main;
+import java.util.ArrayList;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -13,6 +12,8 @@ import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.util.ReflectionUtils;
+
+import main.java.com.mestrado.main.Main;
 
 public class CountItemsets {
 	private static Integer itemsetsCounts[];
@@ -66,8 +67,14 @@ public class CountItemsets {
 	
 	public static String countItemsets() {
 		itemsetsCounts = new Integer[20];
+		//obter todos os arquivos de cada diretório
+		ArrayList<String> outputFileNames;
 		for(int i = 1; i <= Main.countDir; i++){
-			CountItemsets.countByOutputDir(Main.user+"output"+i+"/part-r-00000");
+			outputFileNames = MrUtils.getAllOuputFilesNames(Main.user+"output"+i);
+			for(String outFile : outputFileNames){
+				System.out.println("Contando itemsets em "+outFile);
+				CountItemsets.countByOutputDir(outFile);
+			}
 		}
 		StringBuilder sb = new StringBuilder();
 		int total = 0;
