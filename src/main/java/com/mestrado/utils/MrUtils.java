@@ -350,6 +350,9 @@ public class MrUtils {
     	}
     	if(args.length != 0){
     		Main.supportPercentage = Double.parseDouble(args[0]);
+    		if(args.length == 2){
+    			Main.NUM_REDUCES = Integer.parseInt(args[1]);
+    		}
     	}
     	
     	String inputPathUri = Main.user+Main.inputEntry;
@@ -515,6 +518,7 @@ public class MrUtils {
     	System.out.println("User dir: "+Main.user);
     	System.out.println("Entry file: "+Main.inputEntry);
     	System.out.println("Cluster url: "+Main.clusterUrl);
+    	System.out.println("Reduces: "+Main.NUM_REDUCES);
     	
     	System.out.println("\n******************************************************\n");
     }

@@ -52,7 +52,7 @@ public class Main {
     public static String inputCandidatesDir = user+"inputCandidates";
     public static long totalTransactionCount;
     public static ArrayList<String> candFilesNames;
-
+    public static int NUM_REDUCES = 1;
     /*
     Valor do suporte para 1.000.000
     7500
@@ -95,7 +95,7 @@ public class Main {
         job.getConfiguration().set("count", String.valueOf(Main.countDir));
         job.getConfiguration().set("support", String.valueOf(support));
         
-        job.setNumReduceTasks(4);
+        job.setNumReduceTasks(NUM_REDUCES);
         
         try {
             FileInputFormat.setInputPaths(job, new Path(user+"input"));
@@ -161,7 +161,7 @@ public class Main {
         	}
         }
         
-        job.setNumReduceTasks(4);
+        job.setNumReduceTasks(NUM_REDUCES);
         
         
         try {
@@ -216,7 +216,7 @@ public class Main {
         job.getConfiguration().set("inputCandidates", inputCandidates+Main.countDir);
         System.out.println("AprioriCpa geração de candidatos - CountDir: "+Main.countDir);
         
-        job.setNumReduceTasks(4);
+        job.setNumReduceTasks(NUM_REDUCES);
         
         try {
         	FileInputFormat.setInputPaths(job, new Path(user+"inputToGen"));//Entra Lk, do job count
