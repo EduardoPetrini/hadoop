@@ -13,8 +13,8 @@ public class AprioriUtils {
 	 * A partir do arquivo de saída, com 1-itemset por linha, gera-se 2-itemset
 	 */
 	public static long generate2ItemsetCandidates(){
-		String inputFile = Main.user+"output"+Main.countDir+"/part-r-00000";
-		ArrayList<String> itemsets = MrUtils.readFromHDFS(inputFile);
+		String inputFile = Main.user+"output"+Main.countDir;
+		ArrayList<String> itemsets = MrUtils.readAllFromHDFSDir(inputFile);
 		long ini = System.currentTimeMillis();
 		Collections.sort(itemsets,NUMERIC_ORDER);
 		ArrayList<String> itemset2k = get2itemset(itemsets);

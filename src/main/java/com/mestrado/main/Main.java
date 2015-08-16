@@ -92,6 +92,8 @@ public class Main {
         job.getConfiguration().set("count", String.valueOf(Main.countDir));
         job.getConfiguration().set("support", String.valueOf(support));
         
+        job.setNumReduceTasks(4);
+        
         try {
             FileInputFormat.setInputPaths(job, new Path(user+"input"));
         } catch (IOException ex) {
@@ -147,7 +149,9 @@ public class Main {
         job.getConfiguration().set("support", String.valueOf(support));
         job.getConfiguration().set("k", String.valueOf(k));
         job.getConfiguration().set("inputCandidates", inputCandidates+(Main.countDir));//Contém Ck
-          
+        
+        job.setNumReduceTasks(4);
+        
         try {
            job.addCacheFile(new URI(inputCandidates+(Main.countDir)));
         } catch (URISyntaxException ex) {
@@ -205,6 +209,8 @@ public class Main {
         
         job.getConfiguration().set("inputCandidates", inputCandidates+Main.countDir);
         System.out.println("AprioriCpa geração de candidatos - CountDir: "+Main.countDir);
+        
+        job.setNumReduceTasks(4);
         
         try {
         	FileInputFormat.setInputPaths(job, new Path(user+"inputToGen"));//Entra Lk, do job count

@@ -195,9 +195,8 @@ public class MrUtils {
         Path p = new Path(dir);
         Path aux;
         Configuration c = new Configuration();
-         c.set("fs.defaultFS", Main.clusterUrl);
+        c.set("fs.defaultFS", Main.clusterUrl);
         System.out.println("Verificando diretório: "+dir);
-        
         try{
             FileSystem fs = FileSystem.get(c);
 
@@ -213,8 +212,6 @@ public class MrUtils {
                              
                              if(f.getLen() > 0){
                                 return true;
-                             }else{
-                                 return false;
                              }
                          }
                      }
@@ -476,7 +473,7 @@ public class MrUtils {
     public static ArrayList<String> readFromHDFS(String fileName){
     	Path inputPath = new Path(fileName);
     	Configuration c = new Configuration();
-         c.set("fs.defaultFS", Main.clusterUrl);
+        c.set("fs.defaultFS", Main.clusterUrl);
         ArrayList<String> data = new ArrayList<String>();
         
         try {
@@ -496,6 +493,39 @@ public class MrUtils {
         return data;
     }
     
+    /**
+     * 
+     * @param dirName
+     * @return
+     */
+    public static ArrayList<String> readAllFromHDFSDir(String dirName){
+    	Path inputPath = new Path(dirName);
+    	Configuration c = new Configuration();
+        c.set("fs.defaultFS", Main.clusterUrl);
+        ArrayList<String> data = new ArrayList<String>();
+        
+        try {
+        	
+			FileSystem fs = inputPath.getFileSystem(c);
+			FileStatus[] files = fs.listStatus(inputPath);
+			BufferedReader br;
+			String line;
+			for(FileStatus fst: files){
+				if(fst.getPath().getName().startsWith("part")){
+					System.out.println("Carregando itemsets de "+dirName+" "+fst.getPath().getName());
+					br=new BufferedReader(new InputStreamReader(fs.open(fst.getPath())));
+					while ((line = br.readLine()) != null){
+						data.add(line.split("\\t")[0].trim());
+					}
+					br.close();
+				}
+			}
+        }catch(IOException e){
+        	e.printStackTrace();
+        }
+        
+        return data;
+    }
     /**
      * 
      * @param data
