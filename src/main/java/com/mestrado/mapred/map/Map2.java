@@ -9,9 +9,7 @@ package main.java.com.mestrado.mapred.map;
 import java.io.IOException;
 import java.nio.charset.CharacterCodingException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Set;
 
 import main.java.com.mestrado.app.HashNode;
 import main.java.com.mestrado.app.HashPrefixTree;
@@ -44,6 +42,7 @@ public class Map2 extends Mapper<LongWritable, Text, Text, Text> {
 	private int maxK;
 	private Text valueOut;
 	private Text keyOut;
+	private ArrayList<String> currentPartitionsName;
 	/**
 	 * Le o arquivo invertido para a memória.
 	 * 
@@ -58,26 +57,29 @@ public class Map2 extends Mapper<LongWritable, Text, Text, Text> {
 		inputPartialName = context.getConfiguration().get("outputPartialName");
 
 		blocksIds = new ArrayList<String>();
+		currentPartitionsName = new ArrayList<String>();
 		for (int i = 1; i <= totalPartitions; i++) {
-			blocksIds.add(context.getConfiguration().get("blockId" + i)
-					.replace("partition", ""));// Id da partição é o offset do
-												// bloco
+			
+			blocksIds.add(context.getConfiguration().get("blockId" + i).replace("partition", ""));// Id da partição é o offset do bloco
 		}
 	}
 
 	public boolean checkPartition() {
-
+		String partition;
+		boolean execMap = false;
+		System.out.println("Arquivos da partição: ");
 		for (String ids : blocksIds) {
-			System.out
-					.println("Verificando se a partição atual será processada: "
-							+ splitName + " == " + ids);
-			if (MrUtils.checkPartitions(ids, splitName, 100)) {
-				splitName = ids;
-				return true;
+			partition = ids.split("-")[0];
+			System.out.println("Verificando se a partição atual será processada: "+ splitName + " == " + partition);
+			if (MrUtils.checkPartitions(partition, splitName, 100)) {
+				splitName = partition;
+				currentPartitionsName.add(inputPartialName + ids);
+				System.out.println(inputPartialName + ids);
+				execMap = true;
 			}
 		}
 
-		return false;
+		return execMap;
 	}
 
 	@Override
@@ -192,38 +194,39 @@ public class Map2 extends Mapper<LongWritable, Text, Text, Text> {
 	 * @param context
 	 */
 	public void openFile(Context context) {
-		Path path = new Path(inputPartialName + splitName);
+		Path path;
+		Text key;
+		IntWritable value;
+		String k;
+		String[] kSpt;
+		maxK = 0;
+		Integer vHash[];
+		
+		for(String partition: currentPartitionsName){
+			path = new Path(partition);
+			try {
+				System.out.println("Lendo a partição '" + path.getName()
+						+ "' para a memória!");
+				reader = new SequenceFile.Reader(context.getConfiguration(), SequenceFile.Reader.file(path));
+				
+				key = (Text) ReflectionUtils.newInstance(reader.getKeyClass(), context.getConfiguration());
+				value = (IntWritable) ReflectionUtils.newInstance(reader.getValueClass(), context.getConfiguration());
 
-		try {
-			System.out.println("Lendo a partição '" + path.getName()
-					+ "' para a memória!");
-			reader = new SequenceFile.Reader(context.getConfiguration(),
-					SequenceFile.Reader.file(path));
-
-			Text key = (Text) ReflectionUtils.newInstance(reader.getKeyClass(),
-					context.getConfiguration());
-			IntWritable value = (IntWritable) ReflectionUtils.newInstance(
-					reader.getValueClass(), context.getConfiguration());
-			String k;
-			String[] kSpt;
-			maxK = 0;
-			Integer vHash[];
-			while (reader.next(key, value)) {
-				// System.out.println("Add Key: "+key.toString());
-				k = key.toString();
-				kSpt = k.split(" ");
-				vHash = new Integer[2];
-				vHash[0] = value.get();
-				vHash[1] = 0;
-				itemSup.put(k, vHash);
-				hpt.add(hpt.getHashNode(), kSpt, 0);
-				if(kSpt.length > maxK){
-					maxK = kSpt.length; 
+				while (reader.next(key, value)) {
+					k = key.toString();
+					kSpt = k.split(" ");
+					vHash = new Integer[2];
+					vHash[0] = value.get();
+					vHash[1] = 0;
+					itemSup.put(k, vHash);
+					hpt.add(hpt.getHashNode(), kSpt, 0);
+					if(kSpt.length > maxK){
+						maxK = kSpt.length; 
+					}
 				}
+			} catch (IllegalArgumentException | IOException e) {
+				e.printStackTrace();
 			}
-
-		} catch (IllegalArgumentException | IOException e) {
-			e.printStackTrace();
 		}
 	}
 

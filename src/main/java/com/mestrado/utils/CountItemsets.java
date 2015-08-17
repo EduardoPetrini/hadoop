@@ -3,6 +3,9 @@ package main.java.com.mestrado.utils;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+
+import main.java.com.mestrado.main.Main;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -37,8 +40,16 @@ public class CountItemsets {
 
 	public static String countItemsets() {
 		itemsetsCounts = new Integer[20];
-		CountItemsets.countByOutputDir("/user/eduardo/output1/part-r-00000");
-		CountItemsets.countByOutputDir("/user/eduardo/output2/part-r-00000");
+		ArrayList<String> outputFiles = MrUtils.getAllOuputFilesNames(Main.user+"output1");
+		for(String outFile : outputFiles){
+			System.out.println("Contando itemsets em "+outFile);
+			CountItemsets.countByOutputDir(outFile);
+		}
+		outputFiles = MrUtils.getAllOuputFilesNames(Main.user+"output2");
+		for(String outFile : outputFiles){
+			System.out.println("Contando itemsets em "+outFile);
+			CountItemsets.countByOutputDir(outFile);
+		}
 		int total = 0;
 		StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < itemsetsCounts.length; i++) {

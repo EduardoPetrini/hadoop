@@ -254,6 +254,9 @@ public class MrUtils {
     	}
     	if(args.length != 0){
     		Main.supportPercentage = Double.parseDouble(args[0]);
+    		if(args.length == 2){
+    			Main.NUM_REDUCES = Integer.parseInt(args[1]);
+    		}
     	}
     	String inputPathUri = Main.user+Main.inputEntry;
     	Path inputPath = new Path(inputPathUri);
@@ -358,9 +361,9 @@ public class MrUtils {
     public static ArrayList<String> getPartitions(String pathName){
     	ArrayList<String> partitions = new ArrayList<String>();
     	
-    	Path path = new Path(pathName.substring(0,pathName.length()-9));
+    	Path path = new Path(pathName.substring(0,pathName.length()-9));//Pega o diretório das partições
     	Configuration c = new Configuration();
-          c.set("fs.defaultFS", Main.clusterUrl);
+        c.set("fs.defaultFS", Main.clusterUrl);
         
         try{
         	FileSystem fs = FileSystem.get(c);
@@ -368,9 +371,10 @@ public class MrUtils {
         	if(fs.exists(path)){
         		FileStatus[] fileStatus = fs.listStatus(path);
         		
+        		System.out.println("Partições encontradas: ");
         		for(FileStatus individualFileStatus: fileStatus){
-        			long len =individualFileStatus.getLen();
-        			if(len > 128){
+        			System.out.println(individualFileStatus.getPath().getName()+" "+individualFileStatus.getLen());
+        			if(individualFileStatus.getLen() > 128){
         				partitions.add(individualFileStatus.getPath().getName());
         			}
         		}
@@ -408,6 +412,7 @@ public class MrUtils {
     	for(String b: m.blocksIds){
     		System.out.println("Blocks id: "+b);
     	}
+    	System.out.println("Reduces: "+Main.NUM_REDUCES);
     	System.out.println("\n******************************************************\n");
     }
 
@@ -416,6 +421,31 @@ public class MrUtils {
 		
 	}
 	
+	 public static ArrayList<String> getAllOuputFilesNames(String outName) {
+	    	ArrayList<String> candNames = new ArrayList<String>();
+	    	
+	    	Path p = new Path(outName);
+	    	Path aux;
+	        Configuration c = new Configuration();
+	        c.set("fs.defaultFS", Main.clusterUrl);
+	        try{
+	            FileSystem fs = FileSystem.get(c);
+	            if(fs.exists(p)){
+		            FileStatus[] ff = fs.listStatus(p);
+		
+					 for(FileStatus f: ff){
+					     aux = f.getPath();
+					     if(aux.getName().startsWith("part")){
+					    	 candNames.add(outName+"/"+aux.getName());
+					     }
+					 }
+	            }
+	        }catch(IOException e){
+	            System.out.println("ERROR: "+e);
+	        }
+			return candNames;
+		}
+	 
 	/**
 	 * 
 	 * @param part1

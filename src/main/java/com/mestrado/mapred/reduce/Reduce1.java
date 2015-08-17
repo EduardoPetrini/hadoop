@@ -54,7 +54,7 @@ public class Reduce1 extends Reducer<Text, Text, Text, IntWritable>{
         for(int i = 1; i <= totalMaps; i++){
         	partitionFileName = writersFileName+context.getConfiguration().get("blockId"+i);
 			blocksIds.add(context.getConfiguration().get("blockId"+i));
-    		writers[i-1] = SequenceFile.createWriter(context.getConfiguration(), SequenceFile.Writer.file(new Path(partitionFileName)),
+    		writers[i-1] = SequenceFile.createWriter(context.getConfiguration(), SequenceFile.Writer.file(new Path(partitionFileName+"-"+System.currentTimeMillis())),
     	               SequenceFile.Writer.keyClass(Text.class), SequenceFile.Writer.valueClass(IntWritable.class));
     	}
         

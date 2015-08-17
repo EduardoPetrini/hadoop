@@ -51,6 +51,8 @@ public class Main {
     public static long totalTransactionCount;
     public ArrayList<String> blocksIds;
     public String outputPartialName = user+"partitions-fase-1/partition";
+    public static ArrayList<String> seqFilesNames;
+    public static int NUM_REDUCES = 1;
     
     public Main() {
         countDir = 0;
@@ -92,6 +94,8 @@ public class Main {
         for(int i = 1; i <= this.blocksIds.size(); i++){
         	job.getConfiguration().set("blockId"+i, this.blocksIds.get(i-1).replace("partition", ""));
         }
+        
+        job.setNumReduceTasks(NUM_REDUCES);
         
         try {
         	FileInputFormat.setInputPaths(job, new Path(user+"input"));
@@ -154,15 +158,15 @@ public class Main {
         
         for(int i = 1; i <= this.blocksIds.size(); i++){
         	job.getConfiguration().set("blockId"+i, this.blocksIds.get(i-1));
+        	try {
+    			job.addCacheFile(new URI(user+"partitions-fase-1/"+this.blocksIds.get(i-1)));
+        	} catch (URISyntaxException ex) {
+        		Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+        	}
         }
           
-        try {
-            for(int i = 1; i <= this.blocksIds.size(); i++){
-            	job.addCacheFile(new URI(user+"partitions-fase-1/"+this.blocksIds.get(i-1)));
-            }
-        } catch (URISyntaxException ex) {
-            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        job.setNumReduceTasks(NUM_REDUCES);
+        
         
         try {
             FileInputFormat.setInputPaths(job, new Path(user+"input"));
@@ -215,9 +219,13 @@ public class Main {
         m.job1();
         
         m.blocksIds = MrUtils.getPartitions(m.outputPartialName);
+        if(m.blocksIds.size() == 0){
+        	endTime();
+        	System.exit(0);
+        }
         //configurar o suporte global
         MrUtils.configGlobalSupporte();
-        
+//        MrUtils.getAllSequenceFilesNames();
         
 		Main.countDir++;
 		m.job2();
