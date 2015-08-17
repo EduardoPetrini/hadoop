@@ -48,21 +48,25 @@ public class Map3  extends Mapper<LongWritable, Text, Text, Text>{
     @Override
     public void setup(Context context) throws IOException{
         String count = context.getConfiguration().get("count");
-        String fileCachedRead = context.getConfiguration().get("fileCachedRead");
+        log.info("AprioriDpc Map 3 count = "+count);
+        int lksize = Integer.parseInt(context.getConfiguration().get("lksize"));
+        String[] fileCachedRead = new String[lksize];
+        Path path;
+        log.info("Arquivos Cached: ");
+        fileCached = new ArrayList<String>();
+        for(int i = 0; i < lksize; i++){
+        	fileCachedRead[i] = context.getConfiguration().get("fileCachedRead"+i);
+            log.info(fileCachedRead[i]);
+        	path = new Path(fileCachedRead[i]);
+        	reader = new SequenceFile.Reader(context.getConfiguration(), SequenceFile.Reader.file(path));
+        	openFile(fileCachedRead[i], context);
+        }
         String kStr = context.getConfiguration().get("k");
         k = Integer.parseInt(kStr);
         double earlierTime = Double.parseDouble(context.getConfiguration().get("earlierTime"));
         
-        log.info("AprioriDpc Map 3 count = "+count);
-        log.info("Arquivo Cached = "+fileCachedRead);
         log.info("Tempo da fase anterior é "+earlierTime);
         
-        URI[] patternsFiles = context.getCacheFiles();
-        
-        Path path = new Path(patternsFiles[0].toString());
-        
-        reader = new SequenceFile.Reader(context.getConfiguration(), SequenceFile.Reader.file(path));
-        openFile(fileCachedRead, context);
         //Gerar combinações dos itens de acordo com o tamanho de lk e do tempo gasto da fase anterior
         
         hpt = new HashPrefixTree();
@@ -324,7 +328,7 @@ public class Map3  extends Mapper<LongWritable, Text, Text, Text>{
      * @return
      */
     public ArrayList<String> openFile(String path, Context context){
-    	fileCached = new ArrayList<String>();
+    	
     	try {
 			
 			Text key = (Text) ReflectionUtils.newInstance(reader.getKeyClass(), context.getConfiguration());

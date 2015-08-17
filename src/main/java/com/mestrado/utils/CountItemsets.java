@@ -67,10 +67,20 @@ public class CountItemsets {
 	
 	public static String countItemsets() {
 		itemsetsCounts = new Integer[20];
+		ArrayList<String> outputFileNames;
 		for(int i = 1; i <= Main.countDir; i++){
-			CountItemsets.countByOutputDir("/user/eduardo/output"+i+"/part-r-00000");
-			if(i >= 3)
-				CountItemsets.countBySequence("/user/eduardo/outputCached/outputMR"+i);
+			outputFileNames = MrUtils.getAllOuputFilesNames(Main.user+"output"+i);
+			for(String outFile : outputFileNames){
+				System.out.println("Contando itemsets em "+outFile);
+				CountItemsets.countByOutputDir(outFile);
+			}
+			if(i >= 3){
+				outputFileNames = MrUtils.getAllSequenceFilesNames(Main.fileCachedDir,i);
+				for(String outFile : outputFileNames){
+					System.out.println("Contando itemsets em "+outFile);
+					CountItemsets.countBySequence(outFile);
+				}
+			}
 		}
 		StringBuilder sb = new StringBuilder();
 		int total = 0;

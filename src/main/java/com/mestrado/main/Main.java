@@ -9,6 +9,7 @@ package main.java.com.mestrado.main;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -40,14 +41,17 @@ public class Main {
     private static int timeTotal;
     public static double supportPercentage = 0.52;
     public static String support;
-    int k = 1;
+    public static int k = 1;
     public static String user = "/user/eduardo/";
     public static String inputEntry = "input/";
     public static String inputFileName = "";
     public static String clusterUrl = "hdfs://master/";
-    public static 	String fileCached = user+"outputCached/outputMR";
+    public static String fileCached = user+"outputCached/outputMR";
+    public static String fileCachedDir = user+"outputCached/";
     public static long totalTransactionCount;
-    double earlierTime;
+    public static double earlierTime;
+    public static ArrayList<String> seqFilesNames;
+    public static int NUM_REDUCES = 1;
     /*
     Valor do suporte para 1.000.000
     7500
@@ -90,6 +94,8 @@ public class Main {
         job.getConfiguration().set("count", String.valueOf(Main.countDir));
         job.getConfiguration().set("support", String.valueOf(support));
         job.getConfiguration().set("fileCached", fileCached+(Main.countDir));
+        
+        job.setNumReduceTasks(NUM_REDUCES);
         
         try {
             FileInputFormat.setInputPaths(job, new Path(user+"input"));
@@ -146,15 +152,19 @@ public class Main {
         job.getConfiguration().set("count", String.valueOf(Main.countDir));
         job.getConfiguration().set("support", String.valueOf(support));
         job.getConfiguration().set("k", String.valueOf(k));
-        job.getConfiguration().set("fileCachedRead", fileCached+(Main.countDir-1));
-        job.getConfiguration().set("fileCachedWrited", fileCached+(Main.countDir));
-          
-        try {
-           job.addCacheFile(new URI(fileCached+(Main.countDir-1)));
-        } catch (URISyntaxException ex) {
-            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+        job.getConfiguration().set("lksize", String.valueOf(seqFilesNames.size()));
+        for(int i = 0; i < seqFilesNames.size(); i++){
+        	job.getConfiguration().set("fileCachedRead"+i, seqFilesNames.get(i));
+        	try {
+        		job.addCacheFile(new URI(seqFilesNames.get(i)));
+        	} catch (URISyntaxException ex) {
+        		Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+        	}
         }
+        job.getConfiguration().set("fileCachedWrited", fileCached+(Main.countDir));
         
+        job.setNumReduceTasks(NUM_REDUCES);
+                
         try {
             FileInputFormat.setInputPaths(job, new Path(user+"input"));
         } catch (IOException ex) {
@@ -208,16 +218,20 @@ public class Main {
         job.getConfiguration().set("count", String.valueOf(Main.countDir));
         job.getConfiguration().set("support", String.valueOf(support));
         job.getConfiguration().set("k", String.valueOf(k));
-        job.getConfiguration().set("fileCachedRead", fileCached+(Main.countDir-1));
+        job.getConfiguration().set("lksize", String.valueOf(seqFilesNames.size()));
+        for(int i = 0; i < seqFilesNames.size(); i++){
+        	job.getConfiguration().set("fileCachedRead"+i, seqFilesNames.get(i));
+        	try {
+        		job.addCacheFile(new URI(seqFilesNames.get(i)));
+        	} catch (URISyntaxException ex) {
+        		Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+        	}
+        }
         job.getConfiguration().set("fileCachedWrited", fileCached+(Main.countDir));
         job.getConfiguration().set("earlierTime", String.valueOf(earlierTime));
         System.out.println("AprioriDpc Fase 3 - CountDir: "+Main.countDir);
         
-        try {
-           job.addCacheFile(new URI(fileCached+(Main.countDir-1)));
-        } catch (URISyntaxException ex) {
-            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        job.setNumReduceTasks(NUM_REDUCES);
         
         try {
         	FileInputFormat.setInputPaths(job, new Path(user+"input"));
@@ -280,14 +294,15 @@ public class Main {
         }
         
         int l = 0;
-        while(MrUtils.checkOutputMR() && m.k != -1){
+        while(MrUtils.checkOutputMR() && k != -1){
             Main.countDir++;
-            m.k++;
-            System.out.println("Map 3 com k = "+m.k);
+            k++;
+            System.out.println("Map 3 com k = "+k);
             System.out.println("LOOP "+ ++l);
             m.job3();
-            m.k = MrUtils.getK(m.k);
+            k = MrUtils.getK();
         }
+
         endTime();
     }
 }

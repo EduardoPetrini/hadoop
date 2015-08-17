@@ -33,7 +33,7 @@ public class Reduce2 extends Reducer<Text, IntWritable, Text, IntWritable> {
     @Override
     public void setup(Context context) throws IOException{
         String count = context.getConfiguration().get("count");
-        String fileCachedPath = context.getConfiguration().get("fileCachedWrited");
+        String fileCachedPath = context.getConfiguration().get("fileCachedWrited")+"-"+System.currentTimeMillis();
         support = Double.parseDouble(context.getConfiguration().get("support"));
         
         Path path = new Path(fileCachedPath);

@@ -46,19 +46,21 @@ public class Map2  extends Mapper<LongWritable, Text, Text, IntWritable>{
      */
     @Override
     public void setup(Context context) throws IOException{
-        String count = context.getConfiguration().get("count");
-        String fileCachedRead = context.getConfiguration().get("fileCachedRead");
+    	log.info("AprioriDpc Map 2");
+        int lksize = Integer.parseInt(context.getConfiguration().get("lksize"));
+        String[] fileCachedRead = new String[lksize];
+        log.info("Arquivos Cached: ");
+        Path path;
+        fileCached = new ArrayList<String>();
+        for(int i = 0; i < lksize; i++){
+        	fileCachedRead[i] = context.getConfiguration().get("fileCachedRead"+i);
+            log.info(fileCachedRead[i]);
+        	path = new Path(fileCachedRead[i]);
+        	reader = new SequenceFile.Reader(context.getConfiguration(), SequenceFile.Reader.file(path));
+        	openFile(fileCachedRead[i], context);
+        }
         String kStr = context.getConfiguration().get("k");
         k = Integer.parseInt(kStr);
-        
-        log.info("AprioriDpc Map 2");
-        log.info("Arquivo Cached = "+fileCachedRead);
-        URI[] patternsFiles = context.getCacheFiles();
-        
-        Path path = new Path(patternsFiles[0].toString());
-        
-        reader = new SequenceFile.Reader(context.getConfiguration(), SequenceFile.Reader.file(path));
-        openFile(fileCachedRead, context);
         
         //Gerar combinações dos itens de acordo com k
         
@@ -186,7 +188,6 @@ public class Map2  extends Mapper<LongWritable, Text, Text, IntWritable>{
      * @return
      */
     public void openFile(String path, Context context){
-    	fileCached = new ArrayList<String>();
     	try {
 			
 			Text key = (Text) ReflectionUtils.newInstance(reader.getKeyClass(), context.getConfiguration());

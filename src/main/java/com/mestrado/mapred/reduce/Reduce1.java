@@ -33,9 +33,8 @@ public class Reduce1 extends Reducer<Text, IntWritable, Text, IntWritable>{
     
     @Override
     public void setup(Context context) throws IOException{
-        String count = context.getConfiguration().get("count");
         support = Double.parseDouble(context.getConfiguration().get("support"));
-        String fileCachedPath = context.getConfiguration().get("fileCached");
+        String fileCachedPath = context.getConfiguration().get("fileCached")+"-"+System.currentTimeMillis();
         Path path = new Path(fileCachedPath);
         log.info("AprioriDpc REDUCE Fase 1");
         log.info("Support = "+support);

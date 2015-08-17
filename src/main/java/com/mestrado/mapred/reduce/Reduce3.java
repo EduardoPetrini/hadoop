@@ -40,7 +40,7 @@ public class Reduce3 extends Reducer<Text, Text, Text, Text> {
         log.info("AprioriDpc REDUCE 3. Count dir: "+count);
         String kStr = context.getConfiguration().get("k");
         k = Integer.parseInt(kStr);
-        String fileCachedPath = context.getConfiguration().get("fileCachedWrited");
+        String fileCachedPath = context.getConfiguration().get("fileCachedWrited")+"-"+System.currentTimeMillis();
         
         writer = SequenceFile.createWriter(context.getConfiguration(), SequenceFile.Writer.file(new Path(fileCachedPath)),
                SequenceFile.Writer.keyClass(Text.class), SequenceFile.Writer.valueClass(IntWritable.class));

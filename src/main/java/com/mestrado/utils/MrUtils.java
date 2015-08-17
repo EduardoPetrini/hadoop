@@ -229,29 +229,85 @@ public class MrUtils {
      * @return false if empty file
      */
     public static boolean checkOutputMR(){
-        String dir = Main.user+"outputCached/outputMR"+Main.countDir;
+        String dir = Main.fileCachedDir;
         Path p = new Path(dir);
         
         Configuration c = new Configuration();
-         c.set("fs.defaultFS", Main.clusterUrl);
+        c.set("fs.defaultFS", Main.clusterUrl);
         System.out.println("Verificando diretório: "+dir);
         
         try {
             FileSystem fs = FileSystem.get(c);
-            FileStatus conf = fs.getFileStatus(p);
-            long len = conf.getLen();
-            if(conf.getLen() > 130){
-                System.out.println("O arquivo "+dir+" não é vazio! "+conf.getLen());
-                return true;
+            FileStatus[] files = fs.listStatus(p);
+            Main.seqFilesNames = new ArrayList<String>();
+            for(FileStatus fst: files){
+            	if(fst.getPath().getName().startsWith("outputMR"+Main.countDir)){
+            		if(fst.getLen() > 128){
+            			System.out.println("O arquivo "+fst.getPath().getName()+" não é vazio! "+fst.getLen());
+            			Main.seqFilesNames.add(Main.fileCachedDir+fst.getPath().getName());
+            		}else{
+            			System.out.println("O arquivo "+Main.fileCachedDir+fst.getPath().getName()+" é vazio! "+fst.getLen());
+            		}
+            	}
             }
-            System.out.println("O arquivo "+dir+" é vazio! "+conf.getLen());
         } catch (IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
-        
+        if(Main.seqFilesNames.size() > 0){
+        	return true;
+        }
         return false;
     }
+    
+    public static ArrayList<String> getAllSequenceFilesNames(String dir, int index) {
+    	ArrayList<String> seqNames = new ArrayList<String>();
+    	
+    	Path p = new Path(dir);
+    	Path aux;
+        Configuration c = new Configuration();
+        c.set("fs.defaultFS", Main.clusterUrl);
+        try{
+            FileSystem fs = FileSystem.get(c);
+            FileStatus[] ff = fs.listStatus(p);
+
+			 for(FileStatus f: ff){
+			     aux = f.getPath();
+			     if(aux.getName().contains("outputMR"+index)){
+			    	 seqNames.add(dir+"/"+aux.getName());
+			     }
+			 }
+
+        }catch(IOException e){
+            System.out.println("ERROR: "+e);
+        }
+		return seqNames;
+	}
+    
+    public static ArrayList<String> getAllOuputFilesNames(String outName) {
+    	ArrayList<String> candNames = new ArrayList<String>();
+    	
+    	Path p = new Path(outName);
+    	Path aux;
+        Configuration c = new Configuration();
+        c.set("fs.defaultFS", Main.clusterUrl);
+        try{
+            FileSystem fs = FileSystem.get(c);
+            if(fs.exists(p)){
+	            FileStatus[] ff = fs.listStatus(p);
+	
+				 for(FileStatus f: ff){
+				     aux = f.getPath();
+				     if(aux.getName().startsWith("part")){
+				    	 candNames.add(outName+"/"+aux.getName());
+				     }
+				 }
+            }
+        }catch(IOException e){
+            System.out.println("ERROR: "+e);
+        }
+		return candNames;
+	}
+
     
     /**
      * Calcula a quantidade de transações do arquivo de entrada
@@ -264,6 +320,9 @@ public class MrUtils {
     	}
     	if(args.length != 0){
     		Main.supportPercentage = Double.parseDouble(args[0]);
+    		if(args.length == 2){
+    			Main.NUM_REDUCES = Integer.parseInt(args[1]);
+    		}
     	}
     	String inputPathUri = Main.user+Main.inputEntry;
     	
@@ -379,36 +438,40 @@ public class MrUtils {
     	System.out.println("User dir: "+Main.user);
     	System.out.println("Entry file: "+Main.inputEntry);
     	System.out.println("Cluster url: "+Main.clusterUrl);
+    	System.out.println("Reduces: "+Main.NUM_REDUCES);
     	
     	System.out.println("\n******************************************************\n");
     }
     
-    public static int getK(int k) {
-		String inputPathUri = Main.fileCached+(Main.countDir);
+    public static int getK() {
+		ArrayList<String> inputPathsUri = getAllSequenceFilesNames(Main.fileCachedDir, Main.countDir);
     	
-    	Path inputPath = new Path(inputPathUri);
-    	Configuration c = new Configuration();
-         c.set("fs.defaultFS", Main.clusterUrl);
-        
-        try {
-        	
-			FileSystem fs = inputPath.getFileSystem(c);
-			SequenceFile.Reader reader = new SequenceFile.Reader(c, SequenceFile.Reader.file(inputPath));
+		Configuration c = new Configuration();
+		c.set("fs.defaultFS", Main.clusterUrl);
+		Path inputPath;
+		FileSystem fs;
+		SequenceFile.Reader reader;
+		for(String inputPathUri: inputPathsUri){
+			
+			inputPath = new Path(inputPathUri);
+			try {
 				
-			Text key = (Text) ReflectionUtils.newInstance(reader.getKeyClass(), c);
-			IntWritable value = (IntWritable) ReflectionUtils.newInstance(reader.getValueClass(), c);
-			int kCount = 0;
-			while (reader.next(key, value)) {
-				System.out.println("Key: "+key.toString());
-	            kCount = key.toString().split(" ").length;
-	            break;
-	        }
-		
-			return kCount;
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+				fs = inputPath.getFileSystem(c);
+				reader = new SequenceFile.Reader(c, SequenceFile.Reader.file(inputPath));
+				
+				Text key = (Text) ReflectionUtils.newInstance(reader.getKeyClass(), c);
+				IntWritable value = (IntWritable) ReflectionUtils.newInstance(reader.getValueClass(), c);
+				while (reader.next(key, value)) {
+					System.out.println("Key: "+key.toString());
+					return  key.toString().split(" ").length;
+				}
+				
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
+        
 		return -1;
 	}
     
