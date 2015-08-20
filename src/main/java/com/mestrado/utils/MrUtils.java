@@ -322,6 +322,9 @@ public class MrUtils {
     		Main.supportPercentage = Double.parseDouble(args[0]);
     		if(args.length == 2){
     			Main.NUM_REDUCES = Integer.parseInt(args[1]);
+    		}else if(args.length == 3){
+    			Main.NUM_REDUCES = Integer.parseInt(args[1]);
+    			Main.NUM_BLOCK= Integer.parseInt(args[2]);
     		}
     	}
     	String inputPathUri = Main.user+Main.inputEntry;
@@ -492,7 +495,7 @@ public class MrUtils {
 		FileWriter fw;
 		BufferedWriter bw;
 		try{
-			fw = new FileWriter(file.getAbsoluteFile(), false);
+			fw = new FileWriter(file.getAbsoluteFile(), true);
 			bw = new BufferedWriter(fw);
 			bw.write(data);
 			bw.close();
@@ -511,7 +514,7 @@ public class MrUtils {
 		if(!file.isDirectory()){
 			file.mkdirs();
 		}
-		sb.append(data.split(" ")[0]).append("-").append("-").append(Main.inputFileName).append("_").append(System.currentTimeMillis()).append(".log");
+		sb.append("AprioriDPC").append("-").append(Main.inputFileName).append("-").append(Main.supportPercentage).append("-").append(Main.NUM_REDUCES).append("-").append(Main.NUM_BLOCK).append(".log");
 		System.out.println("Saving: "+data+"\n into "+sb.toString());
 		saveFileInLocal(data, sb.toString());
 	}
