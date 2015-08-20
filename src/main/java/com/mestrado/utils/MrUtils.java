@@ -771,7 +771,7 @@ public class MrUtils {
 		if(!file.isDirectory()){
 			file.mkdirs();
 		}
-		sb.append(data.split(" ")[0]).append("-").append(Main.inputFileName).append("-").append(Main.supportPercentage).append("-").append(Main.NUM_REDUCES).append("-").append(Main.NUM_BLOCK).append(".log");
+		sb.append("AprioriCPA").append("-").append(Main.inputFileName).append("-").append(Main.supportPercentage).append("-").append(Main.NUM_REDUCES).append("-").append(Main.NUM_BLOCK).append(".log");
 		System.out.println("Saving: "+data+"\n into "+sb.toString());
 		saveFileInLocal(data, sb.toString());
 	}
