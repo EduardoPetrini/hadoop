@@ -435,6 +435,7 @@ public class MrUtils {
      */
     public static void printConfigs(Main m){
     	System.out.println("\n******************************************************\n");
+        System.out.println("AprioriDPC");
     	System.out.println("Count: "+Main.countDir);
     	System.out.println("Support percentage: "+Main.supportPercentage);
     	System.out.println("Support: "+Main.support);
@@ -486,13 +487,7 @@ public class MrUtils {
 	 */
 	public static void saveFileInLocal(String data, String fileName){
 		File file = new File(fileName);
-		if(file.exists()){
-			try{
-				file.delete();
-			}catch(Exception e){
-				e.printStackTrace();
-			}
-		}
+		
 		FileWriter fw;
 		BufferedWriter bw;
 		try{
