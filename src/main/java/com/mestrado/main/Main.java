@@ -9,6 +9,7 @@ package main.java.com.mestrado.main;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.logging.Level;
@@ -53,6 +54,7 @@ public class Main {
     public static long totalTransactionCount;
     public static ArrayList<String> candFilesNames;
     public static int NUM_REDUCES = 1;
+    public static int NUM_BLOCK = 0;
     /*
     Valor do suporte para 1.000.000
     7500
@@ -245,13 +247,12 @@ public class Main {
     public static void endTime(){
     	double seg = ((double)timeTotal/1000);
     	StringBuilder sb = new StringBuilder();
-    	sb.append("AprioriCpa - support ").append(supportPercentage).append(", transactions ").append(totalTransactionCount).append(" -- ").append(new Date()).append("\n");
-    	sb.append("Arquivo ").append(inputFileName).append("\n\t");
-    	sb.append("Tempo total: ").append(timeTotal).append(" mile ou ").append(seg).append(" segundos ou ").append(seg/60).append(" minutos\n------------\n");
-        System.out.println("Tempo total: "+timeTotal+" mile ou "+seg+" segundos! ou "+seg/60+" minutos");
-        sb.append("Quantidade de itemsets gerados: \n\t");
-    	sb.append(CountItemsets.countItemsets());
-    	sb.append("\n-----------\n");
+    	SimpleDateFormat format = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+    	sb.append("#\n");
+    	sb.append("DATA=").append(format.format(new Date())).append("/n");
+    	sb.append("TEMPO=").append(seg).append("/n");
+    	sb.append("ITEMSETS=");
+    	sb.append(CountItemsets.countItemsets()).append("\n");
         MrUtils.saveTimeLog(sb.toString());
     }
     
