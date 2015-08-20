@@ -442,7 +442,7 @@ public class MrUtils {
     	System.out.println("Entry file: "+Main.inputEntry);
     	System.out.println("Cluster url: "+Main.clusterUrl);
     	System.out.println("Reduces: "+Main.NUM_REDUCES);
-        System.out.println("Blocks: "+Main.NUM_REDUCES);
+        System.out.println("Blocks: "+Main.NUM_BLOCK);
     	
     	System.out.println("\n******************************************************\n");
     }
