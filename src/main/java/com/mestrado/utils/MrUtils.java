@@ -416,7 +416,7 @@ public class MrUtils {
     		System.out.println("Blocks id: "+b);
     	}
     	System.out.println("Reduces: "+Main.NUM_REDUCES);
-        System.out.println("Block: "+Main.NUM_BLOCK);
+        System.out.println("Blocks: "+Main.NUM_BLOCK);
     	System.out.println("\n******************************************************\n");
     }
 

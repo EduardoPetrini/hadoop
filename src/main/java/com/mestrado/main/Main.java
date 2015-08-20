@@ -199,8 +199,8 @@ public class Main {
     	StringBuilder sb = new StringBuilder();
     	SimpleDateFormat format = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
     	sb.append("#\n");
-    	sb.append("DATA=").append(format.format(new Date())).append("/n");
-    	sb.append("TEMPO=").append(seg).append("/n");
+    	sb.append("DATA=").append(format.format(new Date())).append("\n");
+    	sb.append("TEMPO=").append(seg).append("\n");
     	sb.append("ITEMSETS=");
     	sb.append(CountItemsets.countItemsets()).append("\n");
     	MrUtils.saveTimeLog(sb.toString());
