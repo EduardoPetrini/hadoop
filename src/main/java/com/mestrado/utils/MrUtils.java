@@ -258,7 +258,7 @@ public class MrUtils {
     			Main.NUM_REDUCES = Integer.parseInt(args[1]);
     		}else if(args.length == 3){
     			Main.NUM_REDUCES = Integer.parseInt(args[1]);
-    			Main.NUM_BLOCK= Integer.parseInt(args[2]);
+    			Main.NUM_BLOCK= args[2];
     		}
     	}
     	String inputPathUri = Main.user+Main.inputEntry;
@@ -416,6 +416,7 @@ public class MrUtils {
     		System.out.println("Blocks id: "+b);
     	}
     	System.out.println("Reduces: "+Main.NUM_REDUCES);
+        System.out.println("Block: "+Main.NUM_BLOCK);
     	System.out.println("\n******************************************************\n");
     }
 

@@ -54,7 +54,7 @@ public class Main {
     public String outputPartialName = user+"partitions-fase-1/partition";
     public static ArrayList<String> seqFilesNames;
     public static int NUM_REDUCES = 1;
-    public static int NUM_BLOCK = 0;
+    public static String NUM_BLOCK = "0";
     
     public Main() {
         countDir = 0;
