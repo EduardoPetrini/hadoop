@@ -53,7 +53,7 @@ public class Main {
     public static double earlierTime;
     public static ArrayList<String> seqFilesNames;
     public static int NUM_REDUCES = 1;
-    public static int NUM_BLOCK = 0;
+    public static String NUM_BLOCK = "0";
     
     /*
     Valor do suporte para 1.000.000
