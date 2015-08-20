@@ -54,7 +54,7 @@ public class Main {
     public static long totalTransactionCount;
     public static ArrayList<String> candFilesNames;
     public static int NUM_REDUCES = 1;
-    public static int NUM_BLOCK = 0;
+    public static String NUM_BLOCK = "0";
     /*
     Valor do suporte para 1.000.000
     7500
