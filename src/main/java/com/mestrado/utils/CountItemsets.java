@@ -55,13 +55,12 @@ public class CountItemsets {
 		for (int i = 0; i < itemsetsCounts.length; i++) {
 			if (itemsetsCounts[i] != null) {
 				total += itemsetsCounts[i];
-				sb.append((i + 1)).append("-itemsets: ")
-						.append(itemsetsCounts[i]).append("\n\t");
+				sb.append((i + 1)).append("-itemsets=").append(itemsetsCounts[i]).append(";");
 				System.out.println("Itemsets de tamanho " + (i + 1) + ": "
 						+ itemsetsCounts[i]);
 			}
 		}
-		sb.append(total).append("\n");
+		sb.append("total=").append(total);
 		System.out.println("Total: " + total);
 		return sb.toString();
 	}

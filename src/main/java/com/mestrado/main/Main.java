@@ -9,18 +9,11 @@ package main.java.com.mestrado.main;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import main.java.com.mestrado.hadoop.inputformat.WholeInputFormat;
-import main.java.com.mestrado.mapred.map.Map1;
-import main.java.com.mestrado.mapred.map.Map2;
-import main.java.com.mestrado.mapred.reduce.Reduce1;
-import main.java.com.mestrado.mapred.reduce.Reduce2;
-import main.java.com.mestrado.utils.CountItemsets;
-import main.java.com.mestrado.utils.MrUtils;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -30,6 +23,14 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+
+import main.java.com.mestrado.hadoop.inputformat.WholeInputFormat;
+import main.java.com.mestrado.mapred.map.Map1;
+import main.java.com.mestrado.mapred.map.Map2;
+import main.java.com.mestrado.mapred.reduce.Reduce1;
+import main.java.com.mestrado.mapred.reduce.Reduce2;
+import main.java.com.mestrado.utils.CountItemsets;
+import main.java.com.mestrado.utils.MrUtils;
 
 /**
  *
@@ -53,6 +54,7 @@ public class Main {
     public String outputPartialName = user+"partitions-fase-1/partition";
     public static ArrayList<String> seqFilesNames;
     public static int NUM_REDUCES = 1;
+    public static int NUM_BLOCK = 0;
     
     public Main() {
         countDir = 0;
@@ -195,14 +197,13 @@ public class Main {
     public static void endTime(){
         double seg = ((double)timeTotal/1000);
     	StringBuilder sb = new StringBuilder();
-    	sb.append("ImrApriori - support ").append(supportPercentage).append(", transactions ").append(totalTransactionCount).append(" -- ").append(new Date()).append("\n");
-    	sb.append("Arquivo ").append(inputFileName).append("\n\t"); 
-    	sb.append("Tempo total: ").append(timeTotal).append(" mile ou ").append(seg).append(" segundos ou ").append(seg/60).append(" minutos\n------------\n");
-    	sb.append("Quantidade de itemsets gerados: \n\t");
-    	sb.append(CountItemsets.countItemsets());
-    	sb.append("\n-----------\n");
-        System.out.println("Tempo total: "+timeTotal+" mile ou "+seg+" segundos! ou "+seg/60+" minutos");
-        MrUtils.saveTimeLog(sb.toString());
+    	SimpleDateFormat format = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+    	sb.append("#\n");
+    	sb.append("DATA=").append(format.format(new Date())).append("/n");
+    	sb.append("TEMPO=").append(seg).append("/n");
+    	sb.append("ITEMSETS=");
+    	sb.append(CountItemsets.countItemsets()).append("\n");
+    	MrUtils.saveTimeLog(sb.toString());
     }
     
     public static void main(String[] args) throws IOException {
