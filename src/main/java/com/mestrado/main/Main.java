@@ -51,6 +51,7 @@ public class Main {
     public static String outputCandidates = user+"outputCandidates/C";
     public static String inputCandidates = user+"inputCandidates/C";
     public static String inputCandidatesDir = user+"inputCandidates";
+    public static String inputFileToGen = user+"inputToGen/input";
     public static long totalTransactionCount;
     public static ArrayList<String> candFilesNames;
     public static int NUM_REDUCES = 1;
@@ -221,7 +222,7 @@ public class Main {
         job.setNumReduceTasks(NUM_REDUCES);
         
         try {
-        	FileInputFormat.setInputPaths(job, new Path(user+"inputToGen"));//Entra Lk, do job count
+        	FileInputFormat.setInputPaths(job, new Path(inputFileToGen));//Entra Lk, do job count
         } catch (IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }

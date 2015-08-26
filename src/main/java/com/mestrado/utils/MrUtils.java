@@ -168,13 +168,15 @@ public class MrUtils {
                 	System.out.println(ff.getPath().getName());
                     
                     p = ff.getPath();
+                    if(fs.isFile(p)){
                     
-                	System.out.println("Deletando: "+p.getName());
-                    if(fs.delete(p, true)){
-                        
-                    	System.out.println("Deletado!");
-                    }else{
-                    	System.out.println("Falha ao deletar.");
+	                	System.out.println("Deletando: "+p.getName());
+	                    if(fs.delete(p, true)){
+	                        
+	                    	System.out.println("Deletado!");
+	                    }else{
+	                    	System.out.println("Falha ao deletar.");
+	                    }
                     }
                 }
             }
@@ -710,32 +712,36 @@ public class MrUtils {
 
 	public static void copyToInputGen(String outputCount) {
 		Path path = new Path(outputCount);
-		Path input = new Path(Main.user+"inputToGen/");
+		Path input = new Path(Main.inputFileToGen);
 		Configuration c = new Configuration();
         c.set("fs.defaultFS", Main.clusterUrl);
         
         try{
         	FileSystem fs = FileSystem.get(c);
-        	if(!fs.exists(input)){
-        		fs.create(input);
+        	if(fs.exists(input)){
+        		fs.delete(input, true);
+        	}
+        	if(FileUtil.copyMerge(fs, path, fs, input, false, c, "")){
+        		System.out.println("Arquivos copiados com sucesso!");
         	}else{
-        		delContentFiles(input);
+        		System.out.println("Erro ao copiar os arquivos");
         	}
-        	FileStatus[] files = fs.listStatus(path);
-        	for(FileStatus fst: files){
-        		if(fst.getPath().getName().startsWith("part")){
-	// 		        copy(FileSystem srcFS, FileStatus srcStatus, FileSystem dstFS, Path dst, boolean deleteSource, boolean overwrite, Configuration conf)
-        			FileUtil.copy(fs, fs.getFileStatus(fst.getPath()), fs, input, false, true, c);
-        		}
-        		
-        	}
-//        	FileUtil.copyMerge(fs, path, fs, input, false, c, "");
-//        	fs.rename(new Path(Main.user+"inputToGen/"), new Path(""));
+        	
+//        	for(FileStatus fst: files){
+//        		if(fst.getPath().getName().startsWith("part")){
+//	// 		        copy(FileSystem srcFS, FileStatus srcStatus, FileSystem dstFS, Path dst, boolean deleteSource, boolean overwrite, Configuration conf)
+//        			if(FileUtil.copy(fs, fs.getFileStatus(fst.getPath()), fs, input, false, true, c)){
+//        				System.out.println("Copiado "+fst.getPath().getName()+" para "+input.getName());
+//        			}else{
+//        				System.out.println("Erro ao copiar "+fst.getPath().getName());
+//        			}
+//        		}
+//        		
+//        	}
+        	
         }catch(IOException e){
         	e.printStackTrace();
         }
-
-		
 	}
 	
 	/**

@@ -23,6 +23,8 @@ import java.util.concurrent.Callable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import main.java.com.mestrado.utils.MrUtils;
+
 
 /**
  *
@@ -569,22 +571,11 @@ public void loadFileBinaryFormat(String path) throws IOException {
     }
     
     public static void main(String[] args) {
-    	ArrayList<String> tmp = new ArrayList<String>();
-    	tmp.add("1");
-    	tmp.add("2");
-    	tmp.add("3");
-    	tmp.add("4");
-    	tmp.add("5");
-    	tmp.add("6");
-    	tmp.add("7");
-    	tmp.add("8");
-    	tmp.add("9");
-    	tmp.add("10");
-    	String fileIn = "/user/eduardo/tmp/1itemset";
-    	String fileOut = "/user/eduardo/tmp/2itemset";
-//    	AprioriUtils.k = 2;
-//    	MrUtils.saveSequenceInHDFS(tmp, fileIn);
-//    	AprioriUtils.generate2ItemsetCandidates(fileIn, fileOut);
-//    	while(AprioriUtils.gerateDynamicKItemsets("/user/eduardo/tmp/"+AprioriUtils.k+"itemset"));
+    	MrUtils.copyToInputGen("/user/eduardo/tmp/");
+    	System.out.println("Conteúdo do arquivo:");
+    	ArrayList<String> c = MrUtils.readFromHDFS("/user/eduardo/inputToGen/input/");
+    	for(String a: c){
+    		System.out.println(a);
+    	}
 	}
 }
