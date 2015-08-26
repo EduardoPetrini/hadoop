@@ -725,10 +725,11 @@ public class MrUtils {
         	for(FileStatus fst: files){
         		if(fst.getPath().getName().startsWith("part")){
 	// 		        copy(FileSystem srcFS, FileStatus srcStatus, FileSystem dstFS, Path dst, boolean deleteSource, boolean overwrite, Configuration conf)
-    				FileUtil.copy(fs, fs.getFileStatus(fst.getPath()), fs, input, false, true, c);
+        			FileUtil.copy(fs, fs.getFileStatus(fst.getPath()), fs, input, false, true, c);
         		}
         		
         	}
+//        	FileUtil.copyMerge(fs, path, fs, input, false, c, "");
 //        	fs.rename(new Path(Main.user+"inputToGen/"), new Path(""));
         }catch(IOException e){
         	e.printStackTrace();
