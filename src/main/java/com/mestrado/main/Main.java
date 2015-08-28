@@ -41,7 +41,7 @@ public class Main {
 
     public static int countDir;
     private static int timeTotal;
-    public static double supportPercentage = 0.005;
+    public static double supportPercentage = 0.01;
     public static String support;
     public static int k = 1;
     public static String user = "/user/eduardo/";
@@ -54,8 +54,8 @@ public class Main {
     public static String inputFileToGen = user+"inputToGen/input";
     public static long totalTransactionCount;
     public static ArrayList<String> candFilesNames;
-    public static int NUM_REDUCES = 1;
-    public static String NUM_BLOCK = "0";
+    public static int NUM_REDUCES = 3;
+    public static String NUM_BLOCK = "2b";
     /*
     Valor do suporte para 1.000.000
     7500
@@ -316,16 +316,6 @@ public class Main {
         }
         timeTotal += time2k;
         
-        /*
-         * job1 para encontrar L1
-         * Encontrar L2 de alguma forma
-         * A partir de L2:
-         * loop
-         *   jobGen para encontrar Ck
-         *   job2 para contar e gerar Lk
-         */
-        
-        //colocar no loop
         Main.k++; //Main.k == 2;
         Main.countDir++;//2
         do{

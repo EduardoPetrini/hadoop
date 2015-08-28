@@ -49,7 +49,7 @@ public class Reduce2 extends Reducer<Text, IntWritable, Text, IntWritable> {
             count += it.next().get();
         }
     	
-        if(count >= support){
+    	if(count >= support){
         	valueOut.set(count);
             try {
 //            	saveInCache(key, valueOut);
