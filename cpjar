@@ -9,13 +9,13 @@ echo "Building hadoop app..."
 mvn clean package assembly:single 
 
 echo "Cleaning directory in master..."
-ssh master "rm -rf /home/eduardo/jar/*"
+ssh hdp@master "rm -rf /home/hdp/jar/*"
 
 echo "Copying jar files to master..."
-scp -r target/hadoop* master:/home/eduardo/jar/
+scp -r target/hadoop* hdp@master:/home/hdp/jar/
 
 echo "Add "$1" to app-jar..."
-ssh master "mv /home/eduardo/jar/hadoop-0.0.1-jar-with-dependencies.jar /home/eduardo/app-jar/$1"
+ssh hdp@master "mv /home/hdp/jar/hadoop-0.0.1-jar-with-dependencies.jar /home/hdp/app-jar/$1"
 
 echo "done";
 

@@ -393,7 +393,7 @@ public class MrUtils {
     }
     
     /**
-     *     public static String user = "/user/eduardo/";
+     *     public static String user = "/user/hdp/";
     public static String inputEntry = "input/T2.5I2D10N1500K.dobro";
     public static String clusterUrl = "hdfs://master/";
     public static long totalTransactionCount;
@@ -491,7 +491,7 @@ public class MrUtils {
 	 * @param data
 	 */
 	public static void saveTimeLog(String data){
-		StringBuilder sb = new StringBuilder("/home/eduardo/times/");
+		StringBuilder sb = new StringBuilder("/home/hdp/times/");
 		File file = new File(sb.toString());
 		if(!file.isDirectory()){
 			file.mkdirs();
