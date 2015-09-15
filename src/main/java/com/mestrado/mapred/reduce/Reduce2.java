@@ -33,7 +33,7 @@ public class Reduce2 extends Reducer<Text, Text, Text, Text> {
     	support = Double.parseDouble(sup);
     	totalTransaction= Long.parseLong(context.getConfiguration().get("totalTransactions"));
         log.info("Iniciando o REDUCE ImrApriori Fase 2. ");
-        System.out.println("Support: "+support);
+        System.out.println("Support rate: "+support);
     }
     
     @Override

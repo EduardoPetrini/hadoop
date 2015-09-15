@@ -59,7 +59,7 @@ public class Reduce1 extends Reducer<Text, Text, Text, IntWritable>{
     	}
         
         log.info("Iniciando REDUCE ImrApriori Fase 1");
-        log.info("Support = "+support);
+        log.info("Support rate = "+support);
         log.info("Total Maps = "+totalMaps);
 
         System.out.println("\n*********-**********-************-*****************-**********");
@@ -126,7 +126,7 @@ public class Reduce1 extends Reducer<Text, Text, Text, IntWritable>{
     public void printInfo(String key, double partialSupport, int numMapsOfX, int di){
     	System.out.println("Itemset: "+key);
     	System.out.println("Suporte parcial: "+partialSupport);
-    	System.out.println("Suport threshold: "+support);
+    	System.out.println("Suport rate: "+support);
     	System.out.println("Número de Maps do item (Nx): "+numMapsOfX);
     	System.out.println("Valor de Di: "+di);
     	System.out.println("Toal de Maps: "+totalMaps);

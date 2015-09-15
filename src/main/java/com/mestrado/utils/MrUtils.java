@@ -253,7 +253,7 @@ public class MrUtils {
     		System.out.println("Args: "+s);
     	}
     	if(args.length != 0){
-    		Main.supportPercentage = Double.parseDouble(args[0]);
+    		Main.supportRate = Double.parseDouble(args[0]);
     		if(args.length == 2){
     			Main.NUM_REDUCES = Integer.parseInt(args[1]);
     		}else if(args.length == 3){
@@ -290,7 +290,7 @@ public class MrUtils {
 			while (br.readLine() != null){
 				Main.totalTransactionCount++;
 			}
-			Main.support = String.valueOf((Main.totalTransactionCount*Main.supportPercentage)/100);
+			Main.support = String.valueOf((Main.totalTransactionCount*Main.supportRate));
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -404,9 +404,11 @@ public class MrUtils {
     public static void printConfigs(Main m){
     	System.out.println("\n******************************************************\n");
         System.out.println("IMRApriori");
+        System.out.println("Arquivo de entrada: "+Main.inputFileName);
     	System.out.println("Count: "+m.countDir);
-    	System.out.println("Support percentage: "+Main.supportPercentage);
-    	System.out.println("Support: "+Main.support);
+    	System.out.println("Support rate: "+Main.supportRate);
+    	System.out.println("Support percentage: "+(Main.supportRate*100)+"%");
+    	System.out.println("Support min: "+Main.support);
     	System.out.println("Total blocks/partitiions/Maps: "+Main.totalBlockCount);
     	System.out.println("Total transactions: "+Main.totalTransactionCount);
     	System.out.println("User dir: "+Main.user);
@@ -422,7 +424,7 @@ public class MrUtils {
     }
 
 	public static void configGlobalSupporte() {
-		Main.support = String.valueOf(Main.supportPercentage * Main.totalTransactionCount);
+		Main.support = String.valueOf(Main.supportRate * Main.totalTransactionCount);
 		
 	}
 	
@@ -496,7 +498,7 @@ public class MrUtils {
 		if(!file.isDirectory()){
 			file.mkdirs();
 		}
-		sb.append("IMRApriori").append("-").append(Main.inputFileName).append("-").append(Main.supportPercentage).append("-").append(Main.NUM_REDUCES).append("-").append(Main.NUM_BLOCK).append(".log");
+		sb.append("IMRApriori").append("-").append(Main.inputFileName).append("-").append(Main.supportRate).append("-").append(Main.NUM_REDUCES).append("-").append(Main.NUM_BLOCK).append(".log");
 		System.out.println("Saving: "+data+"\n into "+sb.toString());
 		saveFileInLocal(data, sb.toString());
 	}

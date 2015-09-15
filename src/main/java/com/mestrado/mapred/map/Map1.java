@@ -58,7 +58,7 @@ public class Map1 extends Mapper<LongWritable, Text, Text, Text>{
     	newFrequents = new ArrayList<String>();
     	itemSupHash = new HashMap<String, Integer>();
     	hpt = new HashPrefixTree();
-    	System.out.println("Procentagem do suporte: "+support+"%");
+    	System.out.println("Support rate: "+support);
     	
     	int k = 1;
     	String[] itemset;
