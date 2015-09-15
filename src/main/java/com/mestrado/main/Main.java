@@ -40,7 +40,7 @@ public class Main {
 
     public static int countDir;
     private static int timeTotal;
-    public static double supportPercentage = 0.52;
+    public static double supportRate = 0.52;
     public static String support;
     public static int k = 1;
     public static String user = "/user/hdp/";

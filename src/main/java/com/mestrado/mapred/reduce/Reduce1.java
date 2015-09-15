@@ -37,7 +37,7 @@ public class Reduce1 extends Reducer<Text, IntWritable, Text, IntWritable>{
         String fileCachedPath = context.getConfiguration().get("fileCached")+"-"+System.currentTimeMillis();
         Path path = new Path(fileCachedPath);
         log.info("AprioriDpc REDUCE Fase 1");
-        log.info("Support = "+support);
+        log.info("Support min = "+support);
         log.info("OutFile = "+fileCachedPath);
         writer = SequenceFile.createWriter(context.getConfiguration(), SequenceFile.Writer.file(path),
                 SequenceFile.Writer.keyClass(Text.class), SequenceFile.Writer.valueClass(IntWritable.class));

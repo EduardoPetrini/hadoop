@@ -41,7 +41,7 @@ public class Reduce2 extends Reducer<Text, IntWritable, Text, IntWritable> {
         
          writer = SequenceFile.createWriter(context.getConfiguration(), SequenceFile.Writer.file(path),
                SequenceFile.Writer.keyClass(Text.class), SequenceFile.Writer.valueClass(IntWritable.class));
-         System.out.println("Support: "+support);
+         System.out.println("Support min: "+support);
     }
     
     @Override
