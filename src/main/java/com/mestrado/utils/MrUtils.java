@@ -351,7 +351,7 @@ public class MrUtils {
     		System.out.println("Args: "+s);
     	}
     	if(args.length != 0){
-    		Main.supportPercentage = Double.parseDouble(args[0]);
+    		Main.supportRate = Double.parseDouble(args[0]);
     		if(args.length == 2){
     			Main.NUM_REDUCES = Integer.parseInt(args[1]);
     		}else if(args.length == 3){
@@ -377,7 +377,7 @@ public class MrUtils {
 			while (br.readLine() != null){
 				Main.totalTransactionCount++;
 			}
-			Main.support = String.valueOf(Main.totalTransactionCount*Main.supportPercentage);
+			Main.support = String.valueOf(Main.totalTransactionCount*Main.supportRate);
 			
 //			Path outputCached = new Path(Main.user+"outputCached/");
 //			if(!fs.exists(outputCached)){
@@ -518,11 +518,12 @@ public class MrUtils {
     public static void printConfigs(Main m){
     	System.out.println("\n******************************************************\n");
         System.out.println("AprioriCPA");
+        System.out.println("Arquivo de entrada: "+Main.inputFileName);
     	System.out.println("Count: "+Main.countDir);
-    	System.out.println("Support percentage: "+Main.supportPercentage);
+    	System.out.println("Support rate: "+Main.supportRate);
     	System.out.println("Support: "+Main.support);
     	System.out.println("User dir: "+Main.user);
-    	System.out.println("Entry file: "+Main.inputEntry);
+    	System.out.println("Entry dir: "+Main.inputEntry);
     	System.out.println("Cluster url: "+Main.clusterUrl);
     	System.out.println("Reduces: "+Main.NUM_REDUCES);
         System.out.println("Blocks: "+Main.NUM_BLOCK);
@@ -774,7 +775,7 @@ public class MrUtils {
 		if(!file.isDirectory()){
 			file.mkdirs();
 		}
-		sb.append("AprioriCPA").append("-").append(Main.inputFileName).append("-").append(Main.supportPercentage).append("-").append(Main.NUM_REDUCES).append("-").append(Main.NUM_BLOCK).append(".log");
+		sb.append("AprioriCPA").append("-").append(Main.inputFileName).append("-").append(Main.supportRate).append("-").append(Main.NUM_REDUCES).append("-").append(Main.NUM_BLOCK).append(".log");
 		System.out.println("Saving: "+data+"\n into "+sb.toString());
 		saveFileInLocal(data, sb.toString());
 	}

@@ -41,7 +41,7 @@ public class Main {
 
     public static int countDir;
     private static int timeTotal;
-    public static double supportPercentage = 0.01;
+    public static double supportRate = 0.01;
     public static String support;
     public static int k = 1;
     public static String user = "/user/hdp/";
@@ -217,6 +217,12 @@ public class Main {
         job.setOutputValueClass(Text.class);
         
         job.getConfiguration().set("inputCandidates", inputCandidates+Main.countDir);
+        job.getConfiguration().set("inputFileToGen", inputFileToGen);
+        try{
+        	job.addCacheFile(new URI(inputFileToGen));
+        }catch(URISyntaxException e){
+        	e.printStackTrace();
+        }
         System.out.println("AprioriCpa geração de candidatos - CountDir: "+Main.countDir);
         
         job.setNumReduceTasks(NUM_REDUCES);
@@ -226,7 +232,7 @@ public class Main {
         } catch (IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
-        FileOutputFormat.setOutputPath(job, new Path(user+"candidatosTxt"+Main.countDir));//Sai Ck
+        FileOutputFormat.setOutputPath(job, new Path(user+"candidatosTxt"+Main.countDir));//Sai Ck+1
         try {
             long ini = System.currentTimeMillis();
             int st = (job.waitForCompletion(true) ? 0 : 1);
