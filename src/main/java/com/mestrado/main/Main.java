@@ -109,10 +109,11 @@ public class Main {
         FileOutputFormat.setOutputPath(job, new Path(user+"output"+Main.countDir));
         
         try {
-            long ini = System.currentTimeMillis();
+//            long ini = System.currentTimeMillis();
             int st = (job.waitForCompletion(true) ? 0 : 1);
-            long fim = System.currentTimeMillis();
-            
+//            long fim = System.currentTimeMillis();
+            long ini = job.getStartTime();
+            long fim = job.getFinishTime();
             long t = fim - ini;
             System.out.println("Tempo AprioriCpa Fase 1: "+((double)t/1000));
             
@@ -174,10 +175,11 @@ public class Main {
         }
         FileOutputFormat.setOutputPath(job, new Path(user+"output"+Main.countDir));
         try {
-            long ini = System.currentTimeMillis();
+//            long ini = System.currentTimeMillis();
             int st = (job.waitForCompletion(true) ? 0 : 1);
-            long fim = System.currentTimeMillis();
-            
+//            long fim = System.currentTimeMillis();
+            long ini = job.getStartTime();
+            long fim = job.getFinishTime();
             long t = fim - ini;
             System.out.println("Tempo AprioriCpa Fase de contagem (k = "+k+"): "+((double)t/1000));
             timeTotal += t;
@@ -234,10 +236,11 @@ public class Main {
         }
         FileOutputFormat.setOutputPath(job, new Path(user+"candidatosTxt"+Main.countDir));//Sai Ck+1
         try {
-            long ini = System.currentTimeMillis();
+//            long ini = System.currentTimeMillis();
             int st = (job.waitForCompletion(true) ? 0 : 1);
-            long fim = System.currentTimeMillis();
-            
+//            long fim = System.currentTimeMillis();
+            long ini = job.getStartTime();
+            long fim = job.getFinishTime();
             long t = fim - ini;
             System.out.println("Tempo AprioriCpa Fase de geração (k = "+k+"): "+ ((double)t/1000));
             timeTotal += t;
@@ -320,6 +323,7 @@ public class Main {
         	endTime();
         	System.exit(0);
         }
+        System.out.println("Tempo da fase geração de k = 2: "+time2k);
         timeTotal += time2k;
         
         Main.k++; //Main.k == 2;
