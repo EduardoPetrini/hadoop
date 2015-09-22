@@ -109,10 +109,11 @@ public class Main {
         FileOutputFormat.setOutputPath(job, new Path(user+"output"+Main.countDir));
         
         try {
-            long ini = System.currentTimeMillis();
+//            long ini = System.currentTimeMillis();
             int st = (job.waitForCompletion(true) ? 0 : 1);
-            long fim = System.currentTimeMillis();
-            
+//            long fim = System.currentTimeMillis();
+            long ini = job.getStartTime();
+            long fim = job.getFinishTime();
             long t = fim - ini;
             System.out.println("Tempo AprioriDpc Fase 1: "+((double)t/1000));
             
@@ -175,10 +176,11 @@ public class Main {
         }
         FileOutputFormat.setOutputPath(job, new Path(user+"output"+Main.countDir));
         try {
-            long ini = System.currentTimeMillis();
+//            long ini = System.currentTimeMillis();
             int st = (job.waitForCompletion(true) ? 0 : 1);
-            long fim = System.currentTimeMillis();
-            
+//            long fim = System.currentTimeMillis();
+            long ini = job.getStartTime();
+            long fim = job.getFinishTime();
             long t = fim - ini;
             earlierTime = ((double)t/1000);
             System.out.println("Tempo AprioriDpc Fase 2: "+earlierTime);
@@ -243,9 +245,11 @@ public class Main {
         }
         FileOutputFormat.setOutputPath(job, new Path(user+"output"+Main.countDir));
         try {
-            long ini = System.currentTimeMillis();
+//            long ini = System.currentTimeMillis();
             int st = (job.waitForCompletion(true) ? 0 : 1);
-            long fim = System.currentTimeMillis();
+//            long fim = System.currentTimeMillis();
+            long ini = job.getStartTime();
+            long fim = job.getFinishTime();
             
             long t = fim - ini;
             earlierTime = ((double)t/1000);
