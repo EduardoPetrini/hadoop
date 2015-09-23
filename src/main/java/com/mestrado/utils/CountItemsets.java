@@ -13,7 +13,7 @@ import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.util.ReflectionUtils;
 
-import main.java.com.mestrado.main.Main;
+import main.java.com.mestrado.main.MainSpark;
 
 public class CountItemsets {
 	private static Integer itemsetsCounts[];
@@ -69,8 +69,8 @@ public class CountItemsets {
 		itemsetsCounts = new Integer[20];
 		//obter todos os arquivos de cada diretório
 		ArrayList<String> outputFileNames;
-		for(int i = 1; i <= Main.countDir; i++){
-			outputFileNames = MrUtils.getAllOuputFilesNames(Main.user+"output"+i);
+		for(int i = 1; i <= MainSpark.countDir; i++){
+			outputFileNames = MrUtils.getAllOuputFilesNames(MainSpark.user+"output"+i);
 			for(String outFile : outputFileNames){
 				System.out.println("Contando itemsets em "+outFile);
 				CountItemsets.countByOutputDir(outFile);

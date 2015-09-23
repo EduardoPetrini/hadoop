@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 
-import main.java.com.mestrado.main.Main;
+import main.java.com.mestrado.main.MainSpark;
 
 public class AprioriUtils {
 	public static int maxk;
@@ -13,15 +13,15 @@ public class AprioriUtils {
 	 * A partir do arquivo de saída, com 1-itemset por linha, gera-se 2-itemset
 	 */
 	public static long generate2ItemsetCandidates(){
-		String inputFile = Main.user+"output"+Main.countDir;
+		String inputFile = MainSpark.user + "output" + MainSpark.countDir;
 		ArrayList<String> itemsets = MrUtils.readAllFromHDFSDir(inputFile);
 		long ini = System.currentTimeMillis();
 		Collections.sort(itemsets,NUMERIC_ORDER);
 		ArrayList<String> itemset2k = get2itemset(itemsets);
 		long fim = System.currentTimeMillis();
-		MrUtils.saveSequenceInHDFS(itemset2k, Main.inputCandidates+(Main.countDir+1));
-		Main.candFilesNames = new ArrayList<String>();
-		Main.candFilesNames.add(Main.inputCandidates+(Main.countDir+1));
+		MrUtils.saveSequenceInHDFS(itemset2k, MainSpark.inputCandidates + (MainSpark.countDir + 1));
+		MainSpark.candFilesNames = new ArrayList<String>();
+		MainSpark.candFilesNames.add(MainSpark.inputCandidates + (MainSpark.countDir + 1));
 		if(itemset2k.size() == 0){
 			return -1;
 		}
@@ -33,7 +33,7 @@ public class AprioriUtils {
 		
 		for(int i = 0; i < itemset.size(); i++){
 			for(int j = i+1; j < itemset.size(); j++){
-				newItemsets.add(itemset.get(i)+" "+itemset.get(j));
+				newItemsets.add(itemset.get(i) + " " + itemset.get(j));
 			}
 		}
 		

@@ -11,8 +11,7 @@ import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import main.java.com.mestrado.main.Main;
-import main.java.com.mestrado.mapred.reduce.Reduce1;
+import main.java.com.mestrado.main.MainSpark;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -58,7 +57,7 @@ public class MrUtils {
         
         log.info("Excluindo diretórios anteriores...");
         Configuration c = new Configuration();
-         c.set("fs.defaultFS", Main.clusterUrl);
+         c.set("fs.defaultFS", MainSpark.clusterUrl);
         Path p = new Path(d);
         try {
             FileSystem fs = FileSystem.get(c);
@@ -93,8 +92,9 @@ public class MrUtils {
     public static void delOutDirs(String d) {
         
         System.out.println("Excluindo diretórios anteriores...");
-        Configuration c = new Configuration();
-         c.set("fs.defaultFS", Main.clusterUrl);
+        Configuration c = new Configuration(); 
+        c.set("fs.defaultFS", MainSpark.clusterUrl);
+        
         Path p = new Path(d);
         Path aux;
         
@@ -108,7 +108,7 @@ public class MrUtils {
                 for(FileStatus f: ff){
                     aux = f.getPath();
                     
-                    if(aux.getName().contains("output") || aux.getName().contains("inputCached") ||
+                    if(aux.getName().contains("output") || aux.getName().contains("inputToGen") ||  aux.getName().contains("inputCached") ||
                     		aux.getName().contains("candidatosTxt") || aux.getName().contains("outputCandidates") || 
                     		aux.getName().contains("inputCandidates")){
                         
@@ -131,7 +131,7 @@ public class MrUtils {
     
     public void createTempDir(String d){
     	 Configuration c = new Configuration();
-          c.set("fs.defaultFS", Main.clusterUrl);
+    	 c.set("fs.defaultFS", MainSpark.clusterUrl);
         try {
             FileSystem fs = FileSystem.get(c);
             
@@ -142,7 +142,7 @@ public class MrUtils {
             }
             
         } catch (IOException ex) {
-            Logger.getLogger(Reduce1.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(MrUtils.class.getName()).log(Level.SEVERE, null, ex);
         }
     
     }
@@ -152,7 +152,7 @@ public class MrUtils {
      */
     public static void delContentFiles(Path p){
         Configuration c = new Configuration();
-         c.set("fs.defaultFS", Main.clusterUrl);
+         c.set("fs.defaultFS", MainSpark.clusterUrl);
         try {
             FileSystem fs = FileSystem.get(c);
             
@@ -181,7 +181,7 @@ public class MrUtils {
             
             
         }catch(IOException ex) {
-            Logger.getLogger(Reduce1.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(MrUtils.class.getName()).log(Level.SEVERE, null, ex);
         }
         
     }
@@ -196,8 +196,8 @@ public class MrUtils {
         Path p = new Path(dir);
         Path aux;
         Configuration c = new Configuration();
-        c.set("fs.defaultFS", Main.clusterUrl);
-        System.out.println("Verificando diretório: "+dir);
+        c.set("fs.defaultFS", MainSpark.clusterUrl);
+        System.out.println("Verificando diretório: " + dir);
         try{
             FileSystem fs = FileSystem.get(c);
 
@@ -232,30 +232,30 @@ public class MrUtils {
         Path path;
         
         Configuration c = new Configuration();
-        c.set("fs.defaultFS", Main.clusterUrl);
+        c.set("fs.defaultFS", MainSpark.clusterUrl);
 
         try {
             FileSystem fs = FileSystem.get(c);
             
             //obter todos os arquivos dos candidatos atuais
-            Main.candFilesNames = getAllCandidatesFilesNames();
+            MainSpark.candFilesNames = getAllCandidatesFilesNames();
             ArrayList<String> filesEmpty = new ArrayList<String>();
-            for(String fileName: Main.candFilesNames){
+            for(String fileName: MainSpark.candFilesNames){
             	path = new Path(fileName);
             	FileStatus conf = fs.getFileStatus(path);
             	if(conf.getLen() > 128){
-            		System.out.println("O arquivo "+path.getName()+" não é vazio! "+conf.getLen());
+            		System.out.println("O arquivo " + path.getName() + " não é vazio! " + conf.getLen());
             	}else{
             		filesEmpty.add(fileName);
-            		System.out.println("O arquivo "+path.getName()+" é vazio! "+conf.getLen());
+            		System.out.println("O arquivo " + path.getName() + " é vazio! " + conf.getLen());
             	}
             }
-            if(!filesEmpty.isEmpty())
-            	Main.candFilesNames.removeAll(filesEmpty);
+            if (!filesEmpty.isEmpty())
+            	MainSpark.candFilesNames.removeAll(filesEmpty);
         } catch (IOException e) {
             e.printStackTrace();
         }
-        if(Main.candFilesNames.size() > 0){
+        if (MainSpark.candFilesNames.size() > 0){
         	return true;
         }
         return false;
@@ -264,18 +264,18 @@ public class MrUtils {
     private static ArrayList<String> getAllCandidatesFilesNames() {
     	ArrayList<String> candNames = new ArrayList<String>();
     	
-    	Path p = new Path(Main.inputCandidatesDir);
+    	Path p = new Path(MainSpark.inputCandidatesDir);
     	Path aux;
         Configuration c = new Configuration();
-        c.set("fs.defaultFS", Main.clusterUrl);
+        c.set("fs.defaultFS", MainSpark.clusterUrl);
         try{
             FileSystem fs = FileSystem.get(c);
             FileStatus[] ff = fs.listStatus(p);
 
 			 for(FileStatus f: ff){
 			     aux = f.getPath();
-			     if(aux.getName().contains("C"+Main.countDir)){
-			    	 candNames.add(Main.inputCandidatesDir+"/"+aux.getName());
+			     if(aux.getName().contains("C"+MainSpark.countDir)){
+			    	 candNames.add(MainSpark.inputCandidatesDir+"/"+aux.getName());
 			     }
 			 }
 
@@ -291,7 +291,7 @@ public class MrUtils {
     	Path p = new Path(outName);
     	Path aux;
         Configuration c = new Configuration();
-        c.set("fs.defaultFS", Main.clusterUrl);
+        c.set("fs.defaultFS", MainSpark.clusterUrl);
         try{
             FileSystem fs = FileSystem.get(c);
             if(fs.exists(p)){
@@ -311,11 +311,11 @@ public class MrUtils {
 	}
 
 	public static boolean checkInputMR(){
-//        String dir = Main.inputL+Main.countDir;
+//        String dir = MainSpark.inputL+MainSpark.countDir;
 //        Path p = new Path(dir);
 //        
 //        Configuration c = new Configuration();
-//         c.set("fs.defaultFS", Main.clusterUrl);
+//         c.set("fs.defaultFS", MainSpark.clusterUrl);
 //        System.out.println("Verificando diretório: "+dir);
 //        
 //        try {
@@ -349,39 +349,30 @@ public class MrUtils {
     		System.out.println("Args: "+s);
     	}
     	if(args.length != 0){
-    		Main.supportPercentage = Double.parseDouble(args[0]);
+    		MainSpark.supportPercentage = Double.parseDouble(args[0]);
     		if(args.length == 2){
-    			Main.NUM_REDUCES = Integer.parseInt(args[1]);
+    			//MainSpark.NUM_REDUCES = Integer.parseInt(args[1]);
     		}
     	}
     	
-    	String inputPathUri = Main.user+Main.inputEntry;
+    	String inputPathUri = MainSpark.user + MainSpark.inputEntry;
     	
     	Path inputPath = new Path(inputPathUri);
     	Configuration c = new Configuration();
-        c.set("fs.defaultFS", Main.clusterUrl);
+        c.set("fs.defaultFS", MainSpark.clusterUrl);
         
-        try {
-        	
+        try {	
 			FileSystem fs = inputPath.getFileSystem(c);
 			FileStatus[] subFiles = fs.listStatus(inputPath);
 			Path inputFile = subFiles[0].getPath();
-			Main.inputFileName = inputFile.getName();
+			MainSpark.inputFileName = inputFile.getName();
 			BufferedReader br=new BufferedReader(new InputStreamReader(fs.open(inputFile)));
-			Main.totalTransactionCount = 0;
+			MainSpark.totalTransactionCount = 0;
 			while (br.readLine() != null){
-				Main.totalTransactionCount++;
+				MainSpark.totalTransactionCount++;
 			}
-			Main.support = String.valueOf(Main.totalTransactionCount*Main.supportPercentage);
 			
-//			Path outputCached = new Path(Main.user+"outputCached/");
-//			if(!fs.exists(outputCached)){
-//				fs.create(outputCached);
-//			}else{
-//				for(FileStatus fss: fs.listStatus(outputCached)){
-//					fs.delete(fss.getPath(), true);
-//				}
-//			}
+			MainSpark.support = MainSpark.totalTransactionCount * MainSpark.supportPercentage;
 			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -394,10 +385,10 @@ public class MrUtils {
      * @return
      */
     public static ArrayList<String> extractBlocksIds(){
-    	String inputPathUri = Main.user+Main.inputEntry;
+    	String inputPathUri = MainSpark.user+MainSpark.inputEntry;
         Path inputPath = new Path(inputPathUri);
     	Configuration c = new Configuration();
-        c.set("fs.defaultFS", Main.clusterUrl);
+        c.set("fs.defaultFS", MainSpark.clusterUrl);
         ArrayList<String> blocksIds = new ArrayList<String>();
         
         try{
@@ -418,10 +409,10 @@ public class MrUtils {
     }
     
     public static void test(){
-    	String inputPathUri = Main.user+Main.inputEntry;
+    	String inputPathUri = MainSpark.user+MainSpark.inputEntry;
         Path inputPath = new Path(inputPathUri);
     	Configuration c = new Configuration();
-         c.set("fs.defaultFS", Main.clusterUrl);
+         c.set("fs.defaultFS", MainSpark.clusterUrl);
         
         try{
         	FileSystem fs = FileSystem.get(c);
@@ -445,7 +436,7 @@ public class MrUtils {
     public static void createIfNotExistOrClean(String pathName){
     	Path path = new Path(pathName.substring(0,pathName.length()-9));
     	Configuration c = new Configuration();
-         c.set("fs.defaultFS", Main.clusterUrl);
+         c.set("fs.defaultFS", MainSpark.clusterUrl);
     	
         try{
         	FileSystem fs = FileSystem.get(c);
@@ -476,7 +467,7 @@ public class MrUtils {
     	
     	Path path = new Path(pathName.substring(0,pathName.length()-9));
     	Configuration c = new Configuration();
-         c.set("fs.defaultFS", Main.clusterUrl);
+         c.set("fs.defaultFS", MainSpark.clusterUrl);
         
         try{
         	FileSystem fs = FileSystem.get(c);
@@ -510,15 +501,16 @@ public class MrUtils {
     private String outputPartialName = user+"partitions-fase-1/partition";
      * @param m
      */
-    public static void printConfigs(Main m){
+    public static void printConfigs(MainSpark m){
     	System.out.println("\n******************************************************\n");
-    	System.out.println("Count: "+Main.countDir);
-    	System.out.println("Support percentage: "+Main.supportPercentage);
-    	System.out.println("Support: "+Main.support);
-    	System.out.println("User dir: "+Main.user);
-    	System.out.println("Entry file: "+Main.inputEntry);
-    	System.out.println("Cluster url: "+Main.clusterUrl);
-    	System.out.println("Reduces: "+Main.NUM_REDUCES);
+    	
+    	System.out.println("Count: " + MainSpark.countDir);
+    	System.out.println("Support percentage: " + MainSpark.supportPercentage);
+    	System.out.println("Support: " + MainSpark.support);
+    	System.out.println("User dir: " + MainSpark.user);
+    	System.out.println("Entry file: " + MainSpark.inputEntry + MainSpark.inputFileName);
+    	System.out.println("Cluster url: " + MainSpark.clusterUrl);
+    	//System.out.println("Reduces: " + MainSpark.NUM_REDUCES);
     	
     	System.out.println("\n******************************************************\n");
     }
@@ -531,7 +523,7 @@ public class MrUtils {
     public static ArrayList<String> readFromHDFS(String fileName){
     	Path inputPath = new Path(fileName);
     	Configuration c = new Configuration();
-        c.set("fs.defaultFS", Main.clusterUrl);
+        c.set("fs.defaultFS", MainSpark.clusterUrl);
         ArrayList<String> data = new ArrayList<String>();
         
         try {
@@ -559,26 +551,26 @@ public class MrUtils {
     public static ArrayList<String> readAllFromHDFSDir(String dirName){
     	Path inputPath = new Path(dirName);
     	Configuration c = new Configuration();
-        c.set("fs.defaultFS", Main.clusterUrl);
+        c.set("fs.defaultFS", MainSpark.clusterUrl);
         ArrayList<String> data = new ArrayList<String>();
         
-        try {
-        	
+        try {   	
 			FileSystem fs = inputPath.getFileSystem(c);
 			FileStatus[] files = fs.listStatus(inputPath);
 			BufferedReader br;
 			String line;
-			for(FileStatus fst: files){
+			for(FileStatus fst : files){
 				if(fst.getPath().getName().startsWith("part")){
-					System.out.println("Carregando itemsets de "+dirName+" "+fst.getPath().getName());
+					System.out.println("Carregando itemsets de " + dirName + " " + fst.getPath().getName());
 					br=new BufferedReader(new InputStreamReader(fs.open(fst.getPath())));
-					while ((line = br.readLine()) != null){
-						data.add(line.split("\\t")[0].trim());
+					while ((line = br.readLine()) != null) {
+						line = line.substring(1, line.length() -1);
+						data.add(line.split(",")[0].trim());
 					}
 					br.close();
 				}
 			}
-        }catch(IOException e){
+        } catch(IOException e){
         	e.printStackTrace();
         }
         
@@ -592,7 +584,7 @@ public class MrUtils {
     public static void saveTextInHDFS(ArrayList<String> data, String fileName){
     	Path inputPath = new Path(fileName);
     	Configuration c = new Configuration();
-         c.set("fs.defaultFS", Main.clusterUrl);
+         c.set("fs.defaultFS", MainSpark.clusterUrl);
         
         	try {
 			FileSystem fs = inputPath.getFileSystem(c);
@@ -624,7 +616,7 @@ public class MrUtils {
 		Path p = new Path(outputDir);
         Path aux;
         Configuration c = new Configuration();
-         c.set("fs.defaultFS", Main.clusterUrl);
+         c.set("fs.defaultFS", MainSpark.clusterUrl);
         try{
             FileSystem fs = FileSystem.get(c);
 
@@ -656,19 +648,18 @@ public class MrUtils {
 	 * @param data
 	 * @param fileOut
 	 */
-	public static void saveSequenceInHDFS(ArrayList<String> data,
-			String fileOut) {
+	public static void saveSequenceInHDFS(ArrayList<String> data, String fileOut) {
 		Path p = new Path(fileOut);
         Configuration c = new Configuration();
-         c.set("fs.defaultFS", Main.clusterUrl);
+        c.set("fs.defaultFS", MainSpark.clusterUrl);
         
-        System.out.println("Salvando arquivo de sequência "+fileOut+" com "+data.size()+" elementos...");
+        System.out.println("Salvando arquivo de sequência " + fileOut + " com " + data.size() + " elementos...");
 		try {
 			SequenceFile.Writer writer = SequenceFile.createWriter(c, SequenceFile.Writer.file(p),
 			           SequenceFile.Writer.keyClass(Text.class), SequenceFile.Writer.valueClass(IntWritable.class));
 			Text text = new Text();
 			IntWritable value = new IntWritable(1);
-			for(String is: data){
+			for(String is : data){
 				text.set(is);
 				writer.append(text, value);
 			}
@@ -688,7 +679,7 @@ public class MrUtils {
 		ArrayList<String> itemsets = new ArrayList<String>();
 		Path p = new Path(fileName);
         Configuration c = new Configuration();
-         c.set("fs.defaultFS", Main.clusterUrl);
+         c.set("fs.defaultFS", MainSpark.clusterUrl);
 		
 		try{
 			SequenceFile.Reader reader = new SequenceFile.Reader(c, SequenceFile.Reader.file(p));
@@ -705,14 +696,14 @@ public class MrUtils {
 
 	public static void copyToInputGen(String outputCount) {
 		Path path = new Path(outputCount);
-		Path input = new Path(Main.user+"inputToGen/");
+		Path input = new Path(MainSpark.user + "inputToGen/");
 		Configuration c = new Configuration();
-        c.set("fs.defaultFS", Main.clusterUrl);
+        c.set("fs.defaultFS", MainSpark.clusterUrl);
         
         try{
         	FileSystem fs = FileSystem.get(c);
         	if(!fs.exists(input)){
-        		fs.create(input);
+        		fs.mkdirs(input);
         	}else{
         		delContentFiles(input);
         	}
@@ -724,7 +715,7 @@ public class MrUtils {
         		}
         		
         	}
-//        	fs.rename(new Path(Main.user+"inputToGen/"), new Path(""));
+//        	fs.rename(new Path(MainSpark.user+"inputToGen/"), new Path(""));
         }catch(IOException e){
         	e.printStackTrace();
         }
@@ -763,12 +754,12 @@ public class MrUtils {
 	 * @param data
 	 */
 	public static void saveTimeLog(String data){
-		StringBuilder sb = new StringBuilder("/home/eduardo/times/");
+		StringBuilder sb = new StringBuilder("/home/thiago/times/");
 		File file = new File(sb.toString());
 		if(!file.isDirectory()){
 			file.mkdirs();
 		}
-		sb.append(data.split(" ")[0]).append("-").append(Main.inputFileName).append("_").append(System.currentTimeMillis()).append(".log");
+		sb.append(data.split(" ")[0]).append("-").append(MainSpark.inputFileName).append("_").append(System.currentTimeMillis()).append(".log");
 		System.out.println("Saving: "+data+"\n into "+sb.toString());
 		saveFileInLocal(data, sb.toString());
 	}

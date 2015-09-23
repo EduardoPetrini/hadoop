@@ -1,7 +1,12 @@
 package main.java.com.mestrado.app;
 
+import java.io.Serializable;
 
-public class HashPrefixTree {
+public class HashPrefixTree implements Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private HashNode hashNode;
 	
 	public HashPrefixTree() {
