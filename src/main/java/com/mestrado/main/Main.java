@@ -23,6 +23,7 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
+import main.java.com.mestrado.mapred.combiner.CombinerGen;
 import main.java.com.mestrado.mapred.map.GenMap;
 import main.java.com.mestrado.mapred.map.Map1;
 import main.java.com.mestrado.mapred.map.Map2;
@@ -212,7 +213,7 @@ public class Main {
         job.setJarByClass(Main.class);
         
         job.setMapperClass(GenMap.class);
-//        job.setCombinerClass(Reduce2.class);
+        job.setCombinerClass(CombinerGen.class);
         job.setReducerClass(GenReduce.class);
         
         job.setOutputKeyClass(Text.class);
