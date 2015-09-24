@@ -23,6 +23,7 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
+import main.java.com.mestrado.hadoop.inputformat.WholeInputFormat;
 import main.java.com.mestrado.mapred.combiner.CombinerGen;
 import main.java.com.mestrado.mapred.map.GenMap;
 import main.java.com.mestrado.mapred.map.Map1;
@@ -95,6 +96,7 @@ public class Main {
         
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(IntWritable.class);
+        job.setInputFormatClass(WholeInputFormat.class);
         
         job.getConfiguration().set("count", String.valueOf(Main.countDir));
         job.getConfiguration().set("support", String.valueOf(support));
@@ -152,6 +154,7 @@ public class Main {
         
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(IntWritable.class);
+        job.setInputFormatClass(WholeInputFormat.class);
         
         job.getConfiguration().set("count", String.valueOf(Main.countDir));
         job.getConfiguration().set("support", String.valueOf(support));
@@ -218,6 +221,7 @@ public class Main {
         
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(Text.class);
+        job.setInputFormatClass(WholeInputFormat.class);
         
         job.getConfiguration().set("inputCandidates", inputCandidates+Main.countDir);
         job.getConfiguration().set("inputFileToGen", inputFileToGen);
