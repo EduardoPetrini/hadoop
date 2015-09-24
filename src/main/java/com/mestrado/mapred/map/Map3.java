@@ -8,6 +8,7 @@ package main.java.com.mestrado.mapred.map;
 
 import java.io.IOException;
 import java.net.URI;
+import java.nio.charset.CharacterCodingException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -304,21 +305,53 @@ public class Map3  extends Mapper<LongWritable, Text, Text, Text>{
     
     @Override
     public void map(LongWritable key, Text value, Context context){
-    	
-		//Aplica a função subset e envia o itemset para o reduce
-    	String[] transaction = value.toString().split(" ");
-    	String[] itemset;
-
-    	k = mink;
-    	
-    	for(;k <= maxk; k++){
-	    	if(transaction.length >= k){
-	    		for(int i = 0; i < transaction.length; i++){
-	    			itemset = new String[k];
-	    			subSet(transaction, hpt.getHashNode(), i, itemset, 0, context);
-	    		}
-	    	}
-    	}
+    	String[] transaction;
+		boolean endBlock = false;
+		int pos;
+		int start = 0;
+		int len;
+		String[] itemset;
+		while ((pos = value.find("\n", start)) != -1) {
+			k = mink;
+			len = pos - start;
+			try {
+				transaction = Text.decode(value.getBytes(), start, len).trim().split(" ");
+				for(;k <= maxk; k++){
+			    	if(transaction.length >= k){
+			    		for(int i = 0; i < transaction.length; i++){
+			    			itemset = new String[k];
+			    			subSet(transaction, hpt.getHashNode(), i, itemset, 0, context);
+			    		}
+			    	}
+		    	}
+			} catch (CharacterCodingException e) {
+				e.printStackTrace();
+				System.exit(1);
+			}
+			start = pos + 1;
+			if (start >= value.getLength()) {
+				endBlock = true;
+				break;
+			}
+		}
+		// pegar a ultima transação, caso tenha
+		if (!endBlock) {
+			len = value.getLength() - start;
+			try {
+				transaction = Text.decode(value.getBytes(), start, len).split(" ");
+				for(;k <= maxk; k++){
+			    	if(transaction.length >= k){
+			    		for(int i = 0; i < transaction.length; i++){
+			    			itemset = new String[k];
+			    			subSet(transaction, hpt.getHashNode(), i, itemset, 0, context);
+			    		}
+			    	}
+		    	}
+			} catch (CharacterCodingException e) {
+				e.printStackTrace();
+				System.exit(1);
+			}
+		}
     }
     
     /**

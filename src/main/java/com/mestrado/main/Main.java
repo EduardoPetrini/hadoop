@@ -15,14 +15,7 @@ import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.Job;
-import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
-import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
-
+import main.java.com.mestrado.hadoop.inputformat.WholeInputFormat;
 import main.java.com.mestrado.mapred.map.Map1;
 import main.java.com.mestrado.mapred.map.Map2;
 import main.java.com.mestrado.mapred.map.Map3;
@@ -32,6 +25,14 @@ import main.java.com.mestrado.mapred.reduce.Reduce3;
 import main.java.com.mestrado.utils.CountItemsets;
 import main.java.com.mestrado.utils.MrUtils;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+
 /**
  *
  * @author eduardo
@@ -40,7 +41,7 @@ public class Main {
 
     public static int countDir;
     private static int timeTotal;
-    public static double supportRate = 0.52;
+    public static double supportRate = 0.01;
     public static String support;
     public static int k = 1;
     public static String user = "/user/hdp/";
@@ -52,8 +53,8 @@ public class Main {
     public static long totalTransactionCount;
     public static double earlierTime;
     public static ArrayList<String> seqFilesNames;
-    public static int NUM_REDUCES = 1;
-    public static String NUM_BLOCK = "0";
+    public static String NUM_BLOCK = "2b";
+    public static int NUM_REDUCES = 2;
     
     /*
     Valor do suporte para 1.000.000
@@ -93,6 +94,7 @@ public class Main {
         
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(IntWritable.class);
+        job.setInputFormatClass(WholeInputFormat.class);
         
         job.getConfiguration().set("count", String.valueOf(Main.countDir));
         job.getConfiguration().set("support", String.valueOf(support));
@@ -151,6 +153,7 @@ public class Main {
         
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(IntWritable.class);
+        job.setInputFormatClass(WholeInputFormat.class);
         
         k++;
         job.getConfiguration().set("count", String.valueOf(Main.countDir));
@@ -219,6 +222,7 @@ public class Main {
         
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(Text.class);
+        job.setInputFormatClass(WholeInputFormat.class);
         
         job.getConfiguration().set("count", String.valueOf(Main.countDir));
         job.getConfiguration().set("support", String.valueOf(support));

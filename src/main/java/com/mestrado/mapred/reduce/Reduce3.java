@@ -60,7 +60,6 @@ public class Reduce3 extends Reducer<Text, Text, Text, Text> {
     	for (;it.hasNext();it.next()) {
             count ++;
         }
-
     	if(count >= support){
 	        try {
 	        	/*Divide as saídas pelo k.*/
