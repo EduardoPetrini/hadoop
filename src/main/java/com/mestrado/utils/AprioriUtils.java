@@ -25,7 +25,7 @@ public class AprioriUtils {
 		if(itemset2k.size() == 0){
 			return -1;
 		}
-		return (fim - ini)/1000;
+		return (fim - ini);
 	}
 	
 	private static ArrayList<String> get2itemset(ArrayList<String> itemset){

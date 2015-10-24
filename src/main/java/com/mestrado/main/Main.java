@@ -43,13 +43,13 @@ public class Main {
 
     public static int countDir;
     private static int timeTotal;
-    public static double supportRate = 0.01;
+    public static double supportRate = 0.001;
     public static String support;
     public static int k = 1;
     public static String user = "/user/hdp/";
     public static String inputEntry = "input/";
     public static String inputFileName = "";
-    public static String clusterUrl = "hdfs://master/";
+    public static String clusterUrl = "hdfs://master-home/";
     public static String outputCandidates = user+"outputCandidates/C";
     public static String inputCandidates = user+"inputCandidates/C";
     public static String inputCandidatesDir = user+"inputCandidates";
@@ -58,6 +58,9 @@ public class Main {
     public static ArrayList<String> candFilesNames;
     public static int NUM_REDUCES = 3;
     public static String NUM_BLOCK = "2b";
+    private static ArrayList<String> timeByStep;
+    private static ArrayList<String> itemsetsByStep;
+    private double timeTotalByStep;
     /*
     Valor do suporte para 1.000.000
     7500
@@ -71,6 +74,9 @@ public class Main {
     public Main() {
         countDir = 0;
         timeTotal = 0;
+        timeByStep = new ArrayList<String>();
+        itemsetsByStep = new ArrayList<String>();
+        timeTotalByStep = 0;
     }
  
     /**
@@ -119,12 +125,12 @@ public class Main {
             long fim = job.getFinishTime();
             long t = fim - ini;
             System.out.println("Tempo AprioriCpa Fase 1: "+((double)t/1000));
-            
+            timeByStep.add(String.valueOf(t)+":"+Main.countDir);
             timeTotal += t;
             if(st == 1){
                 System.exit(st);
             }
-            
+            itemsetsByStep.add(MrUtils.countItemsetInOutput(user+"output"+Main.countDir));
         } catch (InterruptedException | ClassNotFoundException | IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -187,11 +193,13 @@ public class Main {
             long t = fim - ini;
             System.out.println("Tempo AprioriCpa Fase de contagem (k = "+k+"): "+((double)t/1000));
             timeTotal += t;
-            
+            timeByStep.add(String.valueOf(t)+":"+Main.countDir+":C");
+            timeTotalByStep += ((double)t/1000);
+            timeByStep.add(String.valueOf(timeTotalByStep)+":"+Main.countDir);
             if(st == 1){
                 System.exit(st);
             }
-            
+            itemsetsByStep.add(MrUtils.countItemsetInOutput(user+"output"+Main.countDir)+":C");
         } catch (InterruptedException | ClassNotFoundException | IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -249,11 +257,13 @@ public class Main {
             long t = fim - ini;
             System.out.println("Tempo AprioriCpa Fase de geração (k = "+k+"): "+ ((double)t/1000));
             timeTotal += t;
-            
+            timeByStep.add(String.valueOf(t)+":"+Main.countDir+":G");
+            timeTotalByStep = ((double)t/1000);
+            timeByStep.add(String.valueOf(timeTotalByStep)+":"+Main.countDir);
             if(st == 1){
                 System.exit(st);
             }
-            
+            itemsetsByStep.add(MrUtils.countItemsetInOutput("C"+Main.countDir)+":G");
         } catch (InterruptedException | ClassNotFoundException | IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -266,11 +276,49 @@ public class Main {
     	sb.append("#\n");
     	sb.append("DATA=").append(format.format(new Date())).append("\n");
     	sb.append("TEMPO=").append(seg).append("\n");
-    	sb.append("ITEMSETS=");
+    	sb.append(createStringByArray());
+    	sb.append("-----ITEMSETS-----\n");
     	sb.append(CountItemsets.countItemsets()).append("\n");
         MrUtils.saveTimeLog(sb.toString());
     }
     
+    private static String createStringByArray(){
+    	
+    	StringBuilder sb = new StringBuilder();
+    	String[] t;
+    	sb.append("-----TIME BY STEP-----\n");
+    	for(String s: timeByStep){
+    		t = s.split(":");
+    		sb.append("Fase ").append(t[1]);
+    		if(t.length == 2){
+    			sb.append(": ").append(t[0]).append("\n");
+    		}else{
+    			if(t[2].equals("C")){
+    				sb.append(" CONTAGEM");
+    			}else{
+    				sb.append(" GERAÇÂO");
+    			}
+    			sb.append(": ").append(t[0]).append("\n");
+    		}
+    	}
+    	sb.append("\n-----ITEMSETS BY STEP-----\n");
+    	for(String s: itemsetsByStep){
+    		t = s.split(":");
+    		sb.append("Fase ").append(t[1]);
+    		if(t.length == 2){
+    			sb.append(": ").append(t[0]).append("\n");
+    		}else{
+    			if(t[2].equals("C")){
+    				sb.append(" CONTAGEM");
+    			}else{
+    				sb.append(" GERAÇÂO");
+    			}
+    			sb.append(": ").append(t[0]).append("\n");
+    		}
+    	}
+    	
+    	return sb.toString();
+    }
     public static boolean checkOutputSequence(){
     	if(!MrUtils.checkOutputMR()){
         	System.out.println("Arquivo gerado na fase "+countDir+" é vazio!!!\n");
@@ -328,11 +376,14 @@ public class Main {
         	endTime();
         	System.exit(0);
         }
-        System.out.println("Tempo da fase geração de k = 2: "+time2k);
+        System.out.println("Tempo da fase geração de k = 2: "+((double)time2k/1000));
+        timeByStep.add(String.valueOf(time2k)+":2:G");
+        m.timeTotalByStep = ((double)time2k/1000);
         timeTotal += time2k;
         
         Main.k++; //Main.k == 2;
         Main.countDir++;//2
+        itemsetsByStep.add(MrUtils.countItemsetInOutput("C"+Main.countDir)+":G");
         do{
 	        m.jobCount();//Contar a corrência de Ck na base. Le Ck e salva Lk
 	        if(!checkCountOutput()){

@@ -23,7 +23,7 @@ public class CountItemsets {
 		
 		Configuration c = new Configuration();
 		try {
-            c.set("fs.defaultFS", "hdfs://master/");
+            c.set("fs.defaultFS", Main.clusterUrl);
 			FileSystem fs = FileSystem.get(c);
 			BufferedReader br = new BufferedReader(new InputStreamReader(
 					fs.open(path)));
@@ -45,7 +45,7 @@ public class CountItemsets {
 	public static void countBySequence(String outputPath){
 		Path path = new Path(outputPath);
 		Configuration c = new Configuration();
-		c.set("fs.defaultFS", "hdfs://master/");
+		c.set("fs.defaultFS", Main.clusterUrl);
 		try {
 			SequenceFile.Reader reader = new SequenceFile.Reader(c, SequenceFile.Reader.file(path));
 			Text key = (Text) ReflectionUtils.newInstance(reader.getKeyClass(), c);
@@ -81,11 +81,11 @@ public class CountItemsets {
 		for(int i = 0; i < itemsetsCounts.length; i++){
 			if(itemsetsCounts[i] != null){
 				total+=itemsetsCounts[i];
-				sb.append((i + 1)).append("-itemsets=").append(itemsetsCounts[i]).append(";");
+				sb.append((i + 1)).append("-itemsets: ").append(itemsetsCounts[i]).append("\n");
 				System.out.println("Itemsets de tamanho "+(i+1)+": "+itemsetsCounts[i]);
 			}
 		}
-		sb.append("total=").append(total);
+		sb.append("total: ").append(total);
 		System.out.println("Total: " + total);
 		return sb.toString();
 	}
