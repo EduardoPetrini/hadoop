@@ -55,20 +55,14 @@ public class Main {
     public static ArrayList<String> seqFilesNames;
     public static String NUM_BLOCK = "2b";
     public static int NUM_REDUCES = 2;
-    
-    /*
-    Valor do suporte para 1.000.000
-    7500
-    10.000
-    12.500
-    15.000
-    17.500
-    20.000
-    */
+    private static ArrayList<String> timeByStep;
+    private static ArrayList<String> itemsetsByStep;
     
     public Main() {
         countDir = 0;
         timeTotal = 0;
+        timeByStep = new ArrayList<String>();
+        itemsetsByStep = new ArrayList<String>();
     }
  
     /**
@@ -117,13 +111,14 @@ public class Main {
             long ini = job.getStartTime();
             long fim = job.getFinishTime();
             long t = fim - ini;
-            System.out.println("Tempo AprioriDpc Fase 1: "+((double)t/1000));
-            
+            String itemsetStep = MrUtils.countItemsetInOutput(user+"output"+Main.countDir);
+            System.out.println("Tempo AprioriDpc Fase 1: "+((double)t/1000)+" Itemsets: "+itemsetStep);
+            timeByStep.add(String.valueOf(t)+":"+Main.countDir);
             timeTotal += t;
             if(st == 1){
                 System.exit(st);
             }
-            
+            itemsetsByStep.add(itemsetStep + ":" + Main.countDir);
         } catch (InterruptedException | ClassNotFoundException | IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -186,13 +181,15 @@ public class Main {
             long fim = job.getFinishTime();
             long t = fim - ini;
             earlierTime = ((double)t/1000);
-            System.out.println("Tempo AprioriDpc Fase 2: "+earlierTime);
+            timeByStep.add(String.valueOf(t)+":"+Main.countDir);
+            String itemsetStep = MrUtils.countItemsetInOutput(user+"output"+Main.countDir);
+            System.out.println("Tempo AprioriDpc Fase 2: "+earlierTime+" Itemsets: "+itemsetStep);
             
             timeTotal += t;
             if(st == 1){
                 System.exit(st);
             }
-            
+            itemsetsByStep.add(itemsetStep+ ":" + Main.countDir);
         } catch (InterruptedException | ClassNotFoundException | IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -257,13 +254,17 @@ public class Main {
             
             long t = fim - ini;
             earlierTime = ((double)t/1000);
-            System.out.println("Tempo AprioriDpc Fase 3: "+earlierTime);
+            timeByStep.add(String.valueOf(t)+":"+Main.countDir);
             
             timeTotal += t;
             if(st == 1){
                 System.exit(st);
             }
-            
+            long item1 = Long.valueOf(MrUtils.countItemsetInOutput(user+"output"+Main.countDir));
+            long item2 = Long.valueOf(MrUtils.countItemsetInOutput("outputMR"+(Main.countDir)));
+            		
+    		itemsetsByStep.add(String.valueOf(item1+item2)+":"+Main.countDir);
+    		System.out.println("Tempo AprioriDpc Fase 3: "+earlierTime+" Itemsets: "+(item1+item2));
         } catch (InterruptedException | ClassNotFoundException | IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }

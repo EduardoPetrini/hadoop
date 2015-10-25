@@ -87,11 +87,11 @@ public class CountItemsets {
 		for(int i = 0; i < itemsetsCounts.length; i++){
 			if(itemsetsCounts[i] != null){
 				total+=itemsetsCounts[i];
-				sb.append((i + 1)).append("-itemsets=").append(itemsetsCounts[i]).append(";");
+				sb.append((i + 1)).append("-itemsets: ").append(itemsetsCounts[i]).append("\n");
 				System.out.println("Itemsets de tamanho "+(i+1)+": "+itemsetsCounts[i]);
 			}
 		}
-		sb.append("total=").append(total);
+		sb.append("total: ").append(total);
 		System.out.println("Total: " + total);
 		return sb.toString();
 	}

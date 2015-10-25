@@ -504,6 +504,90 @@ public class MrUtils {
 	
 	/**
 	 * 
+	 * @param dirName
+	 * @return
+	 */
+	public static ArrayList<String> readAllFromHDFSDir(String dirName) {
+		Path inputPath = new Path(dirName);
+		Configuration c = new Configuration();
+		c.set("fs.defaultFS", Main.clusterUrl);
+		ArrayList<String> data = new ArrayList<String>();
+
+		try {
+
+			FileSystem fs = inputPath.getFileSystem(c);
+			FileStatus[] files = fs.listStatus(inputPath);
+			BufferedReader br;
+			String line;
+			for (FileStatus fst : files) {
+				if (fst.getPath().getName().startsWith("part")) {
+					System.out.println("Carregando itemsets de " + dirName + " " + fst.getPath().getName());
+					br = new BufferedReader(new InputStreamReader(fs.open(fst.getPath())));
+					while ((line = br.readLine()) != null) {
+						data.add(line.split("\\t")[0].trim());
+					}
+					br.close();
+				}
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		return data;
+	}
+	
+	/**
+	 * 
+	 * @param fileName
+	 * @return
+	 */
+	public static ArrayList<String> readSequenfileInHDFS(String fileName) {
+		ArrayList<String> itemsets = new ArrayList<String>();
+		Path p = new Path(fileName);
+		Configuration c = new Configuration();
+		c.set("fs.defaultFS", Main.clusterUrl);
+
+		try {
+			SequenceFile.Reader reader = new SequenceFile.Reader(c, SequenceFile.Reader.file(p));
+			Text key = (Text) ReflectionUtils.newInstance(reader.getKeyClass(), c);
+			IntWritable value = (IntWritable) ReflectionUtils.newInstance(reader.getValueClass(), c);
+			while (reader.next(key, value)) {
+				itemsets.add(key.toString());
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return itemsets;
+	}
+
+	
+	private static ArrayList<String> readAllSequenceFromMatchName(String cCurrent) {
+		Path p = new Path(Main.fileCachedDir);
+		Configuration c = new Configuration();
+		c.set("fs.defaultFS", Main.clusterUrl);
+		ArrayList<String> itemsets = new ArrayList<String>();
+		try {
+			FileSystem fs = FileSystem.get(c);
+			if (fs.isDirectory(p)) {
+				FileStatus[] fss = fs.listStatus(p);
+				for (FileStatus status : fss) {
+					if (status.getPath().getName().contains(cCurrent)) {
+						System.out.println("Lendo itemsets from sequence file \""+Main.fileCachedDir+"/"+status.getPath().getName()+"\"");
+						itemsets.addAll(readSequenfileInHDFS(Main.fileCachedDir+"/"+status.getPath().getName()));
+					}
+
+				}
+			}else{
+				System.out.println("\""+p.getName()+"\" não é um diretório!");
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return itemsets;
+	}
+	
+	/**
+	 * 
 	 * @param data
 	 */
 	public static void saveTimeLog(String data){
@@ -515,5 +599,13 @@ public class MrUtils {
 		sb.append("AprioriDPC").append("-").append(Main.inputFileName).append("-").append(Main.supportRate).append("-").append(Main.NUM_REDUCES).append("-").append(Main.NUM_BLOCK).append(".log");
 		System.out.println("Saving: "+data+"\n into "+sb.toString());
 		saveFileInLocal(data, sb.toString());
+	}
+	
+	public static String countItemsetInOutput(String output) {
+		if (output.contains("outputMR" + Main.countDir)) {
+			return String.valueOf(readAllSequenceFromMatchName(output).size());
+		} else {
+			return String.valueOf(readAllFromHDFSDir(output).size());
+		}
 	}
 }
