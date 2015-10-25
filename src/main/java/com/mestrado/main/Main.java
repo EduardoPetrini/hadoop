@@ -61,15 +61,6 @@ public class Main {
     private static ArrayList<String> timeByStep;
     private static ArrayList<String> itemsetsByStep;
     private double timeTotalByStep;
-    /*
-    Valor do suporte para 1.000.000
-    7500
-    10.000
-    12.500
-    15.000
-    17.500
-    20.000
-    */
     
     public Main() {
         countDir = 0;
