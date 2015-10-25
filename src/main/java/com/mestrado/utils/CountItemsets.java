@@ -21,8 +21,7 @@ public class CountItemsets {
 		try {
 			c.set("fs.defaultFS", "hdfs://master/");
 			FileSystem fs = FileSystem.get(c);
-			BufferedReader br = new BufferedReader(new InputStreamReader(
-					fs.open(path)));
+			BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(path)));
 			String line;
 			String[] lineSpt;
 			while ((line = br.readLine()) != null) {
@@ -40,14 +39,14 @@ public class CountItemsets {
 
 	public static String countItemsets() {
 		itemsetsCounts = new Integer[20];
-		ArrayList<String> outputFiles = MrUtils.getAllOuputFilesNames(Main.user+"output1");
-		for(String outFile : outputFiles){
-			System.out.println("Contando itemsets em "+outFile);
+		ArrayList<String> outputFiles = MrUtils.getAllOuputFilesNames(Main.user + "output1");
+		for (String outFile : outputFiles) {
+			System.out.println("Contando itemsets em " + outFile);
 			CountItemsets.countByOutputDir(outFile);
 		}
-		outputFiles = MrUtils.getAllOuputFilesNames(Main.user+"output2");
-		for(String outFile : outputFiles){
-			System.out.println("Contando itemsets em "+outFile);
+		outputFiles = MrUtils.getAllOuputFilesNames(Main.user + "output2");
+		for (String outFile : outputFiles) {
+			System.out.println("Contando itemsets em " + outFile);
 			CountItemsets.countByOutputDir(outFile);
 		}
 		int total = 0;
@@ -55,12 +54,11 @@ public class CountItemsets {
 		for (int i = 0; i < itemsetsCounts.length; i++) {
 			if (itemsetsCounts[i] != null) {
 				total += itemsetsCounts[i];
-				sb.append((i + 1)).append("-itemsets=").append(itemsetsCounts[i]).append(";");
-				System.out.println("Itemsets de tamanho " + (i + 1) + ": "
-						+ itemsetsCounts[i]);
+				sb.append((i + 1)).append("-itemsets: ").append(itemsetsCounts[i]).append("\n");
+				System.out.println("Itemsets de tamanho "+(i+1)+": "+itemsetsCounts[i]);
 			}
 		}
-		sb.append("total=").append(total);
+		sb.append("total: ").append(total);
 		System.out.println("Total: " + total);
 		return sb.toString();
 	}
