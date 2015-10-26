@@ -9,6 +9,7 @@ package main.java.com.mestrado.main;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -61,6 +62,7 @@ public class Main {
     private static ArrayList<String> timeByStep;
     private static ArrayList<String> itemsetsByStep;
     private double timeTotalByStep;
+    private static DecimalFormat format = new DecimalFormat("#.000");
     
     public Main() {
         countDir = 0;
@@ -116,7 +118,7 @@ public class Main {
             long fim = job.getFinishTime();
             long t = fim - ini;
             System.out.println("Tempo AprioriCpa Fase 1: "+((double)t/1000));
-            timeByStep.add(String.valueOf(t)+":"+Main.countDir);
+            timeByStep.add(String.valueOf(format.format(((double)t/1000)))+":"+Main.countDir);
             timeTotal += t;
             if(st == 1){
                 System.exit(st);
@@ -184,9 +186,9 @@ public class Main {
             long t = fim - ini;
             System.out.println("Tempo AprioriCpa Fase de contagem (k = "+k+"): "+((double)t/1000));
             timeTotal += t;
-            timeByStep.add(String.valueOf(t)+":"+Main.countDir+":C");
+            timeByStep.add(String.valueOf(format.format(((double)t/1000)))+":"+Main.countDir+":C");
             timeTotalByStep += ((double)t/1000);
-            timeByStep.add(String.valueOf(timeTotalByStep)+":"+Main.countDir);
+            timeByStep.add(String.valueOf(format.format(timeTotalByStep))+":"+Main.countDir);
             if(st == 1){
                 System.exit(st);
             }
@@ -248,9 +250,9 @@ public class Main {
             long t = fim - ini;
             System.out.println("Tempo AprioriCpa Fase de geração (k = "+k+"): "+ ((double)t/1000));
             timeTotal += t;
-            timeByStep.add(String.valueOf(t)+":"+Main.countDir+":G");
+            timeByStep.add(String.valueOf(format.format(((double)t/1000)))+":"+Main.countDir+":G");
             timeTotalByStep = ((double)t/1000);
-            timeByStep.add(String.valueOf(timeTotalByStep)+":"+Main.countDir);
+            timeByStep.add(String.valueOf(format.format(timeTotalByStep))+":"+Main.countDir);
             if(st == 1){
                 System.exit(st);
             }
@@ -368,7 +370,7 @@ public class Main {
         	System.exit(0);
         }
         System.out.println("Tempo da fase geração de k = 2: "+((double)time2k/1000));
-        timeByStep.add(String.valueOf(time2k)+":2:G");
+        timeByStep.add(String.valueOf(format.format(((double)time2k/1000)))+":2:G");
         m.timeTotalByStep = ((double)time2k/1000);
         timeTotal += time2k;
         
