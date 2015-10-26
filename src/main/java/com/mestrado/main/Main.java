@@ -49,7 +49,7 @@ public class Main {
     public static String user = "/user/hdp/";
     public static String inputEntry = "input/";
     public static String inputFileName = "";
-    public static String clusterUrl = "hdfs://master-home/";
+    public static String clusterUrl = "hdfs://master/";
     public static String outputCandidates = user+"outputCandidates/C";
     public static String inputCandidates = user+"inputCandidates/C";
     public static String inputCandidatesDir = user+"inputCandidates";
