@@ -9,6 +9,7 @@ package main.java.com.mestrado.main;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -57,6 +58,7 @@ public class Main {
     public static int NUM_REDUCES = 2;
     private static ArrayList<String> timeByStep;
     private static ArrayList<String> itemsetsByStep;
+    private static DecimalFormat format = new DecimalFormat("#.000");
     
     public Main() {
         countDir = 0;
@@ -113,7 +115,7 @@ public class Main {
             long t = fim - ini;
             String itemsetStep = MrUtils.countItemsetInOutput(user+"output"+Main.countDir);
             System.out.println("Tempo AprioriDpc Fase 1: "+((double)t/1000)+" Itemsets: "+itemsetStep);
-            timeByStep.add(String.valueOf(t)+":"+Main.countDir);
+            timeByStep.add(String.valueOf(format.format(((double)t/1000)))+":"+Main.countDir);
             timeTotal += t;
             if(st == 1){
                 System.exit(st);
@@ -181,7 +183,7 @@ public class Main {
             long fim = job.getFinishTime();
             long t = fim - ini;
             earlierTime = ((double)t/1000);
-            timeByStep.add(String.valueOf(t)+":"+Main.countDir);
+            timeByStep.add(String.valueOf(format.format(((double)t/1000)))+":"+Main.countDir);
             String itemsetStep = MrUtils.countItemsetInOutput(user+"output"+Main.countDir);
             System.out.println("Tempo AprioriDpc Fase 2: "+earlierTime+" Itemsets: "+itemsetStep);
             
@@ -254,7 +256,7 @@ public class Main {
             
             long t = fim - ini;
             earlierTime = ((double)t/1000);
-            timeByStep.add(String.valueOf(t)+":"+Main.countDir);
+            timeByStep.add(String.valueOf(format.format(((double)t/1000)))+":"+Main.countDir);
             
             timeTotal += t;
             if(st == 1){
