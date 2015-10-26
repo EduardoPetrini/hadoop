@@ -278,11 +278,32 @@ public class Main {
     	sb.append("#\n");
     	sb.append("DATA=").append(format.format(new Date())).append("\n");
     	sb.append("TEMPO=").append(seg).append("\n");
+    	sb.append(createStringByArray());
     	sb.append("ITEMSETS=");
     	sb.append(CountItemsets.countItemsets()).append("\n");
         MrUtils.saveTimeLog(sb.toString());
     }
     
+private static String createStringByArray(){
+    	
+    	StringBuilder sb = new StringBuilder();
+    	String[] t;
+    	sb.append("-----TIME BY STEP-----\n");
+    	for(String s: timeByStep){
+    		t = s.split(":");
+    		sb.append("Fase ").append(t[1]);
+			sb.append(": ").append(t[0]).append("\n");
+    	}
+    	sb.append("\n-----ITEMSETS BY STEP-----\n");
+    	for(String s: itemsetsByStep){
+    		t = s.split(":");
+    		sb.append("Fase ").append(t[1]);
+			sb.append(": ").append(t[0]).append("\n");
+    	}
+    	
+    	return sb.toString();
+    }
+
     public static void main(String[] args) throws IOException {
         Main m = new Main();
         MrUtils.delOutDirs(user);
