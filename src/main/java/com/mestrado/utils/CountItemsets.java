@@ -23,13 +23,16 @@ public class CountItemsets {
 		
 		Configuration c = new Configuration();
 		try {
-            c.set("fs.defaultFS", "hdfs://master/");
+            c.set("fs.defaultFS", MainSpark.clusterUrl);
 			FileSystem fs = FileSystem.get(c);
 			BufferedReader br = new BufferedReader(new InputStreamReader(
 					fs.open(path)));
 			String line;
 			String[] lineSpt;
 			while ((line = br.readLine()) != null) {
+				line = line.replace("(", "");
+				line = line.replace(")", "");
+				line = line.replace(",", " ");
 				lineSpt = line.split("\\s+");
 				if(itemsetsCounts[lineSpt.length-2] == null){
 					itemsetsCounts[lineSpt.length-2] = new Integer(1);
@@ -45,14 +48,14 @@ public class CountItemsets {
 	public static void countBySequence(String outputPath){
 		Path path = new Path(outputPath);
 		Configuration c = new Configuration();
-		c.set("fs.defaultFS", "hdfs://master/");
+		c.set("fs.defaultFS", MainSpark.clusterUrl);
 		try {
 			SequenceFile.Reader reader = new SequenceFile.Reader(c, SequenceFile.Reader.file(path));
 			Text key = (Text) ReflectionUtils.newInstance(reader.getKeyClass(), c);
 			IntWritable value = (IntWritable) ReflectionUtils.newInstance(reader.getValueClass(), c);
 			String[] lineSpt;
 			while (reader.next(key, value)) {
-				lineSpt = key.toString().split("\\s+");
+				lineSpt = key.toString().split(",");
 				if(itemsetsCounts[lineSpt.length-1] == null){
 					itemsetsCounts[lineSpt.length-1] = new Integer(1);
 				}else{
@@ -70,9 +73,9 @@ public class CountItemsets {
 		//obter todos os arquivos de cada diretório
 		ArrayList<String> outputFileNames;
 		for(int i = 1; i <= MainSpark.countDir; i++){
-			outputFileNames = MrUtils.getAllOuputFilesNames(MainSpark.user+"output"+i);
+			outputFileNames = MrUtils.getAllOuputFilesNames(MainSpark.user + "output" + i);
 			for(String outFile : outputFileNames){
-				System.out.println("Contando itemsets em "+outFile);
+				System.out.println("Contando itemsets em " + outFile);
 				CountItemsets.countByOutputDir(outFile);
 			}
 		}
@@ -80,9 +83,9 @@ public class CountItemsets {
 		int total = 0;
 		for(int i = 0; i < itemsetsCounts.length; i++){
 			if(itemsetsCounts[i] != null){
-				total+=itemsetsCounts[i];
+				total += itemsetsCounts[i];
 				sb.append((i + 1)).append("-itemsets: ").append(itemsetsCounts[i]).append("\n\t");
-				System.out.println("Itemsets de tamanho "+(i+1)+": "+itemsetsCounts[i]);
+				System.out.println("Itemsets de tamanho " + (i + 1) + ": " + itemsetsCounts[i]);
 			}
 		}
 		sb.append(total).append("\n");

@@ -346,13 +346,24 @@ public class MrUtils {
     public static void initialConfig(String[] args){
     	
     	for(String s: args){
-    		System.out.println("Args: "+s);
+    		System.out.println("Args: " + s);
     	}
-    	if(args.length != 0){
-    		MainSpark.supportPercentage = Double.parseDouble(args[0]);
-    		if(args.length == 2){
-    			//MainSpark.NUM_REDUCES = Integer.parseInt(args[1]);
-    		}
+    	
+    	if (args.length == 0) {
+    		System.out.println("Modo de usar: ... aprioriCpaSpark.jar {INPUT FILENAME} {SUPPORT % (Optional)} {NUM_PARTS (Optional)}");
+    		System.exit(1);
+    	} else if (args.length == 1) {
+    		MainSpark.inputFileName = args[0];
+    	} else if (args.length == 2) {
+    		MainSpark.inputFileName = args[0];
+    		MainSpark.supportPercentage = Double.parseDouble(args[1]);
+    	} else if (args.length == 3) {
+    		MainSpark.inputFileName = args[0];
+    		MainSpark.supportPercentage = Double.parseDouble(args[1]);
+    		MainSpark.num_parts = Integer.parseInt(args[2]);
+    	} else {
+    		System.out.println("Modo de usar: ... aprioriCpaSpark.jar {INPUT FILENAME} {SUPPORT % (Optional)} {NUM_PARTS (Optional)}");
+    		System.exit(1);
     	}
     	
     	String inputPathUri = MainSpark.user + MainSpark.inputEntry;
@@ -365,8 +376,8 @@ public class MrUtils {
 			FileSystem fs = inputPath.getFileSystem(c);
 			FileStatus[] subFiles = fs.listStatus(inputPath);
 			Path inputFile = subFiles[0].getPath();
-			MainSpark.inputFileName = inputFile.getName();
-			BufferedReader br=new BufferedReader(new InputStreamReader(fs.open(inputFile)));
+			//MainSpark.inputFileName = inputFile.getName();
+			BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(inputFile)));
 			MainSpark.totalTransactionCount = 0;
 			while (br.readLine() != null){
 				MainSpark.totalTransactionCount++;
@@ -510,7 +521,7 @@ public class MrUtils {
     	System.out.println("User dir: " + MainSpark.user);
     	System.out.println("Entry file: " + MainSpark.inputEntry + MainSpark.inputFileName);
     	System.out.println("Cluster url: " + MainSpark.clusterUrl);
-    	//System.out.println("Reduces: " + MainSpark.NUM_REDUCES);
+    	System.out.println("Num parts: " + MainSpark.num_parts);
     	
     	System.out.println("\n******************************************************\n");
     }
@@ -559,10 +570,10 @@ public class MrUtils {
 			FileStatus[] files = fs.listStatus(inputPath);
 			BufferedReader br;
 			String line;
-			for(FileStatus fst : files){
-				if(fst.getPath().getName().startsWith("part")){
+			for (FileStatus fst : files) {
+				if (fst.getPath().getName().startsWith("part")) {
 					System.out.println("Carregando itemsets de " + dirName + " " + fst.getPath().getName());
-					br=new BufferedReader(new InputStreamReader(fs.open(fst.getPath())));
+					br = new BufferedReader(new InputStreamReader(fs.open(fst.getPath())));
 					while ((line = br.readLine()) != null) {
 						line = line.substring(1, line.length() -1);
 						data.add(line.split(",")[0].trim());
@@ -570,7 +581,7 @@ public class MrUtils {
 					br.close();
 				}
 			}
-        } catch(IOException e){
+        } catch (IOException e) {
         	e.printStackTrace();
         }
         
@@ -696,31 +707,23 @@ public class MrUtils {
 
 	public static void copyToInputGen(String outputCount) {
 		Path path = new Path(outputCount);
-		Path input = new Path(MainSpark.user + "inputToGen/");
+		Path input = new Path(MainSpark.inputFileToGen);
 		Configuration c = new Configuration();
         c.set("fs.defaultFS", MainSpark.clusterUrl);
         
         try{
         	FileSystem fs = FileSystem.get(c);
-        	if(!fs.exists(input)){
-        		fs.mkdirs(input);
+        	if(fs.exists(input)){
+        		fs.delete(input, true);
+        	}
+        	if(FileUtil.copyMerge(fs, path, fs, input, false, c, "")){
+        		System.out.println("Arquivos copiados com sucesso!");
         	}else{
-        		delContentFiles(input);
+        		System.out.println("Erro ao copiar os arquivos");
         	}
-        	FileStatus[] files = fs.listStatus(path);
-        	for(FileStatus fst: files){
-        		if(fst.getPath().getName().startsWith("part")){
-	// 		        copy(FileSystem srcFS, FileStatus srcStatus, FileSystem dstFS, Path dst, boolean deleteSource, boolean overwrite, Configuration conf)
-    				FileUtil.copy(fs, fs.getFileStatus(fst.getPath()), fs, input, false, true, c);
-        		}
-        		
-        	}
-//        	fs.rename(new Path(MainSpark.user+"inputToGen/"), new Path(""));
         }catch(IOException e){
         	e.printStackTrace();
         }
-
-		
 	}
 	
 	/**

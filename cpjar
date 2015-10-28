@@ -1,20 +1,15 @@
 #!/bin/bash
 
-if [ $# == 0 ]; then
-        echo "Uso: ./cpjar <jarname.jar>";
-        exit;
-fi;
-
 echo "Building hadoop app..."
-mvn clean package assembly:single 
+mvn clean package assembly:single
 
 echo "Cleaning directory in master..."
-ssh master "rm -rf /home/eduardo/jar/*"
+ssh hdp@master "rm /home/hdp/programs/spark-1.4.1/aprioriCpaSpark.jar"
 
 echo "Copying jar files to master..."
-scp -r target/hadoop* master:/home/eduardo/jar/
+scp target/hadoop-0.0.1-jar-with-dependencies.jar hdp@master:/home/hdp/programs/spark-1.4.1/
 
-echo "Add "$1" to app-jar..."
-ssh master "mv /home/eduardo/jar/hadoop-0.0.1-jar-with-dependencies.jar /home/eduardo/app-jar/$1"
+echo "Renaming jar file on master"
+ssh hdp@master "mv /home/hdp/programs/spark-1.4.1/hadoop-0.0.1-jar-with-dependencies.jar /home/hdp/programs/spark-1.4.1/aprioriCpaSpark.jar"
 
 echo "done";
