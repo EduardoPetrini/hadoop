@@ -47,8 +47,9 @@ public class Main {
     public static int totalBlockCount;
     public static String user = "/user/hdp/";
     public static String inputEntry = "input/";
+    public static String outputDir = user+"output-spark";
     public static String inputFileName = "";
-    public static String clusterUrl = "hdfs://master/";
+    public static String clusterUrl = "hdfs://master-home/";
     public static long totalTransactionCount;
     public ArrayList<String> blocksIds;
     public String outputPartialName = user+"partitions-fase-1/partition";

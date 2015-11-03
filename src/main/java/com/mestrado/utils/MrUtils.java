@@ -88,25 +88,20 @@ public class MrUtils {
         
         System.out.println("Excluindo diretórios anteriores...");
         Configuration c = new Configuration();
-          c.set("fs.defaultFS", Main.clusterUrl);
+        c.set("fs.defaultFS", Main.clusterUrl);
         Path p = new Path(d);
         Path aux;
         
         try {
             FileSystem fs = FileSystem.get(c);
-            
+ 
             if(fs.isDirectory(p)){
-                
                 FileStatus[] ff = fs.listStatus(p);
-                
                 for(FileStatus f: ff){
                     aux = f.getPath();
-                    
                     if(aux.getName().contains("output")){
-                        
                         if(fs.delete(aux, true)){
                         	System.out.println("Excluido diretório -> "+aux.getName());
-                            
                         }else{
                         	System.out.println("Nao foi possivel excluir "+aux.getName());
                         }
