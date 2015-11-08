@@ -19,16 +19,13 @@ public class SparkUtils {
     	if(args.length != 0){
     		MainSpark.supportRate = Double.parseDouble(args[0]);
     		if(args.length == 2){
-    			MainSpark.NUM_REDUCES = Integer.parseInt(args[1]);
-    		}else if(args.length == 3){
-    			MainSpark.NUM_REDUCES = Integer.parseInt(args[1]);
-    			MainSpark.NUM_BLOCK= args[2];
+    			MainSpark.NUM_BLOCK = Integer.parseInt(args[1]);
     		}
     	}
     	
     	SparkConf conf = new SparkConf().setAppName("Initial Config").setMaster(MainSpark.sparkUrl);
     	JavaSparkContext sc = new JavaSparkContext(conf);
-    	JavaRDD<String> inputFile = sc.textFile(MainSpark.user+MainSpark.inputEntry,4);
+    	JavaRDD<String> inputFile = sc.textFile(MainSpark.user+MainSpark.inputEntry, MainSpark.NUM_BLOCK);
     	MainSpark.totalTransactionCount = inputFile.count();
     	MainSpark.totalBlockCount = inputFile.partitions().size();
     	MainSpark.blocksIds = new ArrayList<String>();
@@ -56,8 +53,13 @@ public class SparkUtils {
     	for(String b: MainSpark.blocksIds){
     		System.out.println("Blocks id: "+b);
     	}
-    	System.out.println("Reduces: "+MainSpark.NUM_REDUCES);
         System.out.println("Blocks: "+MainSpark.NUM_BLOCK);
     	System.out.println("\n******************************************************\n");
+    }
+
+    public static void infoNoItemset(){
+        System.out.println("\n*******************\t*******************\t*******************\n");
+        System.out.println("\tNenhum itemset gerado para os parametros de configuração.");
+        System.out.println("\n*******************\t*******************\t*******************\n");
     }
 }

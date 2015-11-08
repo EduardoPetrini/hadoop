@@ -1,7 +1,6 @@
 
 package main.java.com.mestrado.mapred.map;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -9,27 +8,26 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.Mapper.Context;
 import org.apache.spark.api.java.function.Function2;
 import org.apache.spark.broadcast.Broadcast;
 
 import main.java.com.mestrado.app.HashNode;
 import main.java.com.mestrado.app.HashPrefixTree;
+import scala.Tuple2;
 
 /**
  *
  * @author eduardo
  */
-public class Map1Spark implements Function2<Integer, Iterator<String>, Iterator<String>> {
+public class Map1Spark implements Function2<Integer, Iterator<String>, Iterator<Tuple2<String, String>>> {
 
 	private static final long serialVersionUID = 1L;
 	private double support;
 	private ArrayList<String> frequents;
 	private HashMap<String, Integer> itemSupHash;
 	private ArrayList<String> newFrequents;
-	private List<String> chaveValues;
-
+	private List<Tuple2<String, String>> chaveValues;
+	private List<String[]> transactions;
 	private HashPrefixTree hpt;
 	private String splitName;
 	private long blockSize;
@@ -39,28 +37,29 @@ public class Map1Spark implements Function2<Integer, Iterator<String>, Iterator<
 	}
 
 	@Override
-	public Iterator<String> call(Integer blockIndex, Iterator<String> blockContent) throws Exception {
+	public Iterator<Tuple2<String, String>> call(Integer blockIndex, Iterator<String> blockContent) throws Exception {
 		System.out.println("\n*****************/////// KEY: " + blockIndex);
 		frequents = new ArrayList<String>();
 		newFrequents = new ArrayList<String>();
 		itemSupHash = new HashMap<String, Integer>();
 		hpt = new HashPrefixTree();
-		chaveValues = new ArrayList<String>();
+		chaveValues = new ArrayList<Tuple2<String, String>>();
+		transactions = new ArrayList<String[]>();
 		System.out.println("Support rate: " + support);
 
 		int k = 1;
 		String[] itemset;
-		String[] tr;
+		// String[] tr;
 		int itemsetIndex;
-
+		System.out.println("Iniciando o loop dentro do call de "+blockIndex);
 		do {
 			System.out.println("Gerando itens de tamanho " + k);
-			generateCandidates(blockIndex, k, blockContent);
-
-			if (k > 1) {
+			if (k == 1) {
+				generateCandidates1(blockIndex, blockContent);
+			} else {
+				generateCandidates(k);
 				System.out.println("Iniciando a verificação dos candidatos C" + k);
-				while (blockContent.hasNext()) {
-					tr = blockContent.next().split(" ");
+				for (String[] tr : transactions) {
 					for (int i = 0; i < tr.length; i++) {
 						itemset = new String[k];
 						itemsetIndex = 0;
@@ -80,33 +79,32 @@ public class Map1Spark implements Function2<Integer, Iterator<String>, Iterator<
 
 		return chaveValues.iterator();
 	}
-	
+
 	/**
-     * 
-     * @param transaction
-     * @param pt
-     * @param i
-     * @param k
-     * @param itemset
-     * @param itemsetIndex
-     */
-    private void subSet(String[] transaction, HashNode hNode, int i,
-			int k, String[] itemset, int itemsetIndex) {
-    	if(i >= transaction.length){
+	 * 
+	 * @param transaction
+	 * @param pt
+	 * @param i
+	 * @param k
+	 * @param itemset
+	 * @param itemsetIndex
+	 */
+	private void subSet(String[] transaction, HashNode hNode, int i, int k, String[] itemset, int itemsetIndex) {
+		if (i >= transaction.length) {
 			return;
 		}
-		
+
 		HashNode son = hNode.getHashNode().get(transaction[i]);
-		
-		if(son == null){
+
+		if (son == null) {
 			return;
-		}else{
+		} else {
 			itemset[itemsetIndex] = transaction[i];
-			
-			if(hNode.getLevel() == k-1){
+
+			if (hNode.getLevel() == k - 1) {
 				StringBuilder sb = new StringBuilder();
-				for(String item: itemset){
-					if(item != null){
+				for (String item : itemset) {
+					if (item != null) {
 						sb.append(item).append(" ");
 					}
 				}
@@ -115,46 +113,38 @@ public class Map1Spark implements Function2<Integer, Iterator<String>, Iterator<
 				itemset[itemsetIndex] = "";
 				return;
 			}
-			
+
 			i++;
 			itemsetIndex++;
-			while(i < transaction.length){
+			while (i < transaction.length) {
 				subSet(transaction, son, i, k, itemset, itemsetIndex);
-				for(int j = itemsetIndex; j < itemset.length; j++){
+				for (int j = itemsetIndex; j < itemset.length; j++) {
 					itemset[j] = "";
 				}
 				i++;
 			}
 		}
 	}
-    
-private void addItemsetToItemSupHash(String itemset){
-    	
-    	Integer value = itemSupHash.get(itemset);
-    	if(value != null){
-    		value++;
-    	}else{
-    		value = new Integer(1);
-    	}
-    	itemSupHash.put(itemset, value);
-    }
 
-	public void generateCandidates(Integer blockIndex, int k, Iterator<String> blockContent) {
+	private void addItemsetToItemSupHash(String itemset) {
+
+		Integer value = itemSupHash.get(itemset);
+		if (value != null) {
+			value++;
+		} else {
+			value = new Integer(1);
+		}
+		itemSupHash.put(itemset, value);
+	}
+
+	public void generateCandidates(int k) {
 		System.out.println("Valor de K: " + k);
 
 		StringBuilder tmpItem;
 
-		if (k == 1) {
-			HashMap<String, Integer> itemSupHash = new HashMap<String, Integer>();
-			generateCandidates1(blockIndex, blockContent, itemSupHash);
-
-			// System.out.println("Gerados "+frequents.size()+" candidatos de
-			// tamanho "+n);
-			// removeUnFrequentItemsAndSendToReduce(itemSupHash);
-			Collections.sort(frequents, NUMERICAL_ORDER);
-
-		} else if (k == 2) {
+		if (k == 2) {
 			String item;
+			System.out.println("Itemsets de tamanho " + k);
 			for (int i = 0; i < frequents.size(); i++) {
 				tmpItem = new StringBuilder();
 				tmpItem.append(frequents.get(i).trim()).append(" ");
@@ -163,6 +153,7 @@ private void addItemsetToItemSupHash(String itemset){
 					newFrequents.add(item);
 					itemSupHash.put(item, 1);
 					hpt.add(hpt.getHashNode(), item.split(" "), 0);
+					System.out.println(item);
 				}
 			}
 			System.out.println("Gerados " + newFrequents.size() + " candidatos de tamanho " + k);
@@ -173,6 +164,7 @@ private void addItemsetToItemSupHash(String itemset){
 			String sufix;
 			String newItemSet;
 			int count = 0;
+			System.out.println("Itemsets de tamanho " + k);
 			// ItemSup item;
 			for (int i = 0; i < frequents.size(); i++) {
 				// // System.out.println("Progress: "+context.getProgress());
@@ -197,6 +189,7 @@ private void addItemsetToItemSupHash(String itemset){
 							// item = new ItemSup(newItemSet,0);
 							newFrequents.add(newItemSet);
 							itemSupHash.put(newItemSet, 1);
+							System.out.println(newItemSet);
 							try {
 								hpt.add(hpt.getHashNode(), newItemSet.split(" "), 0);
 							} catch (Exception e) {
@@ -214,46 +207,56 @@ private void addItemsetToItemSupHash(String itemset){
 		}
 	}
 
-	private void generateCandidates1(Integer blockIndex, Iterator<String> blockContent, HashMap<String, Integer> itemSupHash) {
+	private void generateCandidates1(Integer blockIndex, Iterator<String> blockContent) {
+
+		HashMap<String, Integer> itemSupHash = new HashMap<String, Integer>();
 		String[] tmpItemsets;
 		blockSize = 0;
-		boolean endBlock = false;
+		String forPrint;
+		System.out.println("Imprimindo o bloco...");
 		while (blockContent.hasNext()) {
 			blockSize++;
-			tmpItemsets = blockContent.next().split(" ");
+			forPrint = blockContent.next();
+			tmpItemsets = forPrint.split(" ");
+			System.out.println(forPrint);
+			transactions.add(tmpItemsets);
 			for (int j = 0; j < tmpItemsets.length; j++) {
 				if (addItemsetToItemSupHash(tmpItemsets[j], itemSupHash)) {
+					System.out.println(tmpItemsets[j]);
 					frequents.add(tmpItemsets[j]);
 				}
 			}
 		}
 
 		setSplitName(blockIndex);
+		removeUnFrequentItemsAndSendToReduce(itemSupHash);
+		Collections.sort(frequents, NUMERICAL_ORDER);
 	}
 
 	/**
 	 * Verifica se todo subconjunto do itemset é frequente
+	 * 
 	 * @param itemset
 	 * @return
 	 */
 	private boolean allSubsetIsFrequent(String[] itemset) {
 		int indexToSkip = 0;
 		StringBuilder subItem;
-		for(int j = 0; j < itemset.length-1; j++){
+		for (int j = 0; j < itemset.length - 1; j++) {
 			subItem = new StringBuilder();
-			for(int i = 0; i < itemset.length; i++){
-				if(i != indexToSkip){
+			for (int i = 0; i < itemset.length; i++) {
+				if (i != indexToSkip) {
 					subItem.append(itemset[i]).append(" ");
 				}
 			}
-			//subItem gerado, verificar se é do conjunto frequente
-			
-			if(!frequents.contains(subItem.toString().trim())){
+			// subItem gerado, verificar se é do conjunto frequente
+
+			if (!frequents.contains(subItem.toString().trim())) {
 				return false;
 			}
 			indexToSkip++;
 		}
-		
+
 		return true;
 	}
 
@@ -261,6 +264,7 @@ private void addItemsetToItemSupHash(String itemset){
 		Integer value = itemSupHash.get(itemset);
 		if (value == null) {
 			itemSupHash.put(itemset, 1);
+
 			return true;
 		} else {
 			itemSupHash.put(itemset, value + 1);
@@ -293,24 +297,16 @@ private void addItemsetToItemSupHash(String itemset){
 	 * @param context
 	 * @param tempCandidates
 	 */
-	public void removeUnFrequentItemsAndSendToReduce(Context context, HashMap<String, Integer> itemSupHash) {
+	public void removeUnFrequentItemsAndSendToReduce(HashMap<String, Integer> itemSupHash) {
 		Integer value;
 		ArrayList<String> rmItems = new ArrayList<String>();
-		Text key = new Text();
-		Text val = new Text();
-		double rm;
+		Tuple2<String, String> tuple;
 		for (String item : frequents) {
 			value = itemSupHash.get(item);
-			rm = (value / ((double) blockSize));
 			if (value != null && ((value / ((double) blockSize)) >= support)) {
 				// envia para o reduce
-				key.set(item);
-				val.set(String.valueOf(value) + ":" + splitName);
-				try {
-					context.write(key, val);
-				} catch (IOException | InterruptedException e) {
-					e.printStackTrace();
-				}
+				tuple = new Tuple2<String, String>(item, (value + ":" + splitName));
+				chaveValues.add(tuple);
 			} else {
 				rmItems.add(item);
 			}
@@ -326,17 +322,14 @@ private void addItemsetToItemSupHash(String itemset){
 	 */
 	public void addFrequentsItemsAndSendToReduce(int k) {
 		Integer value;
-
-		StringBuilder keyVal;
+		Tuple2<String, String> tuple;
 		for (String item : newFrequents) {
 			value = itemSupHash.get(item);
 			if (value != null && ((value / ((double) blockSize)) >= support)) {
 				// envia para o reduce
-				keyVal = new StringBuilder();
-				keyVal.append(item).append("#");
+				tuple = new Tuple2<String, String>(item, (value + ":" + splitName));
 				frequents.add(item);
-				keyVal.append(value).append(":").append(splitName);
-				chaveValues.add(keyVal.toString());
+				chaveValues.add(tuple);
 			}
 		}
 		newFrequents.clear();
