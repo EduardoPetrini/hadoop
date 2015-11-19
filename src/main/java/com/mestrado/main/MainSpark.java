@@ -84,14 +84,17 @@ public class MainSpark implements Serializable {
 		sc.close();
 	}
 
-	public void job11() {
+	public void job1() {
 		SparkConf conf = new SparkConf().setAppName("Imr fase 1").setMaster(sparkUrl);
 		JavaSparkContext sc = new JavaSparkContext(conf);
 		// sc.addJar("target/spark-imrApriori-1.0-jar-with-dependencies.jar");
 		Broadcast<Double> broadSup = sc.broadcast(MainSpark.supportRate);
 
-		JavaRDD<String> inputFile = sc.textFile(user + inputEntry, MainSpark.NUM_BLOCK);
-		// inputFile.persist(StorageLevel.MEMORY_AND_DISK());
+		StringBuilder log = new StringBuilder();
+		long beginG = System.currentTimeMillis();
+		JavaPairRDD<String,String> inputFile = sc.wholeTextFiles(user + inputEntry, MainSpark.NUM_BLOCK);
+		inputFile.persist(StorageLevel.MEMORY_AND_DISK());
+		
 		JavaRDD<String> mapedAux = inputFile.mapPartitionsWithIndex(new Function2<Integer, Iterator<String>, Iterator<String>>() {
 
 			@Override
@@ -107,18 +110,49 @@ public class MainSpark implements Serializable {
 			}
 
 		}, true);
-		// mapedAux.persist(StorageLevel.MEMORY_AND_DISK());
-		mapedAux.saveAsTextFile(MainSpark.outputDir + MainSpark.countDir);
-		MainSpark.countDir++;
-
+		mapedAux.persist(StorageLevel.MEMORY_AND_DISK());
+		
 		JavaPairRDD<String, String> maped = mapedAux.mapPartitionsToPair(new Map1Spark(broadSup));
 		maped.persist(StorageLevel.MEMORY_AND_DISK());
-		maped.saveAsTextFile(MainSpark.outputDir + MainSpark.countDir);
+		JavaPairRDD<String, Iterable<String>> grouped = maped.groupByKey(MainSpark.NUM_BLOCK);
+		maped.unpersist();
+		grouped.persist(StorageLevel.MEMORY_AND_DISK());
+
+		JavaPairRDD<String, String> mapReduced = grouped.mapToPair(new Reduce1Spark(supportRate, totalBlockCount, totalTransactionCount, blocksIds)).filter(t -> t != null);
+		grouped.unpersist();
+		mapReduced.persist(StorageLevel.MEMORY_AND_DISK());
+		JavaPairRDD<String, String> global = mapReduced.filter(t -> !t._1.contains(":"));
+		global.persist(StorageLevel.MEMORY_AND_DISK());
+		JavaPairRDD<String, String> part = mapReduced.filter(t -> t._1.contains(":"));
+		mapReduced.unpersist();
+		part.persist(StorageLevel.MEMORY_AND_DISK());
+
+		global.saveAsTextFile(MainSpark.outputDir + MainSpark.countDir);
+		global.unpersist();
+
+		globalFileName = MainSpark.outputDir + MainSpark.countDir;
 		MainSpark.countDir++;
+
+		MainSpark.countDir++;
+
+		for (String b : blocksIds) {
+			Broadcast<String> bb = sc.broadcast(b);
+			part.filter(p -> p._1.substring(p._1.indexOf(":")).contains(bb.value())).saveAsTextFile(outputPartialName + b);
+		}
+		part.unpersist();
+
+		sc.stop();
+		sc.close();
+		long endG = System.currentTimeMillis();
+		timeTotal += endG - beginG;
+		log.append("Step 1 : " + (endG - beginG) + "ms " + (((double) (endG - beginG)) / 1000) + "s "+ (((double) (endG - beginG)) / 1000 / 60) + "m\n\n");
+		timeLog.add(log.toString());
+		System.out.println("END STEP ONE");
+
 
 	}
 
-	public void job1() {
+	public void job11() {
 		SparkConf conf = new SparkConf().setAppName("Imr fase 1").setMaster(sparkUrl);
 		JavaSparkContext sc = new JavaSparkContext(conf);
 		// sc.addJar("target/spark-imrApriori-1.0-jar-with-dependencies.jar");
