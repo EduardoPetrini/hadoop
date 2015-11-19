@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.spark.api.java.function.Function2;
 import org.apache.spark.api.java.function.PairFlatMapFunction;
 import org.apache.spark.broadcast.Broadcast;
 
@@ -19,7 +20,7 @@ import scala.Tuple2;
  *
  * @author eduardo
  */
-public class Map1Spark implements PairFlatMapFunction<Iterator<String>, String, String> {
+public class Map1Spark2 implements Function2<Integer, Iterator<String>, Iterator<Tuple2<String,String>>> {
 
 	private static final long serialVersionUID = 1L;
 	private double support;
@@ -32,12 +33,12 @@ public class Map1Spark implements PairFlatMapFunction<Iterator<String>, String, 
 	private String splitName;
 	private long blockSize;
 
-	public Map1Spark(Broadcast<Double> broadSup) {
+	public Map1Spark2(Broadcast<Double> broadSup) {
 		support = broadSup.value();
 	}
 
 	@Override
-	public Iterable<Tuple2<String, String>> call(Iterator<String> blockContent) throws Exception {
+	public Iterator<Tuple2<String, String>> call(Integer blockIndex,Iterator<String> blockContent) throws Exception {
 //		System.out.println("\n*****************/////// KEY: " + blockIndex);
 		frequents = new ArrayList<String>();
 		newFrequents = new ArrayList<String>();
@@ -45,20 +46,20 @@ public class Map1Spark implements PairFlatMapFunction<Iterator<String>, String, 
 		hpt = new HashPrefixTree();
 		chaveValues = new ArrayList<Tuple2<String, String>>();
 		transactions = new ArrayList<String[]>();
-		System.out.println("Support rate: " + support);
+//		System.out.println("Support rate: " + support);
 		int k = 1;
 		String[] itemset;
 //		String[] tr;
 		int itemsetIndex;
 //		printBlockContent(blockContent);
 		do {
-			System.out.println("Gerando itens de tamanho " + k);
+//			System.out.println("Gerando itens de tamanho " + k);
 			if (k == 1) {
-				generateCandidates1(blockContent);
+				generateCandidates1(blockIndex,blockContent);
 			} else {
 				generateCandidates(k);
-				System.out.println("Iniciando a verificação dos candidatos C" + k);
-				System.out.println("No subset... !!");
+//				System.out.println("Iniciando a verificação dos candidatos C" + k);
+//				System.out.println("No subset... !!");
 				for(String[] tr: transactions){
 					
 					for (int i = 0; i < tr.length; i++) {
@@ -70,14 +71,14 @@ public class Map1Spark implements PairFlatMapFunction<Iterator<String>, String, 
 				
 				// limpar prefixTree
 				hpt = new HashPrefixTree();
-				System.out.println("Adicionando os L" + k + " itemsets frequentes no vetor de retorno...");
+//				System.out.println("Adicionando os L" + k + " itemsets frequentes no vetor de retorno...");
 				addFrequentsItemsAndSendToReduce(k);
 			}
 
 			k++;
 		} while (frequents.size() > 1);
 		
-		return chaveValues;
+		return chaveValues.iterator();
 	}
 
 	private void printBlockContent() {
@@ -118,7 +119,7 @@ public class Map1Spark implements PairFlatMapFunction<Iterator<String>, String, 
 						sb.append(item).append(" ");
 					}
 				}
-				 System.out.println("Encontrou: "+sb.toString().trim()+"!");
+//				 System.out.println("Encontrou: "+sb.toString().trim()+"!");
 				addItemsetToItemSupHash(sb.toString().trim());
 				itemset[itemsetIndex] = "";
 				return;
@@ -144,14 +145,11 @@ public class Map1Spark implements PairFlatMapFunction<Iterator<String>, String, 
 		} else {
 			value = new Integer(1);
 		}
-		if(itemset.equals("1 2")){
-			System.out.println("Adicionando 1 2 na hash: "+value);
-		}
 		itemSupHash.put(itemset, value);
 	}
 
 	public void generateCandidates(int k) {
-		System.out.println("Valor de K: " + k);
+//		System.out.println("Valor de K: " + k);
 
 		StringBuilder tmpItem;
 
@@ -163,13 +161,11 @@ public class Map1Spark implements PairFlatMapFunction<Iterator<String>, String, 
 				for (int j = i + 1; j < frequents.size(); j++) {
 					item = tmpItem.toString() + frequents.get(j);
 					newFrequents.add(item);
-					System.out.println(item);
 //					itemSupHash.put(item, 1);
 					hpt.add(hpt.getHashNode(), item.split(" "), 0);
-//					System.out.println(item);
 				}
 			}
-			System.out.println("Gerados " + newFrequents.size() + " candidatos de tamanho " + k);
+//			System.out.println("Gerados " + newFrequents.size() + " candidatos de tamanho " + k);
 			frequents.clear();
 		} else {
 			/* É preciso verificar o prefixo, isso não está sendo feito!! */
@@ -211,21 +207,16 @@ public class Map1Spark implements PairFlatMapFunction<Iterator<String>, String, 
 		}
 	}
 
-	private void generateCandidates1(Iterator<String> blockContent) {
+	private void generateCandidates1(Integer blockIndex, Iterator<String> blockContent) {
 
 		HashMap<String, Integer> itemSupHash = new HashMap<String, Integer>();
 		String[] tmpItemsets;
 		blockSize = 0;
-		System.out.println("Gerando itemsets de tamanho 1");
-		System.out.println("Print content:");
-		String t = blockContent.next().trim();
-		String blockIndex = t.split(":")[0];
+//		System.out.println("Gerando itemsets de tamanho 1");
 		
-		while(true){
+		while(blockContent.hasNext()){
 			blockSize++;
-			System.out.println(t);
-			tmpItemsets = t.split(" ");
-			tmpItemsets[0] = tmpItemsets[0].replaceAll(".*:", "");
+			tmpItemsets = blockContent.next().trim().split(" ");
 			transactions.add(tmpItemsets);
 			for (int j = 0; j < tmpItemsets.length; j++) {
 				if (addItemsetToItemSupHash(tmpItemsets[j], itemSupHash)) {
@@ -233,7 +224,6 @@ public class Map1Spark implements PairFlatMapFunction<Iterator<String>, String, 
 				}
 			}
 			if(blockContent.hasNext()){
-				t = blockContent.next().trim();
 			}else{
 				break;
 			}
@@ -335,9 +325,6 @@ public class Map1Spark implements PairFlatMapFunction<Iterator<String>, String, 
 		Tuple2<String, String> tuple;
 		for (String item : newFrequents) {
 			value = itemSupHash.get(item);
-			if(item.equals("1 2")){
-				System.out.println("Salvando 1 2, sup_count = "+value);
-			}
 			if (value != null && ((value / ((double) blockSize)) >= support)) {
 				// envia para o reduce
 				tuple = new Tuple2<String, String>(item, (value + ":" + splitName));
@@ -349,7 +336,7 @@ public class Map1Spark implements PairFlatMapFunction<Iterator<String>, String, 
 		itemSupHash.clear();
 	}
 
-	public void setSplitName(String blockIndex) {
+	public void setSplitName(Integer blockIndex) {
 
 		splitName = blockIndex + ":" + blockSize;
 		System.out.println("|************************************************************|");

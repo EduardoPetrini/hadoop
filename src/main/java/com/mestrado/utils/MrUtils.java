@@ -10,9 +10,6 @@ import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import main.java.com.mestrado.main.Main;
-import main.java.com.mestrado.mapred.reduce.Reduce1;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -20,6 +17,10 @@ import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+
+import main.java.com.mestrado.main.Main;
+import main.java.com.mestrado.main.MainSpark;
+import main.java.com.mestrado.mapred.reduce.Reduce1;
 
 public class MrUtils {
 	private Log log = LogFactory.getLog(MrUtils.class);
@@ -88,7 +89,7 @@ public class MrUtils {
         
         System.out.println("Excluindo diretórios anteriores...");
         Configuration c = new Configuration();
-        c.set("fs.defaultFS", Main.clusterUrl);
+        c.set("fs.defaultFS", MainSpark.clusterUrl);
         Path p = new Path(d);
         Path aux;
         
@@ -99,7 +100,7 @@ public class MrUtils {
                 FileStatus[] ff = fs.listStatus(p);
                 for(FileStatus f: ff){
                     aux = f.getPath();
-                    if(aux.getName().contains("output")){
+                    if(aux.getName().contains("output") || aux.getName().contains("partitions-fase-1")){
                         if(fs.delete(aux, true)){
                         	System.out.println("Excluido diretório -> "+aux.getName());
                         }else{
