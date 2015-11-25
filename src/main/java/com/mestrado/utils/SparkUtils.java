@@ -17,6 +17,7 @@ import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.storage.StorageLevel;
 
 import main.java.com.mestrado.main.MainSpark;
+import scala.Tuple2;
 
 public class SparkUtils {
 
@@ -163,16 +164,20 @@ public class SparkUtils {
 		}
 		return partitionsDirs;
 	}
-
+	
 	public static void countItemsets(String ... filesName) {
 		Integer[] itemCounts = new Integer[20];
 		StringBuilder[] sbs = new StringBuilder[20];
 		SparkConf conf = new SparkConf().setAppName("Count results").setMaster(MainSpark.sparkUrl);
+		conf.set("spark.shuffle.blockTransferService", "nio");
 		JavaSparkContext sc = new JavaSparkContext(conf);
 		String[] sp;
+		StringBuilder log = new StringBuilder();
+		
 		for(String file: filesName){
 			JavaRDD<String> inputFile = sc.textFile(file, MainSpark.NUM_BLOCK);
-			inputFile.persist(StorageLevel.MEMORY_AND_DISK());
+			inputFile.cache();
+			System.out.println("\n\nSize of file: "+inputFile.count());
 			List<String> lista = inputFile.collect();
 			for(String l: lista){
 				sp = l.replaceAll("\\(||\\)","").replaceAll(",.*","").split(" ");
@@ -191,13 +196,103 @@ public class SparkUtils {
 		sc.stop();
 		sc.close();
 		int index = 1;
+		log.append("\n|**********************************|\n\n");
 		for(Integer i: itemCounts){
 			if(i != null){
 //				System.out.println(sbs[index-1].toString());
-				System.out.println(index+" : "+i);
+				log.append("**********  "+index+" : "+i+"\n");
 				index++;
 			}
 		}
+		log.append("\n|**********************************|\n\n");
+		System.out.println(log.toString());
 	}
+	
+	public static List<String> create2Itemsets(List<Tuple2<String,Integer>> globalOneItemsets){
+		List<String> twoItemsets = new ArrayList<String>();
+		
+		for(int i = 0; i < globalOneItemsets.size(); i++){
+			for(int j = i+1; j < globalOneItemsets.size(); j++){
+				twoItemsets.add(globalOneItemsets.get(i)._1+" "+globalOneItemsets.get(j)._1);
+			}
+		}
+		
+		return twoItemsets;
+	}
+
+	public static List<String> createKItemsets(List<Tuple2<String, Integer>> kLessOneItemsets) {
+		String prefix;
+		String sufix;
+		String newItemSet;
+		StringBuilder tmpItem;
+		List<String> newItemsetsCandidates = new ArrayList<String>();
+		for_ext:
+		for(int i=0; i<kLessOneItemsets.size(); i++){
+//			// System.out.println("Progress: "+context.getProgress());
+			for(int j=i+1; j<kLessOneItemsets.size(); j++){
+//				System.out.println("Combining "+kLessOneItemsets.get(i)._1+" with "+kLessOneItemsets.get(j)._1);
+				prefix = getPrefix(kLessOneItemsets.get(i)._1);
+				
+				if(kLessOneItemsets.get(j)._1.startsWith(prefix)){
+					/*Se o próximo elemento já possui o mesmo prefixo, basta concatenar o sufixo do segundo item.*/
+					sufix = getSufix(kLessOneItemsets.get(j)._1);
+					
+					tmpItem = new StringBuilder();
+					tmpItem.append(kLessOneItemsets.get(i)._1).append(" ").append(sufix);
+					//tmpItem é o novo candidato, verificar e todo o seu subconjunto é frequente
+					newItemSet = tmpItem.toString().trim();
+					if(allSubsetIsFrequent(newItemSet.split(" "),kLessOneItemsets)){
+//						System.out.println("Combined!");
+						newItemsetsCandidates.add(newItemSet);
+					}
+				}else{
+					continue for_ext;
+				}
+			}
+		}
+		return newItemsetsCandidates;
+	}
+	
+	private static boolean allSubsetIsFrequent(String[] itemset,List<Tuple2<String, Integer>> kLessOneItemsets) {
+		int indexToSkip = 0;
+		StringBuilder subItem;
+		for(int j = 0; j < itemset.length-1; j++){
+			subItem = new StringBuilder();
+			for(int i = 0; i < itemset.length; i++){
+				if(i != indexToSkip){
+					subItem.append(itemset[i]).append(" ");
+				}
+			}
+			//subItem gerado, verificar se é do conjunto frequente
+			//See other way more efficient
+			for(Tuple2<String,Integer> t: kLessOneItemsets){
+				if(t._1.equalsIgnoreCase(subItem.toString())){
+					return false;
+				}
+			}
+			indexToSkip++;
+		}
+		
+		return true;
+	}
+	
+	public static String getSufix(String kitem){
+		String[] spkitem = kitem.split(" ");
+		return spkitem[spkitem.length-1].trim();
+	}
+	
+	public static String getPrefix(String kitem){
+        
+        String[] spkitem = kitem.split(" ");
+        StringBuilder sb = new StringBuilder();
+        
+        for (int i = 0; i < spkitem.length-1; i++) {
+            
+            sb.append(spkitem[i]).append(" ");
+        }
+        
+        //k = spkitem.length;
+        return sb.toString();
+    }
 }
 

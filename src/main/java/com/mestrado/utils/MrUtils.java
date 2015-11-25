@@ -430,7 +430,7 @@ public class MrUtils {
 	    	Path p = new Path(outName);
 	    	Path aux;
 	        Configuration c = new Configuration();
-	        c.set("fs.defaultFS", Main.clusterUrl);
+	        c.set("fs.defaultFS", MainSpark.clusterUrl);
 	        try{
 	            FileSystem fs = FileSystem.get(c);
 	            if(fs.exists(p)){
