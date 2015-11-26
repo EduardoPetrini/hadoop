@@ -348,15 +348,19 @@ public class MrUtils {
 		for (String s : args) {
 			System.out.println("Args: " + s);
 		}
-		if (args.length != 0) {
-			Main.supportRate = Double.parseDouble(args[0]);
-			if (args.length == 2) {
-				Main.NUM_REDUCES = Integer.parseInt(args[1]);
-			} else if (args.length == 3) {
-				Main.NUM_REDUCES = Integer.parseInt(args[1]);
-				Main.NUM_BLOCK = args[2];
-			}
-		}
+		if(args.length != 0){
+    		Main.supportRate = Double.parseDouble(args[0]);
+    		if(args.length == 2){
+    			Main.NUM_REDUCES = Integer.parseInt(args[1]);
+    		}else if(args.length == 3){
+    			Main.NUM_REDUCES = Integer.parseInt(args[1]);
+    			Main.NUM_BLOCK= args[2];
+    		}else if(args.length == 4){
+    			Main.NUM_REDUCES = Integer.parseInt(args[1]);
+    			Main.NUM_BLOCK= args[2];
+    			Main.inputFileName = Main.user+Main.inputEntry+args[3];
+    		}
+    	}
 
 		String inputPathUri = Main.user + Main.inputEntry;
 
@@ -368,9 +372,21 @@ public class MrUtils {
 
 			FileSystem fs = inputPath.getFileSystem(c);
 			FileStatus[] subFiles = fs.listStatus(inputPath);
-			Path inputFile = subFiles[0].getPath();
-			Main.inputFileName = inputFile.getName();
-			BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(inputFile)));
+			FileStatus inputFileStatus= null;
+			
+			if(Main.inputFileName == null || Main.inputFileName == ""){
+				inputFileStatus = subFiles[0];
+				Main.inputFileName = inputFileStatus.getPath().getName();
+			}else{
+				for(FileStatus fss: subFiles){
+					if(Main.inputFileName.contains(fss.getPath().getName())){
+						inputFileStatus = fss;
+						break;
+					}
+				}
+			}
+			
+			BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(inputFileStatus.getPath())));
 			Main.totalTransactionCount = 0;
 			while (br.readLine() != null) {
 				Main.totalTransactionCount++;
@@ -773,13 +789,13 @@ public class MrUtils {
 	 * 
 	 * @param data
 	 */
-	public static void saveTimeLog(String data) {
+	public static void saveTimeLog(String data, String[] inputFileName) {
 		StringBuilder sb = new StringBuilder("/home/hdp/times/");
 		File file = new File(sb.toString());
 		if (!file.isDirectory()) {
 			file.mkdirs();
 		}
-		sb.append("AprioriCPA").append("-").append(Main.inputFileName).append("-").append(Main.supportRate).append("-").append(Main.NUM_REDUCES).append("-").append(Main.NUM_BLOCK)
+		sb.append("AprioriCPA").append("-").append(inputFileName[inputFileName.length-1]).append("-").append(Main.supportRate).append("-").append(Main.NUM_REDUCES).append("-").append(Main.NUM_BLOCK)
 				.append(".log");
 		System.out.println("Saving: " + data + "\n into " + sb.toString());
 		saveFileInLocal(data, sb.toString());

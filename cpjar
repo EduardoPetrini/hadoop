@@ -1,20 +1,16 @@
 #!/bin/bash
 
 if [ $# == 0 ]; then
-        echo "Uso: ./cpjar <jarname.jar>";
+        echo "Uso: ./cpjar MASTER";
         exit;
 fi;
 
+MASTER=$1;
+
 echo "Building hadoop app..."
-mvn clean package assembly:single 
+mvn clean install 
 
-echo "Cleaning directory in master..."
-ssh hdp@master "rm -rf /home/hdp/jar/*"
-
-echo "Copying jar files to master..."
-scp -r target/hadoop* hdp@master:/home/hdp/jar/
-
-echo "Add "$1" to app-jar..."
-ssh hdp@master "mv /home/hdp/jar/hadoop-0.0.1-jar-with-dependencies.jar /home/hdp/app-jar/$1"
+echo "Copying jar files to $MASTER..."
+scp -r target/aprioriCpa-1.jar hdp@$MASTER:/home/hdp/app-jar/
 
 echo "done";

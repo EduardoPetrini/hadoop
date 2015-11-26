@@ -103,7 +103,7 @@ public class Main {
         job.setNumReduceTasks(NUM_REDUCES);
         
         try {
-            FileInputFormat.setInputPaths(job, new Path(user+"input"));
+            FileInputFormat.setInputPaths(job, new Path(inputFileName));
         } catch (IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -172,7 +172,7 @@ public class Main {
         
         
         try {
-            FileInputFormat.setInputPaths(job, new Path(user+"input"));
+            FileInputFormat.setInputPaths(job, new Path(inputFileName));
         } catch (IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -272,7 +272,7 @@ public class Main {
     	sb.append(createStringByArray());
     	sb.append("-----ITEMSETS-----\n");
     	sb.append(CountItemsets.countItemsets()).append("\n");
-        MrUtils.saveTimeLog(sb.toString());
+        MrUtils.saveTimeLog(sb.toString(), inputFileName.split("/"));
     }
     
     private static String createStringByArray(){
