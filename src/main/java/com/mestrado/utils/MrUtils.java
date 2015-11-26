@@ -430,7 +430,7 @@ public class MrUtils {
 	    	Path p = new Path(outName);
 	    	Path aux;
 	        Configuration c = new Configuration();
-	        c.set("fs.defaultFS", Main.clusterUrl);
+	        c.set("fs.defaultFS", MainSpark.clusterUrl);
 	        try{
 	            FileSystem fs = FileSystem.get(c);
 	            if(fs.exists(p)){
@@ -488,13 +488,13 @@ public class MrUtils {
 	 * 
 	 * @param data
 	 */
-	public static void saveTimeLog(String data){
+	public static void saveTimeLog(String data, String[] inputFileName){
 		StringBuilder sb = new StringBuilder("/home/hdp/times/");
 		File file = new File(sb.toString());
 		if(!file.isDirectory()){
 			file.mkdirs();
 		}
-		sb.append("IMRApriori").append("-").append(Main.inputFileName).append("-").append(Main.supportRate).append("-").append(Main.NUM_REDUCES).append("-").append(Main.NUM_BLOCK).append(".log");
+		sb.append("Spark-IMRApriori").append("-").append(inputFileName[inputFileName.length-1]).append("-").append(MainSpark.supportRate).append("-").append(Main.NUM_BLOCK).append(".log");
 		System.out.println("Saving: "+data+"\n into "+sb.toString());
 		saveFileInLocal(data, sb.toString());
 	}

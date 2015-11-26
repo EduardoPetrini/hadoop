@@ -7,24 +7,23 @@
 package main.java.com.mestrado.main;
 
 import java.io.Serializable;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.Date;
 import java.util.List;
 
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.api.java.function.Function2;
 import org.apache.spark.api.java.function.PairFunction;
 import org.apache.spark.broadcast.Broadcast;
 import org.apache.spark.storage.StorageLevel;
 
-import main.java.com.mestrado.mapred.map.Map1Spark;
 import main.java.com.mestrado.mapred.map.Map1Spark2;
-import main.java.com.mestrado.mapred.map.Map1SparkTest;
 import main.java.com.mestrado.mapred.map.Map2Spark;
 import main.java.com.mestrado.mapred.reduce.Reduce1Spark;
+import main.java.com.mestrado.utils.CountItemsets;
 import main.java.com.mestrado.utils.MrUtils;
 import main.java.com.mestrado.utils.SparkUtils;
 import scala.Tuple2;
@@ -204,14 +203,18 @@ public class MainSpark implements Serializable {
 		System.out.println("END STEP TWO");
 	}
 	
-	public static void showTotalTime(){
+	public static void showTotalTime(StringBuilder log){
 		for (String l : timeLog) {
 			System.out.println(l);
 		}
+		SimpleDateFormat format = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+		log.append("\n\n|*************************************************************************|\n");
+		log.append("DATA=").append(format.format(new Date())).append("\n");
+		log.append("Total time: "+timeTotal+"ms "+((double)timeTotal)/1000.0+"s "+((double)timeTotal)/1000.0/60.0+"m\n");
+		log.append("TEMPO=").append(((double)timeTotal)/1000.0);
+		log.append("\n\n|*************************************************************************|\n#\n");
 		
-		System.out.println("\n\n|*************************************************************************|\n");
-		System.out.println("Total time: "+timeTotal+"ms "+((double)timeTotal)/1000+"s "+((double)timeTotal)/1000/60+"m");
-		System.out.println("\n|*************************************************************************|\n\n");
+		MrUtils.saveTimeLog(log.toString(),MainSpark.inputFileName.split("/"));
 	}
 
 	public static void main(String[] args) {
@@ -224,9 +227,7 @@ public class MainSpark implements Serializable {
 		countDir++;
 		m.job1();
 		m.job2();
-		SparkUtils.countItemsets(globalFileName, frePartitionsFileName);
-		// SparkUtils.countItemsets("hdfs://master-home/user/hdp/output-spark2","hdfs://master-home/user/hdp/output-spark4");
-		showTotalTime();
-		
+		StringBuilder log = new StringBuilder(CountItemsets.countItemsets(globalFileName, frePartitionsFileName));
+		showTotalTime(log);
 	}
 }
