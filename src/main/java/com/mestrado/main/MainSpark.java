@@ -67,57 +67,6 @@ public class MainSpark implements Serializable {
 		timeTotal = 0;
 	}
 
-	/**
-	 * 
-	 */
-	public void jobTest() {
-		SparkConf conf = new SparkConf().setAppName("Imr fase 1").setMaster(sparkUrl);
-		JavaSparkContext sc = new JavaSparkContext(conf);
-
-		JavaPairRDD<String, String> inputFile = sc.wholeTextFiles(inputFileName, 2);
-		JavaRDD<String> maped = inputFile.mapPartitionsWithIndex(new Map1SparkTest(), true);
-		List<String> lista = maped.collect();
-
-		for (String s : lista) {
-			System.out.println(s);
-		}
-		sc.close();
-	}
-
-	public void job11() {
-		SparkConf conf = new SparkConf().setAppName("Imr fase 1").setMaster(sparkUrl);
-		JavaSparkContext sc = new JavaSparkContext(conf);
-		// sc.addJar("target/spark-imrApriori-1.0-jar-with-dependencies.jar");
-		Broadcast<Double> broadSup = sc.broadcast(MainSpark.supportRate);
-
-		JavaRDD<String> inputFile = sc.textFile(user + inputEntry, MainSpark.NUM_BLOCK);
-		// inputFile.persist(StorageLevel.MEMORY_AND_DISK());
-		JavaRDD<String> mapedAux = inputFile.mapPartitionsWithIndex(new Function2<Integer, Iterator<String>, Iterator<String>>() {
-
-			@Override
-			public Iterator<String> call(Integer v1, Iterator<String> v2) throws Exception {
-				List<String> part = new ArrayList<String>();
-				StringBuilder sb;
-				while (v2.hasNext()) {
-					sb = new StringBuilder();
-					sb.append(v1).append(":").append(v2.next());
-					part.add(sb.toString());
-				}
-				return part.iterator();
-			}
-
-		}, true);
-		// mapedAux.persist(StorageLevel.MEMORY_AND_DISK());
-		mapedAux.saveAsTextFile(MainSpark.outputDir + MainSpark.countDir);
-		MainSpark.countDir++;
-
-		JavaPairRDD<String, String> maped = mapedAux.mapPartitionsToPair(new Map1Spark(broadSup));
-		maped.persist(StorageLevel.MEMORY_AND_DISK());
-		maped.saveAsTextFile(MainSpark.outputDir + MainSpark.countDir);
-		MainSpark.countDir++;
-
-	}
-
 	public void job1() {
 		SparkConf conf = new SparkConf().setAppName("Imr fase 1").setMaster(sparkUrl);
 		JavaSparkContext sc = new JavaSparkContext(conf);
@@ -260,7 +209,9 @@ public class MainSpark implements Serializable {
 			System.out.println(l);
 		}
 		
+		System.out.println("\n\n|*************************************************************************|\n");
 		System.out.println("Total time: "+timeTotal+"ms "+((double)timeTotal)/1000+"s "+((double)timeTotal)/1000/60+"m");
+		System.out.println("\n|*************************************************************************|\n\n");
 	}
 
 	public static void main(String[] args) {

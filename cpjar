@@ -15,7 +15,7 @@ echo "Cleaning directory in $MASTER..."
 ssh hdp@$MASTER "rm -rf /home/hdp/jar/*"
 
 echo "Copying jar files to $MASTER..."
-scp -r target/spark-imrApriori-1.0* hdp@$MASTER:/home/hdp/jar/
+scp -r target/spark-imrApriori-1.0.jar hdp@$MASTER:/home/hdp/jar/
 
 echo "Add "$1" to app-jar..."
 ssh hdp@$MASTER "mv /home/hdp/jar/spark-imrApriori-1.0.jar /home/hdp/app-jar/"
