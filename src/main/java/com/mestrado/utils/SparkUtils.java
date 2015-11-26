@@ -27,25 +27,30 @@ public class SparkUtils {
 		}
 		if (args.length != 0) {
 			MainSpark.supportRate = Double.parseDouble(args[0]);
-			if (args.length == 2) {
+			if (args.length > 1) {
 				MainSpark.NUM_BLOCK = Integer.parseInt(args[1]);
+				if(args.length == 3){
+					MainSpark.inputFileName = MainSpark.user+MainSpark.inputEntry+args[2];
+				}
 			}
 		}
-		
+
 		SparkConf conf = new SparkConf().setAppName("Initial Config").setMaster(MainSpark.sparkUrl);
 		JavaSparkContext sc = new JavaSparkContext(conf);
-		
-		MainSpark.inputFileName = getFileName();
-		
+
+		if (MainSpark.inputFileName == null || MainSpark.inputFileName == "") {
+			MainSpark.inputFileName = getFileName();
+		}
+
 		long begin = System.currentTimeMillis();
 		JavaRDD<String> inputFile = sc.textFile(MainSpark.inputFileName, MainSpark.NUM_BLOCK);
 		inputFile.persist(StorageLevel.MEMORY_AND_DISK());
 		MainSpark.totalTransactionCount = inputFile.count();
 		MainSpark.totalBlockCount = inputFile.partitions().size();
 		long end = System.currentTimeMillis();
-		
-		log.append("Initial config : "+(end-begin)+"ms "+((end-begin)/1000)+"s");
-		
+
+		log.append("Initial config : " + (end - begin) + "ms " + ((end - begin) / 1000) + "s");
+
 		MainSpark.blocksIds = new ArrayList<String>();
 		for (Partition p : inputFile.partitions()) {
 			MainSpark.blocksIds.add(String.valueOf(p.index()));
@@ -54,22 +59,22 @@ public class SparkUtils {
 		MainSpark.support = String.valueOf((MainSpark.totalTransactionCount * MainSpark.supportRate));
 		sc.stop();
 		sc.close();
-		
+
 		MainSpark.timeLog.add(log.toString());
 	}
-	
-	private static String getFileName(){
+
+	private static String getFileName() {
 		Configuration c = new Configuration();
 		c.set("fs.defaultFS", MainSpark.clusterUrl);
-		
+
 		String fileName = "";
-		
+
 		try {
 			FileSystem f = FileSystem.get(c);
 			FileStatus[] fss = f.listStatus(new Path(MainSpark.user + MainSpark.inputEntry));
-			for(FileStatus fs: fss){
-				if(f.isFile(fs.getPath())){
-					fileName = fs.getPath().getParent()+"/"+fs.getPath().getName();
+			for (FileStatus fs : fss) {
+				if (f.isFile(fs.getPath())) {
+					fileName = fs.getPath().getParent() + "/" + fs.getPath().getName();
 					return fileName;
 				}
 			}
@@ -89,8 +94,8 @@ public class SparkUtils {
 		for (int i = 1; i <= MainSpark.totalBlockCount; i++) {
 			partitionFileName = MainSpark.outputPartialName + i;
 			try {
-				writers[i - 1] = SequenceFile.createWriter(c, SequenceFile.Writer.file(new Path(partitionFileName)),
-						SequenceFile.Writer.keyClass(String.class), SequenceFile.Writer.valueClass(Integer.class));
+				writers[i - 1] = SequenceFile.createWriter(c, SequenceFile.Writer.file(new Path(partitionFileName)), SequenceFile.Writer.keyClass(String.class),
+						SequenceFile.Writer.valueClass(Integer.class));
 			} catch (IllegalArgumentException | IOException e) {
 				e.printStackTrace();
 			}
@@ -126,9 +131,9 @@ public class SparkUtils {
 	}
 
 	public static void closeWriters(Writer[] writers) {
-		for(SequenceFile.Writer w: writers){
+		for (SequenceFile.Writer w : writers) {
 			try {
-				if(w != null)
+				if (w != null)
 					w.close();
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -138,22 +143,21 @@ public class SparkUtils {
 
 	public static List<String> getPartitionsFase1Dirs() {
 		Configuration c = new Configuration();
-        c.set("fs.defaultFS", MainSpark.clusterUrl);
-        Path p = new Path(MainSpark.user+"partitions-fase-1");
-        List<String> partitionsDirs = new ArrayList<String>();
-        
-        
-        try {
+		c.set("fs.defaultFS", MainSpark.clusterUrl);
+		Path p = new Path(MainSpark.user + "partitions-fase-1");
+		List<String> partitionsDirs = new ArrayList<String>();
+
+		try {
 			FileSystem fileSystem = FileSystem.get(c);
-			
-			if(fileSystem.isDirectory(p)){
+
+			if (fileSystem.isDirectory(p)) {
 				FileStatus[] fss = fileSystem.listStatus(p);
 				System.out.println("Partitions directories found:");
 				String dirName;
-				for(FileStatus fs: fss){
-					dirName = fs.getPath().getParent()+"/"+fs.getPath().getName();
+				for (FileStatus fs : fss) {
+					dirName = fs.getPath().getParent() + "/" + fs.getPath().getName();
 					partitionsDirs.add(dirName);
-					System.out.println(partitionsDirs.get(partitionsDirs.size()-1));
+					System.out.println(partitionsDirs.get(partitionsDirs.size() - 1));
 				}
 			}
 			fileSystem.close();
@@ -164,40 +168,39 @@ public class SparkUtils {
 		return partitionsDirs;
 	}
 
-	public static void countItemsets(String ... filesName) {
+	public static void countItemsets(String... filesName) {
 		Integer[] itemCounts = new Integer[20];
 		StringBuilder[] sbs = new StringBuilder[20];
 		SparkConf conf = new SparkConf().setAppName("Count results").setMaster(MainSpark.sparkUrl);
 		JavaSparkContext sc = new JavaSparkContext(conf);
 		String[] sp;
-		for(String file: filesName){
+		for (String file : filesName) {
 			JavaRDD<String> inputFile = sc.textFile(file, MainSpark.NUM_BLOCK);
 			inputFile.persist(StorageLevel.MEMORY_AND_DISK());
 			List<String> lista = inputFile.collect();
-			for(String l: lista){
-				sp = l.replaceAll("\\(||\\)","").replaceAll(",.*","").split(" ");
-				if(itemCounts[sp.length-1] == null){
-					itemCounts[sp.length-1] = new Integer(1);
-					sbs[sp.length-1] = new StringBuilder();
-					sbs[sp.length-1].append(l).append("\n");
-				}else{
-					itemCounts[sp.length-1]++;
-					sbs[sp.length-1].append(l).append("\n");
+			for (String l : lista) {
+				sp = l.replaceAll("\\(||\\)", "").replaceAll(",.*", "").split(" ");
+				if (itemCounts[sp.length - 1] == null) {
+					itemCounts[sp.length - 1] = new Integer(1);
+					sbs[sp.length - 1] = new StringBuilder();
+					sbs[sp.length - 1].append(l).append("\n");
+				} else {
+					itemCounts[sp.length - 1]++;
+					sbs[sp.length - 1].append(l).append("\n");
 				}
 			}
 			inputFile.unpersist();
 		}
-		
+
 		sc.stop();
 		sc.close();
 		int index = 1;
-		for(Integer i: itemCounts){
-			if(i != null){
-//				System.out.println(sbs[index-1].toString());
-				System.out.println(index+" : "+i);
+		for (Integer i : itemCounts) {
+			if (i != null) {
+				// System.out.println(sbs[index-1].toString());
+				System.out.println(index + " : " + i);
 				index++;
 			}
 		}
 	}
 }
-
