@@ -28,15 +28,19 @@ public class SparkUtils {
 		}
 		if (args.length != 0) {
 			MainSpark.supportRate = Double.parseDouble(args[0]);
-			if (args.length == 2) {
+			if (args.length > 1) {
 				MainSpark.NUM_BLOCK = Integer.parseInt(args[1]);
+				if(args.length == 3){
+					MainSpark.inputFileName = MainSpark.user+MainSpark.inputEntry+args[2];
+				}
 			}
 		}
 		
 		SparkConf conf = new SparkConf().setAppName("Initial Config").setMaster(MainSpark.sparkUrl);
 		JavaSparkContext sc = new JavaSparkContext(conf);
-		
-		MainSpark.inputFileName = getFileName();
+		if(MainSpark.inputFileName == null || MainSpark.inputFileName == ""){
+			MainSpark.inputFileName = getFileName();
+		}
 		
 		long begin = System.currentTimeMillis();
 		JavaRDD<String> inputFile = sc.textFile(MainSpark.inputFileName, MainSpark.NUM_BLOCK);
@@ -57,6 +61,7 @@ public class SparkUtils {
 		sc.close();
 		
 		MainSpark.timeLog.add(log.toString());
+		
 	}
 	
 	private static String getFileName(){
