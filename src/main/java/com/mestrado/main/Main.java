@@ -15,8 +15,6 @@ import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
@@ -38,12 +36,10 @@ import main.java.com.mestrado.utils.MrUtils;
  */
 public class Main {
 
-    private Log log = LogFactory.getLog(Main.class);
     public static int countDir;
     private static int timeTotal;
     public static double supportRate = 0.005;
     public static String support;
-    private int k = 1;
     public static int totalBlockCount;
     public static String user = "/user/hdp/";
     public static String inputEntry = "input/";
@@ -100,7 +96,7 @@ public class Main {
         job.setNumReduceTasks(NUM_REDUCES);
         
         try {
-        	FileInputFormat.setInputPaths(job, new Path(user+"input"));
+        	FileInputFormat.setInputPaths(job, new Path(inputFileName));
         } catch (IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -172,7 +168,7 @@ public class Main {
         
         
         try {
-            FileInputFormat.setInputPaths(job, new Path(user+"input"));
+            FileInputFormat.setInputPaths(job, new Path(inputFileName));
         } catch (IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -205,7 +201,7 @@ public class Main {
     	sb.append("TEMPO=").append(seg).append("\n");
     	sb.append("ITEMSETS=");
     	sb.append(CountItemsets.countItemsets()).append("\n");
-    	MrUtils.saveTimeLog(sb.toString());
+    	MrUtils.saveTimeLog(sb.toString(), inputFileName.split("/"));
     }
     
     public static void main(String[] args) throws IOException {

@@ -10,9 +10,6 @@ import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import main.java.com.mestrado.main.Main;
-import main.java.com.mestrado.mapred.reduce.Reduce1;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -20,6 +17,9 @@ import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+
+import main.java.com.mestrado.main.Main;
+import main.java.com.mestrado.mapred.reduce.Reduce1;
 
 public class MrUtils {
 	private Log log = LogFactory.getLog(MrUtils.class);
@@ -259,6 +259,10 @@ public class MrUtils {
     		}else if(args.length == 3){
     			Main.NUM_REDUCES = Integer.parseInt(args[1]);
     			Main.NUM_BLOCK= args[2];
+    		}else if(args.length == 4){
+    			Main.NUM_REDUCES = Integer.parseInt(args[1]);
+    			Main.NUM_BLOCK= args[2];
+    			Main.inputFileName = Main.user+Main.inputEntry+args[3];
     		}
     	}
     	String inputPathUri = Main.user+Main.inputEntry;
@@ -270,10 +274,23 @@ public class MrUtils {
         	
 			FileSystem fs = inputPath.getFileSystem(c);
 			FileStatus[] subFiles = fs.listStatus(inputPath);
-			FileStatus conf = subFiles[0];
-			Main.inputFileName = conf.getPath().getName();
-			long blockSize = conf.getLen();
-			long defaultSize = conf.getBlockSize();
+			FileStatus inputFileStatus= null;
+			
+			
+			if(Main.inputFileName == null || Main.inputFileName == ""){
+				inputFileStatus = subFiles[0];
+				Main.inputFileName = inputFileStatus.getPath().getName();
+			}else{
+				for(FileStatus fss: subFiles){
+					if(Main.inputFileName.contains(fss.getPath().getName())){
+						inputFileStatus = fss;
+						break;
+					}
+				}
+			}
+			
+			long blockSize = inputFileStatus.getLen();
+			long defaultSize = inputFileStatus.getBlockSize();
 			
 			double bs = (double)blockSize;
 			double ds = (double)defaultSize;
@@ -284,7 +301,7 @@ public class MrUtils {
 			Main.totalBlockCount = totalBlocks;
 			
 //             FileSystem fs = FileSystem.get(new Configuration());
-			BufferedReader br=new BufferedReader(new InputStreamReader(fs.open(conf.getPath())));
+			BufferedReader br=new BufferedReader(new InputStreamReader(fs.open(inputFileStatus.getPath())));
 			String line;
 			Main.totalTransactionCount = 0;
 			while (br.readLine() != null){
@@ -304,16 +321,13 @@ public class MrUtils {
      * @return
      */
     public static ArrayList<String> extractBlocksIds(){
-    	String inputPathUri = Main.user+Main.inputEntry;
-        Path inputPath = new Path(inputPathUri);
     	Configuration c = new Configuration();
         c.set("fs.defaultFS", Main.clusterUrl);
         ArrayList<String> blocksIds = new ArrayList<String>();
         
         try{
-        	FileSystem fs = inputPath.getFileSystem(c);
-        	FileStatus[] subFile = fs.listStatus(inputPath);
-        	Path inputFile = subFile[0].getPath();
+        	Path inputFile = new Path(Main.inputFileName);
+        	FileSystem fs = inputFile.getFileSystem(c);
         	BlockLocation[] bl = fs.getFileBlockLocations(fs.getFileStatus(inputFile),0,Long.MAX_VALUE);
         	for(BlockLocation b: bl){
         		blocksIds.add(String.valueOf(b.getOffset()));
@@ -492,13 +506,13 @@ public class MrUtils {
 	 * 
 	 * @param data
 	 */
-	public static void saveTimeLog(String data){
+	public static void saveTimeLog(String data, String[] inputFileName){
 		StringBuilder sb = new StringBuilder("/home/hdp/times/");
 		File file = new File(sb.toString());
 		if(!file.isDirectory()){
 			file.mkdirs();
 		}
-		sb.append("IMRApriori").append("-").append(Main.inputFileName).append("-").append(Main.supportRate).append("-").append(Main.NUM_REDUCES).append("-").append(Main.NUM_BLOCK).append(".log");
+		sb.append("IMRApriori").append("-").append(inputFileName[inputFileName.length-1]).append("-").append(Main.supportRate).append("-").append(Main.NUM_REDUCES).append("-").append(Main.NUM_BLOCK).append(".log");
 		System.out.println("Saving: "+data+"\n into "+sb.toString());
 		saveFileInLocal(data, sb.toString());
 	}
