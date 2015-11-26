@@ -205,6 +205,7 @@ public class MainSpark implements Serializable {
 			Broadcast<Integer> kBroad = sc.broadcast(kCount.value());
 			System.out.println("\n\n*******************************\n\n Execution step "+kCount.value()+"\n\n********************************\n");
 			//create news item sets candidates in spark
+			kBroad.destroy();
 			prefixSufixRDD = global.keys().mapToPair(key -> new Tuple2<String,String>(key.substring(0, key.lastIndexOf(" ")),key.split(" ")[kBroad.value()-2])).groupByKey();
 			
 //			List<Tuple2<String,Iterable<String>>> listSS = testRdd.collect();
