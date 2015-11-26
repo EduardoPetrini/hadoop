@@ -206,7 +206,7 @@ public class Main {
     	sb.append("TEMPO=").append(seg).append("\n");
     	sb.append("ITEMSETS=");
     	sb.append(CountItemsets.countItemsets()).append("\n");
-    	MrUtils.saveTimeLog(sb.toString());
+//    	MrUtils.saveTimeLog(sb.toString());
     }
     
     public static void main(String[] args) throws IOException {

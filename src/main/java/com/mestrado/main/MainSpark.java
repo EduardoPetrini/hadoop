@@ -7,6 +7,8 @@
 package main.java.com.mestrado.main;
 
 import java.io.Serializable;
+import java.util.Date;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -43,7 +45,7 @@ public class MainSpark implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 	public static int countDir;
-	private static int timeTotal;
+	private static long timeTotal;
 	public static double supportRate = 0.005;
 	public static String support;
 	private int k = 1;
@@ -65,6 +67,7 @@ public class MainSpark implements Serializable {
 	public static String globalFileName;
 	public static String frePartitionsFileName;
 	public static List<String> timeLog;
+	public static String[] outputFiles;
 
 	public MainSpark() {
 		countDir = 0;
@@ -205,8 +208,8 @@ public class MainSpark implements Serializable {
 			Broadcast<Integer> kBroad = sc.broadcast(kCount.value());
 			System.out.println("\n\n*******************************\n\n Execution step "+kCount.value()+"\n\n********************************\n");
 			//create news item sets candidates in spark
-			kBroad.destroy();
 			prefixSufixRDD = global.keys().mapToPair(key -> new Tuple2<String,String>(key.substring(0, key.lastIndexOf(" ")),key.split(" ")[kBroad.value()-2])).groupByKey();
+//			kBroad.destroy();
 			
 //			List<Tuple2<String,Iterable<String>>> listSS = testRdd.collect();
 //			for(Tuple2<String,Iterable<String>> t: listSS){
@@ -232,13 +235,11 @@ public class MainSpark implements Serializable {
 		sc.close();
 		
 		System.out.println("\nFinished\n");
+		timeTotal = endG - beginG;
 		String[] a = new String[outputFiles.size()];
+		MainSpark.outputFiles = outputFiles.toArray(a);
 //		SparkUtils.countItemsets(outputFiles.toArray(a));
-		CountItemsets.countItemsets(outputFiles.toArray(a));
-		log.append("\n|**********************************|\n\n");
-		log.append("Total execution time: "+(endG - beginG)+"ms "+((double)(endG - beginG))/1000.0+"s "+((double)(endG - beginG))/1000.0/60.0+"s\n");
-		log.append("\n|**********************************|\n\n");
-		System.out.println(log.toString());
+		
 	}
 
 	public void job1() {
@@ -380,12 +381,18 @@ public class MainSpark implements Serializable {
 		System.out.println("END STEP TWO");
 	}
 
-	public static void showTotalTime() {
+	public static void showTotalTime(StringBuilder log){
 		for (String l : timeLog) {
 			System.out.println(l);
 		}
-
-		System.out.println("Total time: " + timeTotal + "ms " + ((double) timeTotal) / 1000 + "s " + ((double) timeTotal) / 1000 / 60 + "m");
+		SimpleDateFormat format = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+		log.append("\n\n|*************************************************************************|\n");
+		log.append("DATA=").append(format.format(new Date())).append("\n");
+		log.append("Total time: "+timeTotal+"ms "+((double)timeTotal)/1000.0+"s "+((double)timeTotal)/1000.0/60.0+"m\n");
+		log.append("TEMPO=").append(((double)timeTotal)/1000.0);
+		log.append("\n\n|*************************************************************************|\n#\n");
+		
+		MrUtils.saveTimeLog(log.toString(),MainSpark.inputFileName.split("/"));
 	}
 
 	public static void main(String[] args) {
@@ -397,10 +404,8 @@ public class MainSpark implements Serializable {
 		SparkUtils.printConfigs();
 		countDir++;
 		m.job1_1();
-		// m.job2();
-//		SparkUtils.countItemsets(globalFileName, frePartitionsFileName);
-		// SparkUtils.countItemsets("hdfs://master-home/user/hdp/output-spark2","hdfs://master-home/user/hdp/output-spark4");
-		// showTotalTime();
-
+		
+		StringBuilder log = new StringBuilder(CountItemsets.countItemsets(outputFiles));
+		showTotalTime(log);
 	}
 }

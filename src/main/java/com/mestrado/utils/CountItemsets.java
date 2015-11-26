@@ -63,7 +63,7 @@ public class CountItemsets {
 		}
 		sb.append("total: ").append(total);
 		sb.append("\n\n|**********************************|\n\n");
-		System.out.println(sb.toString());
+//		System.out.println("ITEMSETSHERE \n\n"+sb.toString());
 		return sb.toString();
 	}
 }
