@@ -44,6 +44,7 @@ public class Main {
 
     public static int countDir;
     private static int timeTotal;
+    private static long allTime;
     public static double supportRate = 0.001;
     public static String support;
     public static int k = 1;
@@ -70,6 +71,7 @@ public class Main {
         timeByStep = new ArrayList<String>();
         itemsetsByStep = new ArrayList<String>();
         timeTotalByStep = 0;
+        allTime = 0;
     }
  
     /**
@@ -111,9 +113,10 @@ public class Main {
         FileOutputFormat.setOutputPath(job, new Path(user+"output"+Main.countDir));
         
         try {
-//            long ini = System.currentTimeMillis();
+            long iniG = System.currentTimeMillis();
             int st = (job.waitForCompletion(true) ? 0 : 1);
-//            long fim = System.currentTimeMillis();
+            long fimG = System.currentTimeMillis();
+            allTime += (fimG-iniG);
             long ini = job.getStartTime();
             long fim = job.getFinishTime();
             long t = fim - ini;
@@ -178,9 +181,10 @@ public class Main {
         }
         FileOutputFormat.setOutputPath(job, new Path(user+"output"+Main.countDir));
         try {
-//            long ini = System.currentTimeMillis();
+            long iniG = System.currentTimeMillis();
             int st = (job.waitForCompletion(true) ? 0 : 1);
-//            long fim = System.currentTimeMillis();
+            long fimG = System.currentTimeMillis();
+            allTime += (fimG-iniG);
             long ini = job.getStartTime();
             long fim = job.getFinishTime();
             long t = fim - ini;
@@ -242,9 +246,10 @@ public class Main {
         }
         FileOutputFormat.setOutputPath(job, new Path(user+"candidatosTxt"+Main.countDir));//Sai Ck+1
         try {
-//            long ini = System.currentTimeMillis();
+            long iniG = System.currentTimeMillis();
             int st = (job.waitForCompletion(true) ? 0 : 1);
-//            long fim = System.currentTimeMillis();
+            long fimG = System.currentTimeMillis();
+            allTime += (fimG-iniG);
             long ini = job.getStartTime();
             long fim = job.getFinishTime();
             long t = fim - ini;
@@ -269,6 +274,7 @@ public class Main {
     	sb.append("#\n");
     	sb.append("DATA=").append(format.format(new Date())).append("\n");
     	sb.append("TEMPO=").append(seg).append("\n");
+    	sb.append("ALLTIME=").append(allTime).append("ms ").append(((double)allTime)/1000.0).append("s ").append(((double)allTime)/1000.0/60.0).append("m\n");
     	sb.append(createStringByArray());
     	sb.append("-----ITEMSETS-----\n");
     	sb.append(CountItemsets.countItemsets()).append("\n");
