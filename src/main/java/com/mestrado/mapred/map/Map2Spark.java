@@ -6,16 +6,26 @@
 
 package main.java.com.mestrado.mapred.map;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.SequenceFile;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.spark.api.java.function.Function2;
-import org.apache.spark.broadcast.Broadcast;
 
 import main.java.com.mestrado.app.HashNode;
 import main.java.com.mestrado.app.HashPrefixTree;
+import main.java.com.mestrado.main.MainSpark;
+import main.java.com.mestrado.utils.SparkUtils;
 import scala.Tuple2;
 
 /**
@@ -26,14 +36,14 @@ import scala.Tuple2;
 public class Map2Spark implements Function2<Integer, Iterator<String>, Iterator<Tuple2<String, String>>> {
 
 	private static final long serialVersionUID = 1L;
-	private List<Tuple2<String, String>> partition;
 	private HashMap<String, Integer[]> itemSup;
 	private HashPrefixTree hpt;
 	private int maxK;
 	private List<Tuple2<String, String>> keyValue;
+	private List<String> partitionsDirs;
 
-	public Map2Spark(List<Tuple2<String, String>> partition) {
-		this.partition = partition;
+	public Map2Spark(List<String> partitionsDirs) {
+		this.partitionsDirs = partitionsDirs;
 	}
 
 	@Override
@@ -42,28 +52,29 @@ public class Map2Spark implements Function2<Integer, Iterator<String>, Iterator<
 		itemSup = new HashMap<String, Integer[]>();
 		hpt = new HashPrefixTree();
 		maxK = 0;
-		boolean checkPartition = false;
 		keyValue = new ArrayList<Tuple2<String, String>>();
 		keyValue.add(new Tuple2<String,String>("#","#"));
-		for (Tuple2<String, String> t : partition) {
-			if (t._1.contains("partition" + v1 + "/")) {
-				System.out.println(t._1);
-				System.out.println("Build hash tree for this partition, t._2 have spark partition:\n" + t._2);
-				// Build hash tree for this partition, t._2 have spark partition step 1 for this partition
-				buildHashTree(t._2);
-				checkPartition = true;
-			}
-		}
-
-		partition.clear();
-		if (checkPartition) {
+		
+//		for (Tuple2<String, String> t : partition[v1-1]) {
+//			if (t._1.contains("partition" + v1 + "/")) {
+//				System.out.println(t._1);
+//				System.out.println("Build hash tree for this partition, t._2 have spark partition:\n" + t._2);
+//				// Build hash tree for this partition, t._2 have spark partition step 1 for this partition
+//				buildHashTree(t._2);
+//				checkPartition = true;
+//			}
+//		}
+		
+		System.out.println("Check if partition will execute...");
+		if(checkExecutionMap(v1)){
 			String[] itemset;
 			String[] tr;
 			int itemsetIndex;
 			String tmp;
+			System.out.println("\n____________________________________ block content\n");	
 			while (v2.hasNext()) {
 				tmp = v2.next();
-
+				System.out.println(tmp);
 				tr = tmp.trim().split(" ");
 				for (int i = 0; i < tr.length; i++) {
 					itemset = new String[maxK];
@@ -71,18 +82,23 @@ public class Map2Spark implements Function2<Integer, Iterator<String>, Iterator<
 					subSet(tr, hpt.getHashNode(), i, itemset, itemsetIndex);
 				}
 			}
+			hpt = null;
+		}
+		return keyValue.iterator();
+	}
 
-			if (keyValue.isEmpty()) {
-				System.out.println("KeyValue is empty :(");
-			} else {
-				System.out.println("KeyValue isn't empty :), your content:");
-				for (Tuple2<String, String> t : keyValue) {
-					System.out.println(t._1 + " : " + t._2);
-				}
+	private boolean checkExecutionMap(Integer v1) {
+		String[] sp;
+		for(String p: partitionsDirs){
+			sp = p.split("/");
+			
+			if(sp[sp.length-1].equalsIgnoreCase("partition"+v1)){
+				System.out.println("\n**********************\n\nok-----partition "+v1+" will execute!!!\n**************************\n\n");
+				buildHashTree(p);
+				return true;
 			}
 		}
-//		return keyValue == null || keyValue.isEmpty() ? null : keyValue.iterator();
-		return keyValue.iterator();
+		return false;
 	}
 
 	private void subSet(String[] transaction, HashNode hNode, int i, String[] itemset, int itemsetIndex) {
@@ -125,32 +141,50 @@ public class Map2Spark implements Function2<Integer, Iterator<String>, Iterator<
 		}
 	}
 
-	private void buildHashTree(String blockContent) {
-		int start = 0;
-		int end;
-		boolean endBlock = false;
-		while ((end = blockContent.indexOf("\n",start)) != -1) {
-			addInHashTree(blockContent.substring(start, end).replaceAll("\\(|\\)", "").split(","));
-			start = end + 1;
-			if (start >= blockContent.length()) {
-				endBlock = true;
-				break;
+	private void buildHashTree(String sequenceFileName) {
+		System.out.println("\n****************************\n\nGet all partitions files names by file \""+sequenceFileName+"\"...\n\n*******************************\n\n");
+		Configuration conf = new Configuration();
+		conf.set("fs.defaultFS", MainSpark.clusterUrl);
+		
+		List<String> partitionsFiles = SparkUtils.getAllFilesInDir(conf, sequenceFileName);
+		
+		SequenceFile.Reader reader;
+		Text key;
+		Text value;
+		for(String file : partitionsFiles){
+			System.out.println("\n****************************\n\nReading "+file+"\n\n*******************************\n\n");
+			try{
+			reader = new SequenceFile.Reader(conf, SequenceFile.Reader.file(new Path(file)));
+			
+			key = (Text) ReflectionUtils.newInstance(reader.getKeyClass(), conf);
+			value = (Text) ReflectionUtils.newInstance(reader.getValueClass(), conf);
+			
+			while (reader.next(key, value)) {
+				System.out.println("Key value "+key+" -> "+value);
+				addInHashTree(key.toString(), value.toString());
+			}
+			}catch(IOException e){
+				e.printStackTrace();
 			}
 		}
-		if (!endBlock) {
-			addInHashTree(blockContent.substring(start).replaceAll("\\(|\\)", "").split(","));
+		
+		Set<String> keySet = itemSup.keySet();
+		System.out.println("\n****************************\n\nKeys in hash:");
+		for(String k: keySet){
+			System.out.println(k);
 		}
+		System.out.println("\n\n*******************************\n\n");
 	}
 
-	private void addInHashTree(String[] line) {
+	private void addInHashTree(String line, String sup) {
 		String[] keySpl;
 		Integer vHash[];
-		line[0] = line[0].replaceAll(":.*", "");
-		keySpl = line[0].split(" ");
+		line = line.replaceAll(":.*", "");
+		keySpl = line.split(" ");
 		vHash = new Integer[2];
-		vHash[0] = Integer.parseInt(line[1]);
+		vHash[0] = Integer.parseInt(sup);
 		vHash[1] = 0;
-		itemSup.put(line[0], vHash);
+		itemSup.put(line, vHash);
 		hpt.add(hpt.getHashNode(), keySpl, 0);
 		if (keySpl.length > maxK) {
 			maxK = keySpl.length;

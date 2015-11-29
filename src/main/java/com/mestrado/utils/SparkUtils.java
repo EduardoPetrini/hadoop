@@ -1,8 +1,13 @@
 package main.java.com.mestrado.utils;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map.Entry;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
@@ -29,8 +34,8 @@ public class SparkUtils {
 			MainSpark.supportRate = Double.parseDouble(args[0]);
 			if (args.length > 1) {
 				MainSpark.NUM_BLOCK = Integer.parseInt(args[1]);
-				if(args.length == 3){
-					MainSpark.inputFileName = MainSpark.user+MainSpark.inputEntry+args[2];
+				if (args.length == 3) {
+					MainSpark.inputFileName = MainSpark.user + MainSpark.inputEntry + args[2];
 				}
 			}
 		}
@@ -168,6 +173,28 @@ public class SparkUtils {
 		return partitionsDirs;
 	}
 
+	public static List<String> getAllFilesInDir(Configuration conf, String sequenceFileName) {
+		List<String> partitionsFiles = new ArrayList<String>();
+		try {
+			FileSystem fs = FileSystem.get(conf);
+			Path path = new Path(sequenceFileName);
+			if (fs.exists(path)) {
+				FileStatus[] fileStatus = fs.listStatus(path);
+
+				for (FileStatus individualFileStatus : fileStatus) {
+					System.out.println(individualFileStatus.getPath().getName() + " " + individualFileStatus.getLen());
+					if (individualFileStatus.getLen() > 0) {
+						partitionsFiles.add(sequenceFileName + "/" + individualFileStatus.getPath().getName());
+					}
+				}
+			}
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return partitionsFiles;
+	}
+
 	public static void countItemsets(String... filesName) {
 		Integer[] itemCounts = new Integer[20];
 		StringBuilder[] sbs = new StringBuilder[20];
@@ -201,6 +228,23 @@ public class SparkUtils {
 				System.out.println(index + " : " + i);
 				index++;
 			}
+		}
+	}
+
+	public static void saveEntryArrayInHdfs(Configuration conf, List<Entry<String, Integer>> entries) {
+		Path path = new Path(MainSpark.user + "output-spark-newItemsets/itemsets");
+		try {
+			FileSystem fs = FileSystem.get(conf);
+			
+			BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fs.create(path)));
+			
+			for(Entry<String, Integer> entry: entries){
+				bw.write(entry.getKey()+"\t:"+entry.getValue()+"\n");
+			}
+			bw.close();
+			
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 	}
 }

@@ -13,6 +13,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.hadoop.io.SequenceFile;
+import org.apache.hadoop.io.Text;
 import org.apache.spark.api.java.function.PairFunction;
 
 import scala.Tuple2;
@@ -21,7 +22,7 @@ import scala.Tuple2;
  *
  * @author eduardo
  */
-public class Reduce1Spark implements PairFunction<Tuple2<String,Iterable<String>>, String,String>{
+public class Reduce1Spark implements PairFunction<Tuple2<String,Iterable<String>>, Text,Text>{
 
 	private static final long serialVersionUID = 1L;
 	private double support;
@@ -44,8 +45,8 @@ public class Reduce1Spark implements PairFunction<Tuple2<String,Iterable<String>
 	}
 
 	@Override
-	public Tuple2<String, String> call(Tuple2<String, Iterable<String>> t) throws Exception {
-		Tuple2<String,String> kv = null;
+	public Tuple2<Text, Text> call(Tuple2<String, Iterable<String>> t) throws Exception {
+		Tuple2<Text,Text> kv = null;
 		Iterator<String> values = t._2.iterator();
 		int partialSupport = 0;
         long numMapsOfX = 0; //Nx
@@ -63,7 +64,7 @@ public class Reduce1Spark implements PairFunction<Tuple2<String,Iterable<String>
     	
     	if(numMapsOfX >= totalMaps){
     		if((partialSupport/((double) totalTransactions)) >= support){
-    			return new Tuple2<String,String>(t._1,String.valueOf(partialSupport));
+    			return new Tuple2<Text,Text>(new Text(t._1),new Text(String.valueOf(partialSupport)));
     		}
     	}else{
     		di = totalTransactions/totalMaps;
@@ -92,7 +93,7 @@ public class Reduce1Spark implements PairFunction<Tuple2<String,Iterable<String>
 	        			sb.append(":").append(i);
 	        		}
 	        	}
-	        	kv = new Tuple2<String, String>(sb.toString(), String.valueOf(partialSupport));
+	        	kv = new Tuple2<Text, Text>(new Text(sb.toString()), new Text(String.valueOf(partialSupport)));
 	        }
     	}
 		return kv;

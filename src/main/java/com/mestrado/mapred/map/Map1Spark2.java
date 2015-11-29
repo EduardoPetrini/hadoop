@@ -39,7 +39,7 @@ public class Map1Spark2 implements Function2<Integer, Iterator<String>, Iterator
 
 	@Override
 	public Iterator<Tuple2<String, String>> call(Integer blockIndex,Iterator<String> blockContent) throws Exception {
-//		System.out.println("\n*****************/////// KEY: " + blockIndex);
+		System.out.println("\n*****************/////// KEY: " + blockIndex);
 		frequents = new ArrayList<String>();
 		newFrequents = new ArrayList<String>();
 		itemSupHash = new HashMap<String, Integer>();
@@ -213,10 +213,11 @@ public class Map1Spark2 implements Function2<Integer, Iterator<String>, Iterator
 		String[] tmpItemsets;
 		blockSize = 0;
 //		System.out.println("Gerando itemsets de tamanho 1");
-		
+		System.out.println("\nblock content......\n");
 		while(blockContent.hasNext()){
 			blockSize++;
 			tmpItemsets = blockContent.next().trim().split(" ");
+			printBlockArray(tmpItemsets);
 			transactions.add(tmpItemsets);
 			for (int j = 0; j < tmpItemsets.length; j++) {
 				if (addItemsetToItemSupHash(tmpItemsets[j], itemSupHash)) {
@@ -231,6 +232,12 @@ public class Map1Spark2 implements Function2<Integer, Iterator<String>, Iterator
 		setSplitName(blockIndex);
 		removeUnFrequentItemsAndSendToReduce(itemSupHash);
 		Collections.sort(frequents, NUMERICAL_ORDER);
+	}
+	public void printBlockArray(String[] tr){
+		for(String s: tr){
+			System.out.print(s+" ");
+		}
+		System.out.println();
 	}
 
 	/**

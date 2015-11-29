@@ -205,7 +205,7 @@ public class Main {
     	sb.append("DATA=").append(format.format(new Date())).append("\n");
     	sb.append("TEMPO=").append(seg).append("\n");
     	sb.append("ITEMSETS=");
-    	sb.append(CountItemsets.countItemsets()).append("\n");
+//    	sb.append(CountItemsets.countItemsets()).append("\n");
 //    	MrUtils.saveTimeLog(sb.toString());
     }
     
