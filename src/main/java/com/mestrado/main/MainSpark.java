@@ -10,16 +10,15 @@ import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
 
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.SequenceFileOutputFormat;
+import org.apache.spark.Accumulator;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.api.java.function.Function2;
 import org.apache.spark.api.java.function.PairFunction;
 import org.apache.spark.broadcast.Broadcast;
 import org.apache.spark.storage.StorageLevel;
@@ -45,7 +44,6 @@ public class MainSpark implements Serializable {
 	private static int timeTotal;
 	public static double supportRate = 0.005;
 	public static String support;
-	private int k = 1;
 	public static int totalBlockCount;
 	public static String inputEntry = "input/";
 	public static String inputFileName = "";
@@ -123,7 +121,13 @@ public class MainSpark implements Serializable {
 		//System.out.println("First map");
 //		print(grouped.collect());
 
-		JavaPairRDD<Text, Text> mapReduced = grouped.mapToPair(new Reduce1Spark(supportRate, totalBlockCount, totalTransactionCount, blocksIds)).filter(t -> t != null);
+		List<Tuple2<String,Iterable<String>>> disRdd = grouped.filter(kv-> kv._1.startsWith("block")).collect();
+		
+		Integer[] disArray = new Integer[MainSpark.NUM_BLOCK];
+		for(int i = 0; i < disRdd.size() ;i++){
+			disArray[Integer.parseInt(disRdd.get(i)._1.replaceAll("[a-z]+", ""))] = Integer.parseInt(disRdd.get(i)._2.iterator().next());
+		}
+		JavaPairRDD<Text, Text> mapReduced = grouped.filter(kv-> !kv._1.startsWith("block")).mapToPair(new Reduce1Spark(supportRate, totalBlockCount, totalTransactionCount, blocksIds, disArray)).filter(t -> t != null);
 //		grouped.unpersist();
 //		mapReduced.persist(StorageLevel.MEMORY_AND_DISK());
 		//System.out.println("First reduce");

@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.spark.Accumulator;
 import org.apache.spark.api.java.function.Function2;
 import org.apache.spark.api.java.function.PairFlatMapFunction;
 import org.apache.spark.broadcast.Broadcast;
@@ -31,7 +32,7 @@ public class Map1Spark2 implements Function2<Integer, Iterator<String>, Iterator
 	private HashPrefixTree hpt;
 	private List<String[]> transactions;
 	private String splitName;
-	private long blockSize;
+	private int blockSize;
 
 	public Map1Spark2(Broadcast<Double> broadSup) {
 		support = broadSup.value();
@@ -77,7 +78,7 @@ public class Map1Spark2 implements Function2<Integer, Iterator<String>, Iterator
 
 			k++;
 		} while (frequents.size() > 1);
-		
+		chaveValues.add(new Tuple2<String,String>("block"+blockIndex,String.valueOf(blockSize)));
 		return chaveValues.iterator();
 	}
 
@@ -213,20 +214,15 @@ public class Map1Spark2 implements Function2<Integer, Iterator<String>, Iterator
 		String[] tmpItemsets;
 		blockSize = 0;
 //		System.out.println("Gerando itemsets de tamanho 1");
-		System.out.println("\nblock content......\n");
 		while(blockContent.hasNext()){
 			blockSize++;
 			tmpItemsets = blockContent.next().trim().split(" ");
-			printBlockArray(tmpItemsets);
+//			printBlockArray(tmpItemsets);
 			transactions.add(tmpItemsets);
 			for (int j = 0; j < tmpItemsets.length; j++) {
 				if (addItemsetToItemSupHash(tmpItemsets[j], itemSupHash)) {
 					frequents.add(tmpItemsets[j]);
 				}
-			}
-			if(blockContent.hasNext()){
-			}else{
-				break;
 			}
 		}
 		setSplitName(blockIndex);
