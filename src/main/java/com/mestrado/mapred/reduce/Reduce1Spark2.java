@@ -72,6 +72,10 @@ public class Reduce1Spark2 implements PairFunction<Tuple2<String,Iterable<SupPar
 	        if((partialGlobalSupport/((double) totalTransactions)) >= support){
 	        
 	        	//Item parcialmente frequente, enviá-lo para partições em que não foi frequente]
+	        	//Verificar itemsets que saão frequentes somando suas ocorrencias nas partições
+	        	//Salvar em uma estrutura de hash e identificar na hora do retorno 
+	        	
+	        	
 	        	boolean cameFromThePartition;
 	        	StringBuilder sb = new StringBuilder();
 	        	sb.append(t._1);
