@@ -48,10 +48,12 @@ public class MainSpark implements Serializable {
 	public static int totalBlockCount;
 	public static String inputEntry = "input/";
 	public static String inputFileName = "";
-	public static String clusterUrl = "hdfs://master-home/";
+//	public static String clusterUrl = "hdfs://master-home/";
 //	public static String clusterUrl = "hdfs://master/";
-	public static String sparkUrl = "spark://master-home:7077";
+	public static String clusterUrl = "hdfs://Lec21/";
+//	public static String sparkUrl = "spark://master-home:7077";
 //	public static String sparkUrl = "spark://master:7077";
+	public static String sparkUrl = "spark://Lec21:7077";
 	// public static String sparkUrl = "yarn-client";
 	public static String user = clusterUrl + "user/hdp/";
 	public static String outputDir = user + "output-spark";
@@ -195,7 +197,7 @@ public class MainSpark implements Serializable {
 //				for (Tuple2<String, Integer> t : lista) {
 //					 System.out.println("Key "+t._1+" value "+t._2);
 //				}
-				global = global.union(partCountedPair);
+				global = global.union(partCountedPair).reduceByKey((v1,v2) -> v1 > v2 ? v1 : v2);
 //				partCountedPair.unpersist();
 			}
 			System.out.println("Save in " + MainSpark.outputDir +kCount.value());

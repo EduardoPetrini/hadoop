@@ -11,14 +11,8 @@ echo "Building hadoop app..."
 #mvn clean package assembly:single -Dmaven.test.skip=true
 mvn clean install
 
-echo "Cleaning directory in $MASTER..."
-ssh hdp@$MASTER "rm -rf /home/hdp/jar/*"
-
 echo "Copying jar files to $MASTER..."
-scp -r target/spark-imrApriori-iterative-1.0.jar hdp@$MASTER:/home/hdp/jar/
-
-echo "Add "$1" to app-jar..."
-ssh hdp@$MASTER "mv /home/hdp/jar/spark-imrApriori-iterative-1.0.jar /home/hdp/app-jar/"
+scp -r target/spark-imrApriori-iterative-1.0.jar hdp@$MASTER:/home/hdp/app-jar/
 
 echo "done "; date;
 
