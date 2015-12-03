@@ -22,11 +22,11 @@ public class Map1Spark3 implements Function2<Integer, Iterator<String>, Iterator
 	private HashMap<String,SupPart> map;
 	private Integer partitionId;
 	private double support;
-	private long countTr;
+	private Integer countTr;
 	
 	public Map1Spark3(double support) {
 		this.support = support;
-		countTr = 0;
+		countTr = new Integer(0);
 	}
 
 	private void add(String item){
@@ -64,6 +64,8 @@ public class Map1Spark3 implements Function2<Integer, Iterator<String>, Iterator
 				lista.add(tuple);
 			}
 		}
+		
+		lista.add(new Tuple2<String,SupPart>("block"+v1,new SupPart(v1,countTr)));
 		
 		return lista.iterator();
 	}

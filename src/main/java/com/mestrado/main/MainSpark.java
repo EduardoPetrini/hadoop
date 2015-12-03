@@ -99,7 +99,13 @@ public class MainSpark implements Serializable {
 		JavaPairRDD<String, Iterable<SupPart>> grouped = maped.groupByKey(MainSpark.NUM_BLOCK);
 //		maped.unpersist();
 //		grouped.persist(StorageLevel.MEMORY_AND_DISK());
-		JavaPairRDD<String, Integer> mapReduced = grouped.mapToPair(new Reduce1Spark2(supportRate, totalBlockCount, totalTransactionCount, blocksIds)).filter(t -> t != null);
+		List<Tuple2<String,Iterable<SupPart>>> disRdd = grouped.filter(kv-> kv._1.startsWith("block")).collect();
+		Integer[] disArray = new Integer[MainSpark.NUM_BLOCK];
+		for(Tuple2<String,Iterable<SupPart>> t: disRdd){
+			disArray[Integer.parseInt(t._1.replace("block",""))] = t._2.iterator().next().getSup();
+		}
+		
+		JavaPairRDD<String, Integer> mapReduced = grouped.mapToPair(new Reduce1Spark2(supportRate, totalBlockCount, totalTransactionCount, blocksIds, disArray)).filter(t -> t != null);
 //		grouped.unpersist();
 //		mapReduced.persist(StorageLevel.MEMORY_AND_DISK());
 		JavaPairRDD<String, Integer> global = mapReduced.filter(t -> !t._1.contains(":"));
@@ -123,7 +129,7 @@ public class MainSpark implements Serializable {
 //		partCounted.unpersist();
 //		partCountedPair.persist(StorageLevel.MEMORY_AND_DISK());
 
-		global = global.union(partCountedPair);
+		global = global.union(partCountedPair).reduceByKey((v1,v2) -> v1 > v2 ? v1 : v2);//caso há algum global parcial que foi contado
 //		partCountedPair.unpersist();
 
 		// Global 1-itemsets finished, go to disk
@@ -163,7 +169,7 @@ public class MainSpark implements Serializable {
 			grouped = maped.groupByKey();
 //			grouped.persist(StorageLevel.MEMORY_AND_DISK());
 //			maped.unpersist();
-			mapReduced = grouped.mapToPair(new Reduce1Spark2(supportRate, totalBlockCount, totalTransactionCount, blocksIds)).filter(t -> t != null);
+			mapReduced = grouped.mapToPair(new Reduce1Spark2(supportRate, totalBlockCount, totalTransactionCount, blocksIds, disArray)).filter(t -> t != null);
 //			if (mapReduced.count() <= 1)
 //				break;
 //			mapReduced.persist(StorageLevel.MEMORY_AND_DISK());
