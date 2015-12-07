@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -23,7 +24,8 @@ public class CountItemsets {
 	private static Integer itemCounts[];
 	private static HashSet<String> itemsets;
 	private static HashMap<String,Integer> newItemsets;
-
+	private static ArrayList<String>[] realItemsets;
+	
 	private static void countByOutputDir(Configuration c, String outputPath) {
 		Path path = new Path(outputPath);
 
@@ -31,11 +33,17 @@ public class CountItemsets {
 			FileSystem fs = FileSystem.get(c);
 			BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(path)));
 			String line;
+			String itemSup;
 			String[] lineSpt;
 			while ((line = br.readLine()) != null) {
-				line = line.replaceAll("\\(||\\)", "").replaceAll(",.*", "");
+				itemSup = line.replaceAll("\\(||\\)", "");
+				line = itemSup.replaceAll(",.*", "");
 				itemsets.add(line.trim());
 				lineSpt = line.split(" ");
+				if(realItemsets[lineSpt.length - 1] == null){
+					realItemsets[lineSpt.length - 1] = new ArrayList<String>();
+				}
+				realItemsets[lineSpt.length - 1].add(itemSup);
 				if (itemCounts[lineSpt.length - 1] == null) {
 					itemCounts[lineSpt.length - 1] = new Integer(1);
 					// sbs[lineSpt.length-1] = new StringBuilder();
@@ -91,6 +99,10 @@ public class CountItemsets {
 			if(((double)entry.getValue())/((double)MainSpark.totalTransactionCount) >= MainSpark.supportRate){
 				//Partial itemset is frequent
 				lineSpt = entry.getKey().trim().split(" ");
+				if(realItemsets[lineSpt.length - 1] == null){
+					realItemsets[lineSpt.length - 1] = new ArrayList<String>();
+				}
+				realItemsets[lineSpt.length - 1].add(entry.getKey().trim()+","+entry.getValue());
 				if (itemCounts[lineSpt.length - 1] == null) {
 					itemCounts[lineSpt.length - 1] = new Integer(1);
 				} else {
@@ -111,6 +123,7 @@ public class CountItemsets {
 		itemCounts = new Integer[20];
 		itemsets = new HashSet<String>();
 		newItemsets = new HashMap<String,Integer>();
+		realItemsets = new ArrayList[20];
 		Configuration conf = new Configuration();
 		conf.set("fs.defaultFS", MainSpark.clusterUrl);
 
@@ -148,4 +161,18 @@ public class CountItemsets {
 		sb.append("\n\n|**********************************|\n\n");
 		return sb.toString();
 	}
+
+	public static void printRealItemsets() {
+		
+		for (int i = 0; i < itemCounts.length; i++) {
+			if (itemCounts[i] != null) {
+//				System.out.println("\n************ "+(i+1)+" : "+itemCounts[i]);
+//				Collections.sort(realItemsets[i]);
+//				for(String item: realItemsets[i]){
+//					System.out.println(item);
+//				}
+			}
+		}
+	}
+	
 }

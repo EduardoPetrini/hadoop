@@ -65,6 +65,9 @@ public class Reduce1Spark implements PairFunction<Tuple2<String, Iterable<String
 			numMapsOfX++;
 		}
 
+//		if(t._1.equalsIgnoreCase("2 6")){
+//			printInfo(t._1, partialSupport, numMapsOfX, 0, diList);
+//		}
 		if (numMapsOfX >= totalMaps) {
 			if ((partialSupport / ((double) totalTransactions)) >= support) {
 				return new Tuple2<Text, Text>(new Text(t._1), new Text(String.valueOf(partialSupport)));
@@ -73,6 +76,10 @@ public class Reduce1Spark implements PairFunction<Tuple2<String, Iterable<String
 			for (String partitionId : blocksIds) {
 				if (!diList.contains(partitionId)) {
 					partialGlobalSupport = calcPartialGlobalSupport(dis[Integer.parseInt(partitionId)], numMapsOfX, partialSupport);
+//					if(t._1.equalsIgnoreCase("2 6")){
+//						printInfo(t._1, partialSupport, numMapsOfX, dis[Integer.parseInt(partitionId)], diList);
+//						System.out.println("Partial global: "+partialGlobalSupport+"\n\nPartition: "+partitionId);
+//					}
 					if ((partialGlobalSupport / ((double) totalTransactions)) >= support) {
 
 						// Item parcialmente frequente, enviá-lo para partições

@@ -47,10 +47,12 @@ public class MainSpark implements Serializable {
 	public static int totalBlockCount;
 	public static String inputEntry = "input/";
 	public static String inputFileName = "";
-//	public static String clusterUrl = "hdfs://master-home/";
-	 public static String clusterUrl = "hdfs://master/";
-//	public static String sparkUrl = "spark://master-home:7077";
-	 public static String sparkUrl = "spark://master:7077";
+	public static String clusterUrl = "hdfs://master-home/";
+//	 public static String clusterUrl = "hdfs://master/";
+//	 public static String clusterUrl = "hdfs://Lec21/";
+	public static String sparkUrl = "spark://master-home:7077";
+//	 public static String sparkUrl = "spark://master:7077";
+//	 public static String sparkUrl = "spark://Lec21:7077";
 	// public static String sparkUrl = "yarn-client";
 	public static String user = clusterUrl + "user/hdp/";
 	public static String outputDir = user + "output-spark";
@@ -291,5 +293,7 @@ public class MainSpark implements Serializable {
 		m.job2();
 		StringBuilder log = new StringBuilder(CountItemsets.countItemsets(outputDirsName));
 		showTotalTime(log);
+		
+		CountItemsets.printRealItemsets();
 	}
 }
