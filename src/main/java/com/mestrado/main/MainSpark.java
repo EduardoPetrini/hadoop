@@ -125,7 +125,7 @@ public class MainSpark implements Serializable {
 
 		List<Tuple2<String,Iterable<String>>> disRdd = grouped.filter(kv-> kv._1.startsWith("block")).collect();
 		
-		Integer[] disArray = new Integer[MainSpark.NUM_BLOCK];
+		Integer[] disArray = new Integer[MainSpark.NUM_BLOCK+1];
 		for(int i = 0; i < disRdd.size() ;i++){
 			disArray[Integer.parseInt(disRdd.get(i)._1.replaceAll("[a-z]+", ""))] = Integer.parseInt(disRdd.get(i)._2.iterator().next());
 		}
@@ -293,7 +293,5 @@ public class MainSpark implements Serializable {
 		m.job2();
 		StringBuilder log = new StringBuilder(CountItemsets.countItemsets(outputDirsName));
 		showTotalTime(log);
-		
-		CountItemsets.printRealItemsets();
 	}
 }
