@@ -48,7 +48,7 @@ public class Reduce1 extends Reducer<Text, Text, Text, IntWritable>{
         totalMaps = Integer.parseInt(context.getConfiguration().get("totalMaps"));
         totalTransactions = Integer.parseInt(context.getConfiguration().get("totalTransactions"));
         blocksIds = new ArrayList<String>();
-        writers = new SequenceFile.Writer[totalMaps];
+        writers = new SequenceFile.Writer[totalMaps+1];
         String partitionFileName;
         
         for(int i = 1; i <= totalMaps; i++){
