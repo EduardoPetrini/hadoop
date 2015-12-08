@@ -41,9 +41,11 @@ public class Map2Spark implements Function2<Integer, Iterator<String>, Iterator<
 	private int maxK;
 	private List<Tuple2<String, String>> keyValue;
 	private List<String> partitionsDirs;
+	private String clusterUrl;
 
-	public Map2Spark(List<String> partitionsDirs) {
+	public Map2Spark(List<String> partitionsDirs, String clusterUrl) {
 		this.partitionsDirs = partitionsDirs;
+		this.clusterUrl = clusterUrl;
 	}
 
 	@Override
@@ -140,7 +142,7 @@ public class Map2Spark implements Function2<Integer, Iterator<String>, Iterator<
 	private void buildHashTree(String sequenceFileName) {
 //		System.out.println("\n****************************\n\nGet all partitions files names by file \""+sequenceFileName+"\"...\n\n*******************************\n\n");
 		Configuration conf = new Configuration();
-		conf.set("fs.defaultFS", MainSpark.clusterUrl);
+		conf.set("fs.defaultFS", this.clusterUrl);
 		
 		List<String> partitionsFiles = SparkUtils.getAllFilesInDir(conf, sequenceFileName);
 		

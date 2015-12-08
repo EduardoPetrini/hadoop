@@ -111,8 +111,6 @@ public class MainSpark implements Serializable {
 //		inputFile.unpersist();
 //		mapedInter.persist(StorageLevel.MEMORY_AND_DISK());
 		
-		MainSpark.countDir++;
-
 		ClassTag<String> tag = ClassManifestFactory$.MODULE$.fromClass(String.class);
 		JavaPairRDD<String, String> maped = new JavaPairRDD<String, String>(mapedInter.rdd(), tag, tag);
 //		mapedInter.unpersist();
@@ -146,9 +144,7 @@ public class MainSpark implements Serializable {
 		global.unpersist();
 
 		outputDirsName.add(MainSpark.outputDir + MainSpark.countDir);
-		MainSpark.countDir++;
 
-		MainSpark.countDir++;
 		//System.out.println("Print partitions");
 		for (String b : blocksIds) {
 			Broadcast<String> bb = sc.broadcast(b);
@@ -177,7 +173,7 @@ public class MainSpark implements Serializable {
 		SparkConf conf = new SparkConf().setAppName("Imr fase 2").setMaster(sparkUrl);
 		JavaSparkContext sc = new JavaSparkContext(conf);
 
-		Broadcast<Double> broadSup = sc.broadcast(MainSpark.supportRate);
+		Broadcast<Double> broadSup = sc.broadcast(MainSpark.supportRate*MainSpark.totalTransactionCount);
 
 		StringBuilder log = new StringBuilder();
 		
@@ -213,7 +209,7 @@ public class MainSpark implements Serializable {
 		// All step 1 partitions in "partition" RDD
 //		System.out.println("Second partitions");
 //		print2(partition.collect());
-		JavaRDD<Tuple2<String, String>> mapedInter = inputFile.mapPartitionsWithIndex(new Map2Spark(partitionsDirs), true).filter(kv -> !kv._1.equals("#"));
+		JavaRDD<Tuple2<String, String>> mapedInter = inputFile.mapPartitionsWithIndex(new Map2Spark(partitionsDirs, MainSpark.clusterUrl), true).filter(kv -> !kv._1.equals("#"));
 		mapedInter.persist(StorageLevel.MEMORY_AND_DISK());
 //		inputFile.unpersist();
 //		partition.unpersist();
@@ -251,11 +247,11 @@ public class MainSpark implements Serializable {
 //		reduced.persist(StorageLevel.MEMORY_AND_DISK());
 //		grouped.unpersist();
 //		System.out.println("Second reduce with fiter");
+		MainSpark.countDir++;
 		reduced.filter(kv -> Integer.parseInt(kv._2) >= broadSup.value()).saveAsTextFile(MainSpark.outputDir + MainSpark.countDir);
 //		reduced.unpersist();
 
 		outputDirsName.add(MainSpark.outputDir + MainSpark.countDir);
-		MainSpark.countDir++;
 		sc.stop();
 		sc.close();
 		
@@ -293,5 +289,6 @@ public class MainSpark implements Serializable {
 		m.job2();
 		StringBuilder log = new StringBuilder(CountItemsets.countItemsets(outputDirsName));
 		showTotalTime(log);
+//		CountItemsets.printRealItemsets();
 	}
 }

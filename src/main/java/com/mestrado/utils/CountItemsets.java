@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -40,10 +41,10 @@ public class CountItemsets {
 				line = itemSup.replaceAll(",.*", "");
 				itemsets.add(line.trim());
 				lineSpt = line.split(" ");
-				if(realItemsets[lineSpt.length - 1] == null){
-					realItemsets[lineSpt.length - 1] = new ArrayList<String>();
-				}
-				realItemsets[lineSpt.length - 1].add(itemSup);
+//				if(realItemsets[lineSpt.length - 1] == null){
+//					realItemsets[lineSpt.length - 1] = new ArrayList<String>();
+//				}
+//				realItemsets[lineSpt.length - 1].add(itemSup);
 				if (itemCounts[lineSpt.length - 1] == null) {
 					itemCounts[lineSpt.length - 1] = new Integer(1);
 					// sbs[lineSpt.length-1] = new StringBuilder();
@@ -80,9 +81,6 @@ public class CountItemsets {
 						
 						valueInt = Integer.parseInt(value.toString());
 						newItemsets.put(keySt,valueInt);
-					}else{
-						valueInt += Integer.parseInt(value.toString());
-						newItemsets.put(keySt,valueInt);
 					}
 				}
 			}
@@ -99,10 +97,10 @@ public class CountItemsets {
 			if(((double)entry.getValue())/((double)MainSpark.totalTransactionCount) >= MainSpark.supportRate){
 				//Partial itemset is frequent
 				lineSpt = entry.getKey().trim().split(" ");
-				if(realItemsets[lineSpt.length - 1] == null){
-					realItemsets[lineSpt.length - 1] = new ArrayList<String>();
-				}
-				realItemsets[lineSpt.length - 1].add(entry.getKey().trim()+","+entry.getValue());
+//				if(realItemsets[lineSpt.length - 1] == null){
+//					realItemsets[lineSpt.length - 1] = new ArrayList<String>();
+//				}
+//				realItemsets[lineSpt.length - 1].add(entry.getKey().trim()+","+entry.getValue());
 				if (itemCounts[lineSpt.length - 1] == null) {
 					itemCounts[lineSpt.length - 1] = new Integer(1);
 				} else {
@@ -166,13 +164,32 @@ public class CountItemsets {
 		
 		for (int i = 0; i < itemCounts.length; i++) {
 			if (itemCounts[i] != null) {
-//				System.out.println("\n************ "+(i+1)+" : "+itemCounts[i]);
-//				Collections.sort(realItemsets[i]);
-//				for(String item: realItemsets[i]){
-//					System.out.println(item);
-//				}
+				System.out.println("\n************ "+(i+1)+" : "+itemCounts[i]);
+				Collections.sort(realItemsets[i], ITEMSET_ORDER);
+				for(String item: realItemsets[i]){
+					System.out.println(item);
+				}
 			}
 		}
 	}
+	
+	public static Comparator<String> ITEMSET_ORDER = new Comparator<String>(){
+
+		@Override
+		public int compare(String o1, String o2) {
+			String[] item1 = o1.replaceAll(",.*","").split(" ");
+			String[] item2 = o2.replaceAll(",.*","").split(" ");
+			
+			for(int i = 0; i < item1.length; i++){
+				if(Integer.parseInt(item1[i]) < Integer.parseInt(item2[i])){
+					return -1;
+				}else if(Integer.parseInt(item1[i]) > Integer.parseInt(item2[i])){
+					return 1;
+				}
+			}
+			return 0;
+		}
+		
+	};
 	
 }
