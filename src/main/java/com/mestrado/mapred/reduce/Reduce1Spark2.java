@@ -6,13 +6,9 @@
 
 package main.java.com.mestrado.mapred.reduce;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
-import org.apache.hadoop.io.SequenceFile;
 import org.apache.spark.api.java.function.PairFunction;
 
 import main.java.com.mestrado.app.SupPart;
@@ -30,7 +26,7 @@ public class Reduce1Spark2 implements PairFunction<Tuple2<String, Iterable<SupPa
 	private int totalMaps; // M
 	private long totalTransactions; // D
 	private ArrayList<String> blocksIds; // Partial
-	private SequenceFile.Writer[] writers;
+//	private SequenceFile.Writer[] writers;
 	private Integer[] dis;
 
 	public Reduce1Spark2(double support, int totalMaps, long totalTransactions, ArrayList<String> blocksIds, Integer[] dis) {
@@ -70,15 +66,6 @@ public class Reduce1Spark2 implements PairFunction<Tuple2<String, Iterable<SupPa
 				if (!diList.contains(partitionId)) {
 					partialGlobalSupport = calcPartialGlobalSupport(dis[Integer.parseInt(partitionId)], numMapsOfX, partialSupport);
 					if ((partialGlobalSupport / ((double) totalTransactions)) >= support) {
-
-						// Item parcialmente frequente, enviá-lo para partições
-						// em
-						// que não foi frequente]
-						// Verificar itemsets que saão frequentes somando suas
-						// ocorrencias nas partições
-						// Salvar em uma estrutura de hash e identificar na hora
-						// do
-						// retorno
 
 						boolean cameFromThePartition;
 						StringBuilder sb = new StringBuilder();
@@ -132,10 +119,10 @@ public class Reduce1Spark2 implements PairFunction<Tuple2<String, Iterable<SupPa
 	 * @param index
 	 */
 	public void saveInCache(String key, Integer value, int index) {
-		try {
-			writers[index].append(key, value);
-		} catch (IOException ex) {
-			Logger.getLogger(Reduce1.class.getName()).log(Level.SEVERE, null, ex);
-		}
+//		try {
+//			writers[index].append(key, value);
+//		} catch (IOException ex) {
+//			Logger.getLogger(Reduce1.class.getName()).log(Level.SEVERE, null, ex);
+//		}
 	}
 }

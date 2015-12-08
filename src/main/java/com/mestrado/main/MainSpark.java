@@ -48,12 +48,12 @@ public class MainSpark implements Serializable {
 	public static int totalBlockCount;
 	public static String inputEntry = "input/";
 	public static String inputFileName = "";
-//	public static String clusterUrl = "hdfs://master-home/";
+	public static String clusterUrl = "";
 //	public static String clusterUrl = "hdfs://master/";
-	public static String clusterUrl = "hdfs://Lec21/";
-//	public static String sparkUrl = "spark://master-home:7077";
+//	public static String clusterUrl = "hdfs://Lec21/";
+	public static String sparkUrl = "";
 //	public static String sparkUrl = "spark://master:7077";
-	public static String sparkUrl = "spark://Lec21:7077";
+//	public static String sparkUrl = "spark://Lec21:7077";
 	// public static String sparkUrl = "yarn-client";
 	public static String user = clusterUrl + "user/hdp/";
 	public static String outputDir = user + "output-spark";
@@ -107,7 +107,7 @@ public class MainSpark implements Serializable {
 			disArray[Integer.parseInt(t._1.replace("block",""))] = t._2.iterator().next().getSup();
 		}
 		
-		JavaPairRDD<String, Integer> mapReduced = grouped.mapToPair(new Reduce1Spark2(supportRate, totalBlockCount, totalTransactionCount, blocksIds, disArray)).filter(t -> t != null);
+		JavaPairRDD<String, Integer> mapReduced = grouped.filter(kv-> !kv._1.startsWith("block")).mapToPair(new Reduce1Spark2(supportRate, totalBlockCount, totalTransactionCount, blocksIds, disArray)).filter(t -> t != null);
 //		grouped.unpersist();
 //		mapReduced.persist(StorageLevel.MEMORY_AND_DISK());
 		JavaPairRDD<String, Integer> global = mapReduced.filter(t -> !t._1.contains(":"));
@@ -273,5 +273,6 @@ public class MainSpark implements Serializable {
 		
 		StringBuilder log = new StringBuilder(CountItemsets.countItemsets(outputFiles));
 		showTotalTime(log);
+//		CountItemsets.printRealItemsets();
 	}
 }

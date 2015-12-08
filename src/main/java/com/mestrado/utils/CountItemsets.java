@@ -14,6 +14,7 @@ import org.apache.hadoop.fs.Path;
 
 public class CountItemsets {
 	private static Integer itemCounts[];
+	private static ArrayList<String>[] realItemsets;
 
 	private static void countByOutputDir(String outputPath) {
 		Path path = new Path(outputPath);
@@ -25,9 +26,16 @@ public class CountItemsets {
 			FileSystem fs = FileSystem.get(c);
 			BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(path)));
 			String line;
+			String itemSup;
 			String[] lineSpt;
 			while ((line = br.readLine()) != null) {
-				lineSpt = line.replaceAll("\\(||\\)", "").replaceAll(",.*", "").split(" ");
+				itemSup = line.replaceAll("\\(||\\)", "");
+				lineSpt = itemSup.replaceAll(",.*", "").split(" ");
+				
+//				if(realItemsets[lineSpt.length-1] == null){
+//					realItemsets[lineSpt.length-1] = new ArrayList<String>();
+//				}
+//				realItemsets[lineSpt.length-1].add(itemSup);
 				if (itemCounts[lineSpt.length - 1] == null) {
 					itemCounts[lineSpt.length - 1] = new Integer(1);
 					// sbs[lineSpt.length-1] = new StringBuilder();
@@ -44,7 +52,7 @@ public class CountItemsets {
 
 	public static String countItemsets(String... filesNames) {
 		itemCounts = new Integer[20];
-
+//		realItemsets= new ArrayList[20];
 		for (String dirName : filesNames) {
 			ArrayList<String> outputFiles = MrUtils.getAllOuputFilesNames(dirName);
 			for (String outFile : outputFiles) {
@@ -65,5 +73,16 @@ public class CountItemsets {
 		sb.append("\n\n|**********************************|\n\n");
 //		System.out.println("ITEMSETSHERE \n\n"+sb.toString());
 		return sb.toString();
+	}
+	
+	public static void printRealItemsets(){
+		for (int i = 0; i < itemCounts.length; i++){
+			if (itemCounts[i] != null) {
+				System.out.println("\n************** "+(i+1)+" : "+itemCounts[i]);
+				for(String item: realItemsets[i]){
+					System.out.println(item);
+				}
+			}
+		}
 	}
 }
