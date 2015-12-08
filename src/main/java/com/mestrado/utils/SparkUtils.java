@@ -30,14 +30,15 @@ public class SparkUtils {
 		for (String s : args) {
 			System.out.println("Args: " + s);
 		}
-		if (args.length != 0) {
+		if (args.length == 4) {
 			MainSpark.supportRate = Double.parseDouble(args[0]);
-			if (args.length > 1) {
-				MainSpark.NUM_BLOCK = Integer.parseInt(args[1]);
-				if (args.length == 3) {
-					MainSpark.inputFileName = MainSpark.user + MainSpark.inputEntry + args[2];
-				}
-			}
+			MainSpark.NUM_BLOCK = Integer.parseInt(args[1]);
+			MainSpark.inputFileName = MainSpark.user+MainSpark.inputEntry+args[2];
+			MainSpark.clusterUrl = "hdfs://"+args[3]+"/";
+			MainSpark.sparkUrl = "spark://"+args[3]+":7077";
+		}else{
+			System.out.println("Missing arguments: SUPPORT NUM_BLOCK FILE_NAME MASTER_NAME");
+			System.exit(1);
 		}
 
 		SparkConf conf = new SparkConf().setAppName("Initial Config").setMaster(MainSpark.sparkUrl);

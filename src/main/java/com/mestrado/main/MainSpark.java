@@ -47,10 +47,10 @@ public class MainSpark implements Serializable {
 	public static int totalBlockCount;
 	public static String inputEntry = "input/";
 	public static String inputFileName = "";
-	public static String clusterUrl = "hdfs://master-home/";
+	public static String clusterUrl = "";
 //	 public static String clusterUrl = "hdfs://master/";
 //	 public static String clusterUrl = "hdfs://Lec21/";
-	public static String sparkUrl = "spark://master-home:7077";
+	public static String sparkUrl = "";
 //	 public static String sparkUrl = "spark://master:7077";
 //	 public static String sparkUrl = "spark://Lec21:7077";
 	// public static String sparkUrl = "yarn-client";

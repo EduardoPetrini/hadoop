@@ -30,7 +30,7 @@ public class Reduce1Spark implements PairFunction<Tuple2<String, Iterable<String
 	private int totalMaps; // M
 	private long totalTransactions; // D
 	private ArrayList<String> blocksIds; // Partial
-	private SequenceFile.Writer[] writers;
+//	private SequenceFile.Writer[] writers;
 	private Integer[] dis;
 
 	public Reduce1Spark(double support, int totalMaps, long totalTransactions, ArrayList<String> blocksIds, Integer[] dis) {
@@ -132,10 +132,10 @@ public class Reduce1Spark implements PairFunction<Tuple2<String, Iterable<String
 	 * @param index
 	 */
 	public void saveInCache(String key, Integer value, int index) {
-		try {
-			writers[index].append(key, value);
-		} catch (IOException ex) {
-			Logger.getLogger(Reduce1.class.getName()).log(Level.SEVERE, null, ex);
-		}
+//		try {
+//			writers[index].append(key, value);
+//		} catch (IOException ex) {
+//			Logger.getLogger(Reduce1.class.getName()).log(Level.SEVERE, null, ex);
+//		}
 	}
 }

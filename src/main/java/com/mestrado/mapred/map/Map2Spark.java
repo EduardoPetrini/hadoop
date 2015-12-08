@@ -65,17 +65,13 @@ public class Map2Spark implements Function2<Integer, Iterator<String>, Iterator<
 //			}
 //		}
 		
-		System.out.println("Check if partition will execute...");
+//		System.out.println("Check if partition will execute...");
 		if(checkExecutionMap(v1)){
 			String[] itemset;
 			String[] tr;
 			int itemsetIndex;
-			String tmp;
-			System.out.println("\n____________________________________ block content\n");	
 			while (v2.hasNext()) {
-				tmp = v2.next();
-				System.out.println(tmp);
-				tr = tmp.trim().split(" ");
+				tr = v2.next().trim().split(" ");
 				for (int i = 0; i < tr.length; i++) {
 					itemset = new String[maxK];
 					itemsetIndex = 0;
@@ -93,7 +89,7 @@ public class Map2Spark implements Function2<Integer, Iterator<String>, Iterator<
 			sp = p.split("/");
 			
 			if(sp[sp.length-1].equalsIgnoreCase("partition"+v1)){
-				System.out.println("\n**********************\n\nok-----partition "+v1+" will execute!!!\n**************************\n\n");
+//				System.out.println("\n**********************\n\nok-----partition "+v1+" will execute!!!\n**************************\n\n");
 				buildHashTree(p);
 				return true;
 			}
@@ -142,7 +138,7 @@ public class Map2Spark implements Function2<Integer, Iterator<String>, Iterator<
 	}
 
 	private void buildHashTree(String sequenceFileName) {
-		System.out.println("\n****************************\n\nGet all partitions files names by file \""+sequenceFileName+"\"...\n\n*******************************\n\n");
+//		System.out.println("\n****************************\n\nGet all partitions files names by file \""+sequenceFileName+"\"...\n\n*******************************\n\n");
 		Configuration conf = new Configuration();
 		conf.set("fs.defaultFS", MainSpark.clusterUrl);
 		
@@ -152,7 +148,7 @@ public class Map2Spark implements Function2<Integer, Iterator<String>, Iterator<
 		Text key;
 		Text value;
 		for(String file : partitionsFiles){
-			System.out.println("\n****************************\n\nReading "+file+"\n\n*******************************\n\n");
+//			System.out.println("\n****************************\n\nReading "+file+"\n\n*******************************\n\n");
 			try{
 			reader = new SequenceFile.Reader(conf, SequenceFile.Reader.file(new Path(file)));
 			
@@ -160,7 +156,7 @@ public class Map2Spark implements Function2<Integer, Iterator<String>, Iterator<
 			value = (Text) ReflectionUtils.newInstance(reader.getValueClass(), conf);
 			
 			while (reader.next(key, value)) {
-				System.out.println("Key value "+key+" -> "+value);
+//				System.out.println("Key value "+key+" -> "+value);
 				addInHashTree(key.toString(), value.toString());
 			}
 			}catch(IOException e){
@@ -168,12 +164,12 @@ public class Map2Spark implements Function2<Integer, Iterator<String>, Iterator<
 			}
 		}
 		
-		Set<String> keySet = itemSup.keySet();
-		System.out.println("\n****************************\n\nKeys in hash:");
-		for(String k: keySet){
-			System.out.println(k);
-		}
-		System.out.println("\n\n*******************************\n\n");
+//		Set<String> keySet = itemSup.keySet();
+//		System.out.println("\n****************************\n\nKeys in hash:");
+//		for(String k: keySet){
+//			System.out.println(k);
+//		}
+//		System.out.println("\n\n*******************************\n\n");
 	}
 
 	private void addInHashTree(String line, String sup) {
