@@ -54,11 +54,11 @@ public class MainSpark implements Serializable {
 //	 public static String sparkUrl = "spark://master:7077";
 //	 public static String sparkUrl = "spark://Lec21:7077";
 	// public static String sparkUrl = "yarn-client";
-	public static String user = clusterUrl + "user/hdp/";
-	public static String outputDir = user + "output-spark";
+	public static String user = "";
+	public static String outputDir = "";
 	public static long totalTransactionCount;
 	public static ArrayList<String> blocksIds;
-	public static String outputPartialName = user + "partitions-fase-1/partition";
+	public static String outputPartialName = "";
 	public static ArrayList<String> seqFilesNames;
 	public static int NUM_BLOCK = 1;
 	public static String globalFileName;

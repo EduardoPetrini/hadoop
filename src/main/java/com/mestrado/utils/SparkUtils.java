@@ -33,9 +33,12 @@ public class SparkUtils {
 		if (args.length == 4) {
 			MainSpark.supportRate = Double.parseDouble(args[0]);
 			MainSpark.NUM_BLOCK = Integer.parseInt(args[1]);
-			MainSpark.inputFileName = MainSpark.user+MainSpark.inputEntry+args[2];
 			MainSpark.clusterUrl = "hdfs://"+args[3]+"/";
 			MainSpark.sparkUrl = "spark://"+args[3]+":7077";
+			MainSpark.user = MainSpark.clusterUrl + "user/hdp/";
+			MainSpark.outputDir = MainSpark.user + "output-spark";
+			MainSpark.outputPartialName = MainSpark.user + "partitions-fase-1/partition";
+			MainSpark.inputFileName = MainSpark.user+MainSpark.inputEntry+args[2];
 		}else{
 			System.out.println("Missing arguments: SUPPORT NUM_BLOCK FILE_NAME MASTER_NAME");
 			System.exit(1);
