@@ -9,6 +9,7 @@ package main.java.com.mestrado.mapred.map;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -32,7 +33,7 @@ public class Map3Spark implements FlatMapFunction<Tuple2<String,Iterable<String>
 	@Override
 	public Iterable<String> call(Tuple2<String, Iterable<String>> t) throws Exception {
 		List<String> suffix = new ArrayList<String>((Collection<? extends String>) t._2);
-		Collections.sort(suffix);
+		Collections.sort(suffix,NUMERIC_ORDER);
 		String prefix;
     	String newItemset;
     	List<String> newItemsets = new ArrayList<String>();
@@ -67,4 +68,15 @@ public class Map3Spark implements FlatMapFunction<Tuple2<String,Iterable<String>
 		}
 		return true;
     }
+	
+	public static Comparator<String> NUMERIC_ORDER = new Comparator<String>(){
+
+		@Override
+		public int compare(String o1, String o2) {
+			Integer item1 = Integer.parseInt(o1.trim());
+			Integer item2 = Integer.parseInt(o2.trim());
+			return item1.compareTo(item2);
+		}
+		
+	};
 }

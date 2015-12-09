@@ -4,6 +4,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 
 import main.java.com.mestrado.main.Main;
 import main.java.com.mestrado.main.MainSpark;
@@ -52,7 +54,7 @@ public class CountItemsets {
 
 	public static String countItemsets(String... filesNames) {
 		itemCounts = new Integer[20];
-//		realItemsets= new ArrayList[20];
+		realItemsets= new ArrayList[20];
 		for (String dirName : filesNames) {
 			ArrayList<String> outputFiles = MrUtils.getAllOuputFilesNames(dirName);
 			for (String outFile : outputFiles) {
@@ -78,6 +80,7 @@ public class CountItemsets {
 	public static void printRealItemsets(){
 		for (int i = 0; i < itemCounts.length; i++){
 			if (itemCounts[i] != null) {
+				Collections.sort(realItemsets[i],ITEMSET_ORDER);
 				System.out.println("\n************** "+(i+1)+" : "+itemCounts[i]);
 				for(String item: realItemsets[i]){
 					System.out.println(item);
@@ -85,4 +88,23 @@ public class CountItemsets {
 			}
 		}
 	}
+	
+	public static Comparator<String> ITEMSET_ORDER = new Comparator<String>(){
+
+		@Override
+		public int compare(String o1, String o2) {
+			String[] item1 = o1.replaceAll(",.*","").split(" ");
+			String[] item2 = o2.replaceAll(",.*","").split(" ");
+			
+			for(int i = 0; i < item1.length; i++){
+				if(Integer.parseInt(item1[i]) < Integer.parseInt(item2[i])){
+					return -1;
+				}else if(Integer.parseInt(item1[i]) > Integer.parseInt(item2[i])){
+					return 1;
+				}
+			}
+			return 0;
+		}
+		
+	};
 }

@@ -49,14 +49,14 @@ public class Map2Spark2 implements Function2<Integer, Iterator<String>, Iterator
 		String[] pName;
 		for (Tuple2<String, Integer> t : partition) {
 			pName = t._1.split(":");
-
-//			System.out.println("if " + pName[1] + " equals \"" + v1 + "\"");
-
-			if (String.valueOf(v1).equalsIgnoreCase(pName[1])) {
+			for(int i = 1; i < pName.length; i++){
+				if (String.valueOf(v1).equalsIgnoreCase(pName[i])) {
 //				System.out.println(t._1);
 //				System.out.println("Build hash tree for this partition, t._2 have spark partition:\n" + t._2);
-				buildHashTree(pName[0], t._2);
-				checkPartition = true;
+					if(i == 1) keyValue.add(new Tuple2<String,Integer>(pName[0],t._2));
+					buildHashTree(pName[0], 0);
+					checkPartition = true;
+				}
 			}
 		}
 

@@ -28,6 +28,7 @@ import main.java.com.mestrado.mapred.map.Map3Spark;
 import main.java.com.mestrado.mapred.reduce.Reduce1Spark2;
 import main.java.com.mestrado.utils.CountItemsets;
 import main.java.com.mestrado.utils.MrUtils;
+import main.java.com.mestrado.utils.SerializableComparator;
 import main.java.com.mestrado.utils.SparkUtils;
 import scala.Tuple2;
 import scala.reflect.ClassManifestFactory$;
@@ -79,7 +80,7 @@ public class MainSpark implements Serializable {
 		StringBuilder log = new StringBuilder();
 		List<String> outputFiles = new ArrayList<String>();
 		long beginG = System.currentTimeMillis();
-
+		Broadcast<Double> supBroad = sc.broadcast(MainSpark.supportRate*MainSpark.totalTransactionCount);
 		JavaRDD<String> inputFile = sc.textFile(inputFileName, MainSpark.NUM_BLOCK);
 		// inputFile.persist(StorageLevel.MEMORY_AND_DISK());
 		inputFile.cache();
@@ -129,8 +130,8 @@ public class MainSpark implements Serializable {
 		JavaPairRDD<String, Integer> partCountedPair = new JavaPairRDD<String, Integer>(partCounted.rdd(), stringTag, integerTag);
 //		partCounted.unpersist();
 //		partCountedPair.persist(StorageLevel.MEMORY_AND_DISK());
-
-		global = global.union(partCountedPair).reduceByKey((v1,v2) -> v1 > v2 ? v1 : v2);//caso há algum global parcial que foi contado
+		
+		global = global.union(partCountedPair.reduceByKey((v1,v2) -> v1+v2)).reduceByKey((v1,v2) -> v1 > v2 ? v1 : v2).filter(kv -> kv._2 >= supBroad.value());//caso há algum global parcial que foi contado
 //		partCountedPair.unpersist();
 
 		// Global 1-itemsets finished, go to disk
@@ -139,7 +140,7 @@ public class MainSpark implements Serializable {
 		outputFiles.add(MainSpark.outputDir + kCount.value());
 
 		// Create 2-itemsets by global RDD
-		List<String> newItemsetsCandidates = SparkUtils.create2Itemsets(global.sortByKey().collect());
+		List<String> newItemsetsCandidates = SparkUtils.create2Itemsets(global.sortByKey(new SerializableComparator()).collect());
 		kCount.add(1);
 		System.out.println("\n\n*******************************\n\n Execution step "+kCount.value()+"\n\n********************************\n");
 //		global.unpersist();
@@ -196,7 +197,7 @@ public class MainSpark implements Serializable {
 //				for (Tuple2<String, Integer> t : lista) {
 //					 System.out.println("Key "+t._1+" value "+t._2);
 //				}
-				global = global.union(partCountedPair).reduceByKey((v1,v2) -> v1 > v2 ? v1 : v2);
+				global = global.union(partCountedPair.reduceByKey((v1,v2) -> v1+v2)).reduceByKey((v1,v2) -> v1 > v2 ? v1 : v2).filter(kv -> kv._2 >= supBroad.value());
 //				partCountedPair.unpersist();
 			}
 			System.out.println("Save in " + MainSpark.outputDir +kCount.value());

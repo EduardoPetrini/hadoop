@@ -58,7 +58,6 @@ public class Reduce1Spark2 implements PairFunction<Tuple2<String, Iterable<SupPa
 			diList.add(String.valueOf(supPartValues.getPartitionId()));
 			numMapsOfX++;
 		}
-
 		if ((partialSupport / ((double) totalTransactions)) >= support) {
 			return new Tuple2<String, Integer>(t._1, partialSupport);
 		}else if (numMapsOfX < totalMaps) {

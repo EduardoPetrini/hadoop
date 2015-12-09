@@ -122,6 +122,7 @@ public class SparkUtils {
 		System.out.println("User partition dir: " + MainSpark.outputPartialName);
 		System.out.println("Entry dir: " + MainSpark.inputEntry);
 		System.out.println("Cluster url: " + MainSpark.clusterUrl);
+		System.out.println("Spark url: " + MainSpark.sparkUrl);
 		for (String b : MainSpark.blocksIds) {
 			System.out.println("Blocks id: " + b);
 		}
