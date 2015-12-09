@@ -102,7 +102,7 @@ public class MainSpark implements Serializable {
 //		maped.unpersist();
 //		grouped.persist(StorageLevel.MEMORY_AND_DISK());
 		List<Tuple2<String,Iterable<SupPart>>> disRdd = grouped.filter(kv-> kv._1.startsWith("block")).collect();
-		Integer[] disArray = new Integer[MainSpark.NUM_BLOCK];
+		Integer[] disArray = new Integer[disRdd.size()];
 		for(Tuple2<String,Iterable<SupPart>> t: disRdd){
 			disArray[Integer.parseInt(t._1.replace("block",""))] = t._2.iterator().next().getSup();
 		}
