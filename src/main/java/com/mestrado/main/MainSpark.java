@@ -121,12 +121,15 @@ public class MainSpark implements Serializable {
 		//System.out.println("First map");
 //		print(grouped.collect());
 
-		List<Tuple2<String,Iterable<String>>> disRdd = grouped.filter(kv-> kv._1.startsWith("block")).collect();
+		List<Tuple2<String,Iterable<String>>> disRdd = grouped.filter(kv-> kv._1.startsWith("block")).sortByKey().collect();
 		
-		Integer[] disArray = new Integer[MainSpark.NUM_BLOCK+1];
+//		System.out.println("\n_______ blocks "+MainSpark.NUM_BLOCK+" dis size "+disRdd.size()+" ____\n");
+		Integer[] disArray = new Integer[disRdd.size()];
 		for(int i = 0; i < disRdd.size() ;i++){
+//			System.out.println(disRdd.get(i)._1.replaceAll("[a-z]+", ""));
 			disArray[Integer.parseInt(disRdd.get(i)._1.replaceAll("[a-z]+", ""))] = Integer.parseInt(disRdd.get(i)._2.iterator().next());
 		}
+//		System.exit(1);
 		JavaPairRDD<Text, Text> mapReduced = grouped.filter(kv-> !kv._1.startsWith("block")).mapToPair(new Reduce1Spark(supportRate, totalBlockCount, totalTransactionCount, blocksIds, disArray)).filter(t -> t != null);
 //		grouped.unpersist();
 //		mapReduced.persist(StorageLevel.MEMORY_AND_DISK());
