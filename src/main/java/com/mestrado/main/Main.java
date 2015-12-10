@@ -173,7 +173,6 @@ public class Main {
         
         job.setNumReduceTasks(NUM_REDUCES);
         
-        
         try {
             FileInputFormat.setInputPaths(job, new Path(inputFileName));
         } catch (IOException ex) {

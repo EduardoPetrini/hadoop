@@ -106,11 +106,11 @@ public class AprioriUtils {
 	}
 
 
-	public static Comparator<Object> ITEMSET_NUMERIC_ORDER = new Comparator<Object>() {
-    	public int compare(Object obj1, Object obj2){
+	public static Comparator<String> ITEMSET_NUMERIC_ORDER = new Comparator<String>() {
+    	public int compare(String obj1, String obj2){
     		
-    		String[] o1 = ((String)obj1).trim().split(" ");
-    		String[] o2 = ((String)obj2).trim().split(" ");
+    		String[] o1 = obj1.trim().split(" ");
+    		String[] o2 = obj2.trim().split(" ");
     		int a;
     		int b;
     		for(int i = 0; i < o1.length; i++){
@@ -130,11 +130,11 @@ public class AprioriUtils {
     	}
 	};
 
-	public static Comparator<Object> NUMERIC_ORDER = new Comparator<Object>() {
-    	public int compare(Object obj1, Object obj2){
+	public static Comparator<String> NUMERIC_ORDER = new Comparator<String>() {
+    	public int compare(String obj1, String obj2){
     		
-    		int o1 = Integer.parseInt(((String)obj1).trim());
-    		int o2 = Integer.parseInt(((String)obj2).trim());
+    		int o1 = Integer.parseInt(obj1.trim());
+    		int o2 = Integer.parseInt(obj2.trim());
     		
 			if(o1 < o2){
 				return -1;
