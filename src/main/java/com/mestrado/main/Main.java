@@ -48,8 +48,9 @@ public class Main {
     public static String clusterUrl = "hdfs://master/";
     public static long totalTransactionCount;
     public ArrayList<String> blocksIds;
-    public String outputPartialName = user+"partitions-fase-1/partition";
-    public static ArrayList<String> seqFilesNames;
+    public static String outputPartialName = user+"partitions-fase-1/partition";
+    public static String outputPartialNameDir = user+"partitions-fase-1/";
+//    public static ArrayList<String> seqFilesNames;
     public static int NUM_REDUCES = 1;
     public static String NUM_BLOCK = "0";
     
@@ -214,14 +215,14 @@ public class Main {
       
         MrUtils.initialConfig(args);//Dentre outras coisas, define a quantidade total de transações
         m.blocksIds = MrUtils.extractBlocksIds();
-        MrUtils.createIfNotExistOrClean(m.outputPartialName);
+        MrUtils.createIfNotExistOrClean(outputPartialNameDir);
         MrUtils.printConfigs(m);
         
         MrUtils.delOutDirs(user);
         Main.countDir++;
         m.job1();
         
-        m.blocksIds = MrUtils.getPartitions(m.outputPartialName);
+        m.blocksIds = MrUtils.getPartitions(outputPartialNameDir);
         if(m.blocksIds.size() == 0){
         	endTime();
         	System.exit(0);

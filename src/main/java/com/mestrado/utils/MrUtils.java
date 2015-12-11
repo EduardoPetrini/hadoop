@@ -6,7 +6,10 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -347,7 +350,7 @@ public class MrUtils {
      * @param pathName
      */
     public static void createIfNotExistOrClean(String pathName){
-    	Path path = new Path(pathName.substring(0,pathName.length()-9));
+    	Path path = new Path(pathName);
     	Configuration c = new Configuration();
           c.set("fs.defaultFS", Main.clusterUrl);
     	
@@ -378,7 +381,7 @@ public class MrUtils {
     public static ArrayList<String> getPartitions(String pathName){
     	ArrayList<String> partitions = new ArrayList<String>();
     	
-    	Path path = new Path(pathName.substring(0,pathName.length()-9));//Pega o diretório das partições
+    	Path path = new Path(pathName);//Pega o diretório das partições
     	Configuration c = new Configuration();
         c.set("fs.defaultFS", Main.clusterUrl);
         
@@ -515,5 +518,22 @@ public class MrUtils {
 		sb.append("IMRApriori").append("-").append(inputFileName[inputFileName.length-1]).append("-").append(Main.supportRate).append("-").append(Main.NUM_REDUCES).append("-").append(Main.NUM_BLOCK).append(".log");
 		System.out.println("Saving: "+data+"\n into "+sb.toString());
 		saveFileInLocal(data, sb.toString());
+	}
+	
+	public static void saveEntryArrayInHdfs(Configuration conf, List<Entry<String, Integer>> entries) {
+		Path path = new Path(Main.user + "output-imr-newItemsets/itemsets");
+		try {
+			FileSystem fs = FileSystem.get(conf);
+			
+			BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fs.create(path)));
+			
+			for(Entry<String, Integer> entry: entries){
+				bw.write(entry.getKey()+"\t:"+entry.getValue()+"\n");
+			}
+			bw.close();
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 }

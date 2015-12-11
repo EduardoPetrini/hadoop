@@ -6,30 +6,42 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map.Entry;
+import java.util.Set;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.SequenceFile;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.util.ReflectionUtils;
+
 
 import main.java.com.mestrado.main.Main;
 
 public class CountItemsets {
 	private static Integer itemsetsCounts[];
 	private static ArrayList<String>[] realItemsets;
+	private static HashMap<String,Integer> newItemsets;
+	private static HashSet<String> itemsets;
 
-	private static void countByOutputDir(String outputPath) {
+	private static void countByOutputDir(Configuration c, String outputPath) {
 		Path path = new Path(outputPath);
 
-		Configuration c = new Configuration();
+		
 		try {
-			c.set("fs.defaultFS", "hdfs://master/");
+			
 			FileSystem fs = FileSystem.get(c);
 			BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(path)));
 			String line;
 			String[] lineSpt;
 			while ((line = br.readLine()) != null) {
 				lineSpt = line.split("\\s+");
+				addItemset(line.trim());
 //				if(realItemsets[lineSpt.length - 2] == null){
 //					realItemsets[lineSpt.length - 2] = new ArrayList<String>();
 //				}
@@ -45,19 +57,86 @@ public class CountItemsets {
 		}
 	}
 
+	private static void countBySequenceDir(Configuration c, String sequencePath) {
+		SequenceFile.Reader reader;
+		Text key;
+		String keySt;
+		Integer valueInt;
+		IntWritable value;
+		try {
+			reader = new SequenceFile.Reader(c, SequenceFile.Reader.file(new Path(sequencePath)));
+
+			key = (Text) ReflectionUtils.newInstance(reader.getKeyClass(), c);
+			value = (IntWritable) ReflectionUtils.newInstance(reader.getValueClass(), c);
+			
+			while (reader.next(key, value)) {
+				keySt = key.toString().trim();
+//				valueInt = Integer.parseInt(value.toString());
+//				System.out.println("Contains... "+keySt);
+				if(!itemsets.contains(keySt)){
+					if((valueInt = newItemsets.get(keySt)) == null){
+						newItemsets.put(keySt,value.get());
+					}
+				}
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private static void checkNewItemsets(Configuration c){
+		String[] lineSpt;
+		Set<Entry<String,Integer>> keysValues = newItemsets.entrySet();
+		List<Entry<String,Integer>> itemsetsToSave = new ArrayList<Entry<String,Integer>>();
+		for(Entry<String,Integer> entry: keysValues){
+//			System.out.println("sup "+entry.getValue()+" tr "+Main.totalTransactionCount+" sr "+Main.supportRate);
+			if(((double)entry.getValue())/((double)Main.totalTransactionCount) >= Main.supportRate){
+				//Partial itemset is frequent
+				lineSpt = entry.getKey().trim().split(" ");
+//				if(realItemsets[lineSpt.length - 1] == null){
+//					realItemsets[lineSpt.length - 1] = new ArrayList<String>();
+//				}
+//				realItemsets[lineSpt.length - 1].add(entry.getKey().trim()+","+entry.getValue());
+				if (itemsetsCounts[lineSpt.length - 1] == null) {
+					itemsetsCounts[lineSpt.length - 1] = new Integer(1);
+				} else {
+					itemsetsCounts[lineSpt.length - 1]++;
+				}
+				
+				itemsetsToSave.add(entry);
+			}
+		}
+		
+		System.out.println("\n******\tNew itemsets to save\t******\n");
+		System.out.println(itemsetsToSave.size());
+		
+		MrUtils.saveEntryArrayInHdfs(c, itemsetsToSave);
+	}
+	
 	public static String countItemsets() {
 		itemsetsCounts = new Integer[20];
 		realItemsets = new ArrayList[20];
+		itemsets = new HashSet<String>();
+		newItemsets = new HashMap<String,Integer>();
+		List<String> partitions = MrUtils.getPartitions(Main.outputPartialNameDir);
 		ArrayList<String> outputFiles = MrUtils.getAllOuputFilesNames(Main.user + "output1");
+		Configuration c = new Configuration();
+		c.set("fs.defaultFS", "hdfs://master/");
 		for (String outFile : outputFiles) {
 			System.out.println("Contando itemsets em " + outFile);
-			CountItemsets.countByOutputDir(outFile);
+			CountItemsets.countByOutputDir(c,outFile);
 		}
 		outputFiles = MrUtils.getAllOuputFilesNames(Main.user + "output2");
 		for (String outFile : outputFiles) {
 			System.out.println("Contando itemsets em " + outFile);
-			CountItemsets.countByOutputDir(outFile);
+			CountItemsets.countByOutputDir(c,outFile);
 		}
+		//for partitions
+		for (String seqFile : partitions) {
+			System.out.println("Contando itemsets em " + seqFile);
+			countBySequenceDir(c, Main.outputPartialNameDir+seqFile);
+		}
+		checkNewItemsets(c);
 		int total = 0;
 		StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < itemsetsCounts.length; i++) {
@@ -82,6 +161,16 @@ public class CountItemsets {
 				}
 			}
 		}
+	}
+	
+	private static void addItemset(String item){
+		String[] itemArray = item.split("\\s+");
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < itemArray.length-1; i++){
+			sb.append(itemArray[i]).append(" ");
+		}
+//		System.out.println("Adding... "+sb.toString().trim());
+		itemsets.add(sb.toString().trim());
 	}
 	
 	private static Comparator<String> ITEMSET_ORDER = new Comparator<String>(){
