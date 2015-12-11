@@ -211,7 +211,6 @@ public class Main {
     
     public static void main(String[] args) throws IOException {
         Main m = new Main();
-//        System.out.println(m.checkOutput(user+"output1"));
       
         MrUtils.initialConfig(args);//Dentre outras coisas, define a quantidade total de transações
         m.blocksIds = MrUtils.extractBlocksIds();

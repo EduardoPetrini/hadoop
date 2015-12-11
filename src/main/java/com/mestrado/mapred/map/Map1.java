@@ -198,7 +198,7 @@ public class Map1 extends Mapper<LongWritable, Text, Text, Text>{
     			for(int j=i+1; j<frequents.size(); j++){
     				item = tmpItem.toString()+frequents.get(j);
     				newFrequents.add(item);
-    				itemSupHash.put(item, 1);
+//    				itemSupHash.put(item, 1);
     				hpt.add(hpt.getHashNode(),item.split(" "),0);
     			}
     		}
@@ -229,7 +229,7 @@ public class Map1 extends Mapper<LongWritable, Text, Text, Text>{
     						count++;
 //    						item = new ItemSup(newItemSet,0);
     						newFrequents.add(newItemSet);
-    						itemSupHash.put(newItemSet, 1);
+//    						itemSupHash.put(newItemSet, 1);
 	    					try{
 	    						hpt.add(hpt.getHashNode(),newItemSet.split(" "),0);
 	    					}catch(Exception e){
@@ -375,10 +375,8 @@ public class Map1 extends Mapper<LongWritable, Text, Text, Text>{
     	ArrayList<String> rmItems = new ArrayList<String>();
     	Text key = new Text();
 		Text val = new Text();
-		double rm;
     	for(String item: frequents){
     		value = itemSupHash.get(item);
-    		rm = (value/((double) blockSize));
     		if(value != null && ((value/((double) blockSize)) >= support)){
     			//envia para o reduce
     			key.set(item);
@@ -392,6 +390,7 @@ public class Map1 extends Mapper<LongWritable, Text, Text, Text>{
     			rmItems.add(item);
     		}
     	}
+    	itemSupHash.clear();
     	frequents.removeAll(rmItems);
     }
     
