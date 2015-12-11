@@ -40,11 +40,8 @@ public class CountItemsets {
 //				realItemsets[lineSpt.length-1].add(itemSup);
 				if (itemCounts[lineSpt.length - 1] == null) {
 					itemCounts[lineSpt.length - 1] = new Integer(1);
-					// sbs[lineSpt.length-1] = new StringBuilder();
-					// sbs[lineSpt.length-1].append(l).append("\n");
 				} else {
 					itemCounts[lineSpt.length - 1]++;
-					// sbs[lineSpt.length-1].append(l).append("\n");
 				}
 			}
 		} catch (IOException e) {
