@@ -167,8 +167,8 @@ public class Reduce1 extends Reducer<Text, Text, Text, IntWritable>{
     public void cleanup(Context c){
         log.info("Finalizando o REDUCE 1.");
         try {
-        	for(SequenceFile.Writer writer: writers){
-        		writer.close();
+        	for(int i = 0; i < writers.length; i++){
+        		if(writers[i] != null) writers[i].close();
         	}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
