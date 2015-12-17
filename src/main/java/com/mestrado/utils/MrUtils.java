@@ -500,7 +500,7 @@ public class MrUtils {
 		if (!file.isDirectory()) {
 			file.mkdirs();
 		}
-		sb.append("Spark-IMRApriori").append("-").append(inputFileName[inputFileName.length - 1]).append("-").append(MainSpark.supportRate).append("-").append(Main.NUM_BLOCK)
+		sb.append("Spark-IMRApriori").append("-").append(inputFileName[inputFileName.length - 1]).append("-").append(MainSpark.supportRate).append("-").append(MainSpark.NUM_BLOCK)
 				.append(".log");
 		System.out.println("Saving: " + data + "\n into " + sb.toString());
 		saveFileInLocal(data, sb.toString());
