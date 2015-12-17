@@ -114,7 +114,7 @@ public class SparkUtils {
 
 	public static void printConfigs() {
 		System.out.println("\n******************************************************\n");
-		System.out.println("IMRApriori");
+		System.out.println("Spark IMRApriori v2");
 		System.out.println("Arquivo de entrada: " + MainSpark.inputFileName);
 		System.out.println("Count: " + MainSpark.countDir);
 		System.out.println("Support rate: " + MainSpark.supportRate);

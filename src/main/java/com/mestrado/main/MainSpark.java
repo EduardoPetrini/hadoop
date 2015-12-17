@@ -105,59 +105,73 @@ public class MainSpark implements Serializable {
 		long beginG = System.currentTimeMillis();
 		
 		JavaRDD<String> inputFile = sc.textFile(inputFileName, MainSpark.NUM_BLOCK);
-//		inputFile.persist(StorageLevel.MEMORY_AND_DISK());
-		
+		inputFile.cache();
 		JavaRDD<Tuple2<String, String>> mapedInter = inputFile.mapPartitionsWithIndex(new Map1Spark2(broadSup), true);
-//		inputFile.unpersist();
-//		mapedInter.persist(StorageLevel.MEMORY_AND_DISK());
 		
 		ClassTag<String> tag = ClassManifestFactory$.MODULE$.fromClass(String.class);
 		JavaPairRDD<String, String> maped = new JavaPairRDD<String, String>(mapedInter.rdd(), tag, tag);
-//		mapedInter.unpersist();
 		maped.persist(StorageLevel.MEMORY_AND_DISK());
 		JavaPairRDD<String, Iterable<String>> grouped = maped.groupByKey(MainSpark.NUM_BLOCK);
-//		maped.unpersist();
-//		grouped.persist(StorageLevel.MEMORY_AND_DISK());
-		//System.out.println("First map");
-//		print(grouped.collect());
 
 		List<Tuple2<String,Iterable<String>>> disRdd = grouped.filter(kv-> kv._1.startsWith("block")).sortByKey().collect();
 		
-//		System.out.println("\n_______ blocks "+MainSpark.NUM_BLOCK+" dis size "+disRdd.size()+" ____\n");
 		Integer[] disArray = new Integer[disRdd.size()];
 		for(int i = 0; i < disRdd.size() ;i++){
-//			System.out.println(disRdd.get(i)._1.replaceAll("[a-z]+", ""));
 			disArray[Integer.parseInt(disRdd.get(i)._1.replaceAll("[a-z]+", ""))] = Integer.parseInt(disRdd.get(i)._2.iterator().next());
 		}
-//		System.exit(1);
 		JavaPairRDD<Text, Text> mapReduced = grouped.filter(kv-> !kv._1.startsWith("block")).mapToPair(new Reduce1Spark(supportRate, totalBlockCount, totalTransactionCount, blocksIds, disArray)).filter(t -> t != null);
-//		grouped.unpersist();
-//		mapReduced.persist(StorageLevel.MEMORY_AND_DISK());
-		//System.out.println("First reduce");
-//		print2(mapReduced.collect());
 		JavaPairRDD<Text, Text> global = mapReduced.filter(t -> !t._1.toString().contains(":"));
 		global.persist(StorageLevel.MEMORY_AND_DISK());
 		JavaPairRDD<Text, Text> part = mapReduced.filter(t -> t._1.toString().contains(":"));
+		mapedInter.unpersist();
 		mapReduced.unpersist();
+		grouped.unpersist();
 		part.persist(StorageLevel.MEMORY_AND_DISK());
-		
-		//System.out.println("\n\n______________________print parts__________________\n\n");
 		
 		global.saveAsTextFile(MainSpark.outputDir + MainSpark.countDir);
 		global.unpersist();
 
 		outputDirsName.add(MainSpark.outputDir + MainSpark.countDir);
-
-		//System.out.println("Print partitions");
+		List<String> partitionsDirs = new ArrayList<String>();
+		
 		for (String b : blocksIds) {
 			Broadcast<String> bb = sc.broadcast(b);
-//			print2(part.filter(p -> p._1.substring(p._1.indexOf(":")).contains(bb.value())).collect());
 			JavaPairRDD<Text,Text> tmp = part.filter(p -> p._1.toString().substring(p._1.toString().indexOf(":")).contains(bb.value()));
 			if(tmp.count() > 0){
 				tmp.saveAsHadoopFile(outputPartialName + b, Text.class,Text.class,SequenceFileOutputFormat.class);
+				partitionsDirs.add(outputPartialName + b);
 			}
 		}
-//		part.unpersist();
+		//step 2
+//		List<String> partitionsDirs = SparkUtils.getPartitionsFase1Dirs();
+		outputDirsName.addAll(partitionsDirs);
+		
+		mapedInter = inputFile.mapPartitionsWithIndex(new Map2Spark(partitionsDirs, MainSpark.clusterUrl), true).filter(kv -> !kv._1.equals("#"));
+		mapedInter.persist(StorageLevel.MEMORY_AND_DISK());
+		
+		maped = new JavaPairRDD<String, String>(mapedInter.rdd(), tag, tag);
+		grouped = maped.groupByKey();
+
+		JavaPairRDD<String, String> reduced = grouped.mapToPair(new PairFunction<Tuple2<String, Iterable<String>>, String, String>() {
+
+			@Override
+			public Tuple2<String, String> call(Tuple2<String, Iterable<String>> t) throws Exception {
+				Tuple2<String, String> kv;
+				Iterable<String> value = t._2;
+				Integer sup_count = 0;
+				sup_count = Integer.valueOf(value.iterator().next().split(":")[0]);
+				for (String v : value) {
+					sup_count++;
+				}
+
+				kv = new Tuple2<String, String>(t._1, String.valueOf(sup_count));
+				return kv;
+			}
+		});
+		MainSpark.countDir++;
+		reduced.filter(kv -> Integer.parseInt(kv._2) >= broadSup.value()).saveAsTextFile(MainSpark.outputDir + MainSpark.countDir);
+
+		outputDirsName.add(MainSpark.outputDir + MainSpark.countDir);
 
 		sc.stop();
 		sc.close();
@@ -289,7 +303,7 @@ public class MainSpark implements Serializable {
 		SparkUtils.printConfigs();
 		countDir++;
 		m.job1();
-		m.job2();
+//		m.job2();
 		StringBuilder log = new StringBuilder(CountItemsets.countItemsets(outputDirsName));
 		showTotalTime(log);
 //		CountItemsets.printRealItemsets();
