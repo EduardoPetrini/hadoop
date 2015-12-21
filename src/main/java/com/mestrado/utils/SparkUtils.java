@@ -1,11 +1,12 @@
 package main.java.com.mestrado.utils;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map.Entry;
 
@@ -23,7 +24,12 @@ import org.apache.spark.storage.StorageLevel;
 
 import main.java.com.mestrado.main.MainSpark;
 
-public class SparkUtils {
+public class SparkUtils implements Serializable{
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 
 	public static void initialConfig(String[] args) {
 		StringBuilder log = new StringBuilder();
@@ -252,4 +258,174 @@ public class SparkUtils {
 			e.printStackTrace();
 		}
 	}
+	
+	public static List<String[]> creatTwoItemsets(List<String> oneItems){
+		List<String[]> twoItems = new ArrayList<String[]>();
+		for(int i = 0; i < oneItems.size()-1; i++){
+			for(int j = i+1; j < oneItems.size(); j++){
+				twoItems.add(new String[]{oneItems.get(i),oneItems.get(j)});
+			}
+		}
+		return twoItems;
+	}
+	
+	public static List<String[]> createKItemsets(List<String[]> kLessOneItemsets, int k){
+		Collections.sort(kLessOneItemsets,ITEMSET_ORDER);
+		
+		List<String[]> kItemsets = new ArrayList<String[]>();
+		String[] itemA;
+		String[] itemB;
+		String[] itemsetCSpt;
+		for_ext:
+		for (int i = 0; i < kLessOneItemsets.size()-1; i++){
+//			System.out.println("\nin item i "+kLessOneItemsets.get(i)+"\n");
+        	itemA = kLessOneItemsets.get(i);
+        	for (int j = i+1; j < kLessOneItemsets.size(); j++){
+        		itemB = kLessOneItemsets.get(j);
+//        		System.out.println("\nin item j "+kLessOneItemsets.get(j)+" k is "+k+"\n");
+        		if(isSamePrefix(itemA, itemB, i, j, k)){
+        			itemsetCSpt = new String[k];
+        			combine(itemA, itemB, itemsetCSpt, k);
+        			if(allSubsetIsFrequent(itemsetCSpt, kLessOneItemsets)){
+//	        			itemsetAux.add(itemsetC);
+        				kItemsets.add(itemsetCSpt);
+        			}
+        		}else continue for_ext;
+        	}
+		}
+		return kItemsets;
+	}
+	/**
+     * 
+     * @param itemA
+     * @param itemB
+     * @param i
+     * @param j
+     * @return
+     */
+    public static boolean isSamePrefix(String[] itemA, String[] itemB, int i, int j, int k){
+    	for(int a = 0; a < k - 2; a++){
+            if(!itemA[a].equals(itemB[a])){
+            	//System.out.println("Não é o mesmo prefixo: "+itemA[a]+" != "+itemB[a]);
+                return false;
+            }
+        }
+        
+    	return true;
+    }
+    
+    /**
+     * 
+     * @param itemA
+     * @param itemB
+     * @return
+     */
+    public static void combine(String[] itemA, String[] itemB, String[] itemsetCSpt, int k){
+        for(int i = 0; i < itemA.length; i++){
+            itemsetCSpt[i] = itemA[i]; 
+        }
+        itemsetCSpt[k-1] = itemB[itemB.length-1];
+    }
+    
+    /**
+     * 
+     * @param itemset
+     * @param frequents
+     * @return
+     */
+    private static boolean allSubsetIsFrequent(String[] itemset, List<String[]> frequents) { 
+		int indexToSkip = 0;
+		int index;
+		String[] subItem = new String[itemset.length-1];
+		boolean subIsFrequent;
+		for(int j = 0; j < itemset.length-1; j++){
+			index = 0;
+			for(int i = 0; i < itemset.length; i++){
+				if(i != indexToSkip){
+					subItem[index] = itemset[i];
+					index++;
+				}
+			}
+			//subItem gerado, verificar se é do conjunto frequente
+			subIsFrequent = false;
+			for_middle:
+			for(int i = 0; i < frequents.size(); i++){
+				for(int x = 0; x < frequents.get(i).length; x++){
+					if(!frequents.get(i)[x].equalsIgnoreCase(subItem[x])){
+						continue for_middle;
+					}else{
+						if(x == subItem.length-1){
+							subIsFrequent = true;
+						}
+					}
+				}
+			}
+			if(!subIsFrequent) return false;
+			indexToSkip++;
+		}
+		
+		return true;
+	}
+
+	public static List<String[]> createKItemsetsString(List<String> kLessOneItemsets, Integer k) {
+		List<String[]> kItemsets = new ArrayList<String[]>();
+		String[] itemA;
+		String[] itemB;
+		String[] itemsetCSpt;
+		for (int i = 0; i < kLessOneItemsets.size()-1; i++){
+        	itemA = kLessOneItemsets.get(i).split(" ");
+        	for (int j = i+1; j < kLessOneItemsets.size(); j++){
+        		itemB = kLessOneItemsets.get(j).split(" ");
+        		if(isSamePrefix(itemA, itemB, i, j, k)){
+        			itemsetCSpt = new String[k];
+        			combine(itemA, itemB, itemsetCSpt, k);
+        			if(allSubsetIsFrequentString(itemsetCSpt, kLessOneItemsets)){
+        				kItemsets.add(itemsetCSpt);
+        			}
+        		}
+        	}
+		}
+		return kItemsets;
+	}
+
+	private static boolean allSubsetIsFrequentString(String[] itemset, List<String> frequents) {
+		int indexToSkip = 0;
+		StringBuilder subItem;
+		for(int j = 0; j < itemset.length-1; j++){
+			subItem = new StringBuilder();
+			for(int i = 0; i < itemset.length; i++){
+				if(i != indexToSkip){
+					subItem.append(itemset[i]).append(" ");
+				}
+			}
+			//subItem gerado, verificar se é do conjunto frequente
+			
+			if(!frequents.contains(subItem.toString().trim())){
+				return false;
+			}
+			indexToSkip++;
+		}
+		
+		return true;
+	}
+	public static void main(String[] nda){
+		int j = 1,i = 2;
+		System.out.println(j+" "+i);
+	}
+	
+	public static Comparator<String[]> ITEMSET_ORDER = new Comparator<String[]>() {
+
+		@Override
+		public int compare(String[] o1, String[] o2) {
+			for(int i =0; i < o1.length; i++){
+				if(Integer.parseInt(o1[i]) < Integer.parseInt(o2[i])){
+					return -1;
+				}else if(Integer.parseInt(o1[i]) > Integer.parseInt(o2[i])){
+					return 1;
+				}
+			}
+			return 0;
+		}
+		
+	};
 }

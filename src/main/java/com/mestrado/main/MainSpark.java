@@ -9,23 +9,20 @@ package main.java.com.mestrado.main;
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
-import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapred.SequenceFileOutputFormat;
 import org.apache.spark.Accumulator;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.api.java.function.PairFunction;
 import org.apache.spark.broadcast.Broadcast;
-import org.apache.spark.storage.StorageLevel;
 
-import main.java.com.mestrado.mapred.map.Map1Spark2;
-import main.java.com.mestrado.mapred.map.Map2Spark;
-import main.java.com.mestrado.mapred.reduce.Reduce1Spark;
+import main.java.com.mestrado.mapred.map.Map2Spark3;
+import main.java.com.mestrado.utils.ComparatorUtils;
+import main.java.com.mestrado.utils.ComparatorUtilsOne;
 import main.java.com.mestrado.utils.CountItemsets;
 import main.java.com.mestrado.utils.MrUtils;
 import main.java.com.mestrado.utils.SparkUtils;
@@ -48,11 +45,11 @@ public class MainSpark implements Serializable {
 	public static String inputEntry = "input/";
 	public static String inputFileName = "";
 	public static String clusterUrl = "";
-//	 public static String clusterUrl = "hdfs://master/";
-//	 public static String clusterUrl = "hdfs://Lec21/";
+	// public static String clusterUrl = "hdfs://master/";
+	// public static String clusterUrl = "hdfs://Lec21/";
 	public static String sparkUrl = "";
-//	 public static String sparkUrl = "spark://master:7077";
-//	 public static String sparkUrl = "spark://Lec21:7077";
+	// public static String sparkUrl = "spark://master:7077";
+	// public static String sparkUrl = "spark://Lec21:7077";
 	// public static String sparkUrl = "yarn-client";
 	public static String user = "";
 	public static String outputDir = "";
@@ -71,227 +68,179 @@ public class MainSpark implements Serializable {
 		timeTotal = 0;
 		outputDirsName = new ArrayList<String>();
 	}
-	
-//	public void print(List<Tuple2<String,Iterable<String>>> lista){
-//		System.out.println("********************************* printing");
-//		for(Tuple2<String,Iterable<String>> l: lista){
-//			System.out.println(l._1+" -> "+l._2);
-//		}
-//		System.out.println("****************************** end printing");
-//	}
-//	
-//	public void print2(List<Tuple2<String,String>> lista){
-//		System.out.println("********************************* printing");
-//		for(Tuple2<String,String> l: lista){
-//			System.out.println(l._1+" -> "+l._2);
-//		}
-//		System.out.println("****************************** end printing");
-//	}
-//	
-//	public void print3(List<Tuple2<Text,Text>> lista){
-//		System.out.println("********************************* printing");
-//		for(Tuple2<Text,Text> l: lista){
-//			System.out.println(l._1+" -> "+l._2);
-//		}
-//		System.out.println("****************************** end printing");
-//	}
 
+	// public void print(List<Tuple2<String,Iterable<String>>> lista){
+	// System.out.println("********************************* printing");
+	// for(Tuple2<String,Iterable<String>> l: lista){
+	// System.out.println(l._1+" -> "+l._2);
+	// }
+	// System.out.println("****************************** end printing");
+	// }
+	//
+	// public void print2(List<Tuple2<String,String>> lista){
+	// System.out.println("********************************* printing");
+	// for(Tuple2<String,String> l: lista){
+	// System.out.println(l._1+" -> "+l._2);
+	// }
+	// System.out.println("****************************** end printing");
+	// }
+	//
+	// public void print3(List<Tuple2<Text,Text>> lista){
+	// System.out.println("********************************* printing");
+	// for(Tuple2<Text,Text> l: lista){
+	// System.out.println(l._1+" -> "+l._2);
+	// }
+	// System.out.println("****************************** end printing");
+	// }
+
+//	public void printVector(List<String[]> vet){
+//		for(String[] a: vet){
+//			for(String b: a){
+//				System.out.print(b+" ");
+//			}
+//			System.out.println("");
+//		}
+//	}
+//	
+//	public void printVectorString(List<String> vet){
+//		for(String a: vet){
+//			System.out.println(a);
+//		}
+//	}
+	
 	public void job1() {
-		SparkConf conf = new SparkConf().setAppName("Imr fase 1").setMaster(sparkUrl);
+		SparkConf conf = new SparkConf().setAppName("Spark DPC").setMaster(sparkUrl);
 		JavaSparkContext sc = new JavaSparkContext(conf);
 		// sc.addJar("target/spark-imrApriori-1.0-jar-with-dependencies.jar");
-		Broadcast<Double> broadSup = sc.broadcast(MainSpark.supportRate);
+//		Broadcast<Double> broadSup = sc.broadcast(MainSpark.supportRate);
+		Broadcast<Double> broadSupTotal = sc.broadcast(MainSpark.supportRate * MainSpark.totalTransactionCount);
+		Accumulator<Integer> dirCount = sc.accumulator(1);
 		StringBuilder log = new StringBuilder();
+
 		long beginG = System.currentTimeMillis();
-		
+
 		JavaRDD<String> inputFile = sc.textFile(inputFileName, MainSpark.NUM_BLOCK);
 		inputFile.cache();
-		JavaRDD<Tuple2<String, String>> mapedInter = inputFile.mapPartitionsWithIndex(new Map1Spark2(broadSup), true);
-		
+
+		JavaRDD<String> oneItem = inputFile.flatMap(line -> new ArrayList<String>(Arrays.asList(line.split(" "))));
+		JavaPairRDD<String, Integer> oneCounted = oneItem.mapToPair(item -> new Tuple2<String, Integer>(item, 1)).reduceByKey((v1, v2) -> v1 + v2)
+				.filter(kv -> kv._2 >= broadSupTotal.getValue()).sortByKey(new ComparatorUtilsOne());
+		oneCounted.saveAsTextFile(outputDir + dirCount.value());
+		outputDirsName.add(outputDir + dirCount.value());
+		dirCount.add(1);
+		// Creating 2-itemsets
+		long begin = System.currentTimeMillis();
+		List<String[]> kItemsets = SparkUtils.creatTwoItemsets(oneCounted.keys().collect());
+
+		JavaRDD<Tuple2<String, Integer>> kCounted = inputFile.mapPartitions(new Map2Spark3(kItemsets,dirCount.value()));
 		ClassTag<String> tag = ClassManifestFactory$.MODULE$.fromClass(String.class);
-		JavaPairRDD<String, String> maped = new JavaPairRDD<String, String>(mapedInter.rdd(), tag, tag);
-		maped.persist(StorageLevel.MEMORY_AND_DISK());
-		JavaPairRDD<String, Iterable<String>> grouped = maped.groupByKey(MainSpark.NUM_BLOCK);
-
-		List<Tuple2<String,Iterable<String>>> disRdd = grouped.filter(kv-> kv._1.startsWith("block")).sortByKey().collect();
-		
-		Integer[] disArray = new Integer[disRdd.size()];
-		for(int i = 0; i < disRdd.size() ;i++){
-			disArray[Integer.parseInt(disRdd.get(i)._1.replaceAll("[a-z]+", ""))] = Integer.parseInt(disRdd.get(i)._2.iterator().next());
-		}
-		JavaPairRDD<Text, Text> mapReduced = grouped.filter(kv-> !kv._1.startsWith("block")).mapToPair(new Reduce1Spark(supportRate, totalBlockCount, totalTransactionCount, blocksIds, disArray)).filter(t -> t != null);
-		JavaPairRDD<Text, Text> global = mapReduced.filter(t -> !t._1.toString().contains(":"));
-		global.persist(StorageLevel.MEMORY_AND_DISK());
-		JavaPairRDD<Text, Text> part = mapReduced.filter(t -> t._1.toString().contains(":"));
-		mapedInter.unpersist();
-		mapReduced.unpersist();
-		grouped.unpersist();
-		part.persist(StorageLevel.MEMORY_AND_DISK());
-		
-		global.saveAsTextFile(MainSpark.outputDir + MainSpark.countDir);
-		global.unpersist();
-
-		outputDirsName.add(MainSpark.outputDir + MainSpark.countDir);
-		List<String> partitionsDirs = new ArrayList<String>();
-		
-		for (String b : blocksIds) {
-			Broadcast<String> bb = sc.broadcast(b);
-			JavaPairRDD<Text,Text> tmp = part.filter(p -> p._1.toString().substring(p._1.toString().indexOf(":")).contains(bb.value()));
-			if(tmp.count() > 0){
-				tmp.saveAsHadoopFile(outputPartialName + b, Text.class,Text.class,SequenceFileOutputFormat.class);
-				partitionsDirs.add(outputPartialName + b);
+		ClassTag<Integer> tagInt = ClassManifestFactory$.MODULE$.fromClass(Integer.class);
+		JavaPairRDD<String, Integer> itemsetCounted = new JavaPairRDD<String, Integer>(kCounted.rdd(), tag, tagInt).reduceByKey((v1, v2) -> v1 + v2)
+				.filter(kv -> kv._2 >= broadSupTotal.getValue()).sortByKey(new ComparatorUtils());
+		itemsetCounted.saveAsTextFile(outputDir + dirCount.value());
+		outputDirsName.add(outputDir + dirCount.value());
+		dirCount.add(1);
+		long lkSize;
+		long end = System.currentTimeMillis();
+		double timeByStep;
+		int cSetSize;
+		long ct;
+		int minK, maxK;
+		List<String[]> kItemsetsTmp = null;
+		JavaRDD<Tuple2<String, Integer>> kCountedTmp;
+		boolean cameFromBreak = false;
+		// loop for k >= 3
+		while (!cameFromBreak) {
+			minK = dirCount.value();
+			lkSize = itemsetCounted.count(); 
+			timeByStep = ((double) end) - ((double) begin);
+			begin = System.currentTimeMillis();
+//			System.out.println("\n********************** 2: "+itemsetCounted.count());
+			kItemsets = SparkUtils.createKItemsetsString(itemsetCounted.keys().collect(), dirCount.value());
+//			Collections.sort(kItemsets,SparkUtils.ITEMSET_ORDER);
+			dirCount.add(1);
+			maxK = dirCount.value();
+//			System.out.println("\n\n*********************** 3: "+ kItemsets.size()+"\n");
+			cSetSize = kItemsets.size();
+			if(cSetSize == 0) break;
+			if (timeByStep >= 60) {
+				ct = lkSize;
+			} else {
+				ct = (long) Math.round(lkSize * 1.2);
 			}
-		}
-		//step 2
-//		List<String> partitionsDirs = SparkUtils.getPartitionsFase1Dirs();
-		outputDirsName.addAll(partitionsDirs);
-		
-		mapedInter = inputFile.mapPartitionsWithIndex(new Map2Spark(partitionsDirs, MainSpark.clusterUrl), true).filter(kv -> !kv._1.equals("#"));
-		mapedInter.persist(StorageLevel.MEMORY_AND_DISK());
-		
-		maped = new JavaPairRDD<String, String>(mapedInter.rdd(), tag, tag);
-		grouped = maped.groupByKey();
-
-		JavaPairRDD<String, String> reduced = grouped.mapToPair(new PairFunction<Tuple2<String, Iterable<String>>, String, String>() {
-
-			@Override
-			public Tuple2<String, String> call(Tuple2<String, Iterable<String>> t) throws Exception {
-				Tuple2<String, String> kv;
-				Iterable<String> value = t._2;
-				Integer sup_count = 0;
-				sup_count = Integer.valueOf(value.iterator().next().split(":")[0]);
-				for (String v : value) {
-					sup_count++;
-				}
-
-				kv = new Tuple2<String, String>(t._1, String.valueOf(sup_count));
-				return kv;
+			if(cSetSize > ct){
+				dirCount.setValue(dirCount.value()-1);
+				maxK = dirCount.value();
+			}else{
+				kItemsetsTmp = kItemsets;
 			}
-		});
-		MainSpark.countDir++;
-		reduced.filter(kv -> Integer.parseInt(kv._2) >= broadSup.value()).saveAsTextFile(MainSpark.outputDir + MainSpark.countDir);
-
-		outputDirsName.add(MainSpark.outputDir + MainSpark.countDir);
+			 while( cSetSize <= ct){
+				 kItemsetsTmp = SparkUtils.createKItemsets(kItemsetsTmp, dirCount.value());
+				 if(kItemsetsTmp.size() == 0) {
+					 dirCount.setValue(dirCount.value()-1);
+					 maxK = dirCount.value();
+					 cameFromBreak = true;
+					 break;
+				 }
+//				 System.out.println("\n\n*********************** "+dirCount.value()+": "+ kItemsetsTmp.size()+"\n");
+				 cSetSize += kItemsetsTmp.size();
+				 kItemsets.addAll(kItemsetsTmp);
+				 dirCount.add(1);
+				 maxK = dirCount.value();
+				 kItemsetsTmp = SparkUtils.createKItemsets(kItemsetsTmp, dirCount.value());
+				 if(kItemsetsTmp.size() == 0) {
+					 dirCount.setValue(dirCount.value()-1);
+					 maxK = dirCount.value();
+					 cameFromBreak = true;
+					 break;
+				 }
+				 dirCount.add(1);
+				 maxK = dirCount.value();
+//				 System.out.println("\n\n*********************** "+dirCount.value()+": "+ kItemsetsTmp.size()+"\n");
+				 cSetSize += kItemsetsTmp.size();
+				 kItemsets.addAll(kItemsetsTmp);
+				 if(cSetSize > ct){
+						dirCount.setValue(dirCount.value()-1);
+						maxK = dirCount.value();
+					}
+			 }
+			 //itemsets created for this step
+			 for(int i = minK; i < maxK; i++){
+				 kCountedTmp = inputFile.mapPartitions(new Map2Spark3(kItemsets,i));
+				 new JavaPairRDD<String, Integer>(kCountedTmp.rdd(), tag, tagInt).reduceByKey((v1, v2) -> v1 + v2)
+							.filter(kv -> kv._2 >= broadSupTotal.getValue()).sortByKey(new ComparatorUtils()).saveAsTextFile(outputDir + i);
+				 outputDirsName.add(outputDir + i);
+			 }
+			 kCounted = inputFile.mapPartitions(new Map2Spark3(kItemsets,maxK));
+			 itemsetCounted = new JavaPairRDD<String, Integer>(kCounted.rdd(), tag, tagInt).reduceByKey((v1, v2) -> v1 + v2)
+						.filter(kv -> kv._2 >= broadSupTotal.getValue()).sortByKey(new ComparatorUtils());
+			 itemsetCounted.saveAsTextFile(outputDir + dirCount.value());
+			 outputDirsName.add(outputDir + dirCount.value());
+			 dirCount.add(1);
+			 end = System.currentTimeMillis();
+		}
 
 		sc.stop();
 		sc.close();
 		long endG = System.currentTimeMillis();
 		timeTotal += endG - beginG;
-		log.append("Step 1 : " + (endG - beginG) + "ms " + (((double) (endG - beginG)) / 1000) + "s "+ (((double) (endG - beginG)) / 1000 / 60) + "m\n\n");
+		log.append("Step 1 : " + (endG - beginG) + "ms " + (((double) (endG - beginG)) / 1000) + "s " + (((double) (endG - beginG)) / 1000 / 60) + "m\n\n");
 		timeLog.add(log.toString());
 		System.out.println("END STEP ONE");
 	}
 
-	public void job2() {
-		System.out.println("Gargabe collect...");
-		System.gc();
-		System.out.println("Gargabe collect...end");
-		
-		SparkConf conf = new SparkConf().setAppName("Imr fase 2").setMaster(sparkUrl);
-		JavaSparkContext sc = new JavaSparkContext(conf);
-
-		Broadcast<Double> broadSup = sc.broadcast(MainSpark.supportRate*MainSpark.totalTransactionCount);
-
-		StringBuilder log = new StringBuilder();
-		
-		long beginG = System.currentTimeMillis();
-		JavaRDD<String> inputFile = sc.textFile(inputFileName, MainSpark.NUM_BLOCK);
-		
-//		inputFile.persist(StorageLevel.MEMORY_AND_DISK());
-		List<String> partitionsDirs = SparkUtils.getPartitionsFase1Dirs();
-		outputDirsName.addAll(partitionsDirs);
-//		System.exit(0);
-//		JavaPairRDD<String, String> partition = null;
-//		List<Tuple2<String,String>> partitionList = new ArrayList<Tuple2<String,String>>();
-//		JavaPairRDD<String, String> partitionAux = null;
-//		List<Tuple2<String,String>>[] partitionsList = new List[partitionsDirs.size()];
-//		int index = 0;
-//		for (String p : partitionsDirs) {
-//			partitionsList[index] =  sc.wholeTextFiles(p).filter(kv -> kv._2.length() > 4).collect();
-//			index++;
-////			if (partition == null) {
-////				partition = sc.wholeTextFiles(p).filter(kv -> kv._2.length() > 4);
-////				partitionList.addAll(sc.wholeTextFiles(p).filter(kv -> kv._2.length() > 4).collect());
-////				partition.persist(StorageLevel.MEMORY_AND_DISK());
-//////			} else {
-////				partitionAux = sc.wholeTextFiles(p).filter(kv -> kv._2.length() > 4);
-////				if (partitionAux != null) {
-////					partition = partition.union(partitionAux);
-////				}
-////			}
-//			
-////			partition.foreach(t -> System.out.println("Partition " + t._1 + " content: \n" + t._2));
-//		}
-
-		// All step 1 partitions in "partition" RDD
-//		System.out.println("Second partitions");
-//		print2(partition.collect());
-		JavaRDD<Tuple2<String, String>> mapedInter = inputFile.mapPartitionsWithIndex(new Map2Spark(partitionsDirs, MainSpark.clusterUrl), true).filter(kv -> !kv._1.equals("#"));
-		mapedInter.persist(StorageLevel.MEMORY_AND_DISK());
-//		inputFile.unpersist();
-//		partition.unpersist();
-
-		
-		
-		ClassTag<String> tag = ClassManifestFactory$.MODULE$.fromClass(String.class);
-		JavaPairRDD<String, String> maped = new JavaPairRDD<String, String>(mapedInter.rdd(), tag, tag);
-//		mapedInter.unpersist();
-//		maped.persist(StorageLevel.MEMORY_AND_DISK());
-		JavaPairRDD<String, Iterable<String>> grouped = maped.groupByKey();
-//		maped.unpersist();
-//		grouped.persist(StorageLevel.MEMORY_AND_DISK());
-//		System.out.println("Second map");
-
-		JavaPairRDD<String, String> reduced = grouped.mapToPair(new PairFunction<Tuple2<String, Iterable<String>>, String, String>() {
-
-			@Override
-			public Tuple2<String, String> call(Tuple2<String, Iterable<String>> t) throws Exception {
-				Tuple2<String, String> kv;
-				Iterable<String> value = t._2;
-				Integer sup_count = 0;
-				sup_count = Integer.valueOf(value.iterator().next().split(":")[0]);
-				for (String v : value) {
-					sup_count++;
-					// sup_count = Integer.valueOf(v.split(":")[1]);
-				}
-
-				kv = new Tuple2<String, String>(t._1, String.valueOf(sup_count));
-				return kv;
-			}
-		});
-		//System.out.println("Second reduce without fiter");
-		
-//		reduced.persist(StorageLevel.MEMORY_AND_DISK());
-//		grouped.unpersist();
-//		System.out.println("Second reduce with fiter");
-		MainSpark.countDir++;
-		reduced.filter(kv -> Integer.parseInt(kv._2) >= broadSup.value()).saveAsTextFile(MainSpark.outputDir + MainSpark.countDir);
-//		reduced.unpersist();
-
-		outputDirsName.add(MainSpark.outputDir + MainSpark.countDir);
-		sc.stop();
-		sc.close();
-		
-		long endG = System.currentTimeMillis();
-		log.append("Step 2 : " + (endG - beginG) + "ms " + (((double) (endG - beginG)) / 1000.0) + "s "+ (((double) (endG - beginG)) / 1000.0/ 60.0) + "m\n\n");
-		timeTotal += endG - beginG;
-		timeLog.add(log.toString());
-		
-		System.out.println("END STEP TWO");
-	}
-	
-	public static void showTotalTime(StringBuilder log){
+	public static void showTotalTime(StringBuilder log) {
 		for (String l : timeLog) {
 			System.out.println(l);
 		}
 		SimpleDateFormat format = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
 		log.append("\n\n|*************************************************************************|\n");
 		log.append("DATA=").append(format.format(new Date())).append("\n");
-		log.append("Total time: "+timeTotal+"ms "+((double)timeTotal)/1000.0+"s "+((double)timeTotal)/1000.0/60.0+"m\n");
-		log.append("TEMPO=").append(((double)timeTotal)/1000.0);
+		log.append("Total time: " + timeTotal + "ms " + ((double) timeTotal) / 1000.0 + "s " + ((double) timeTotal) / 1000.0 / 60.0 + "m\n");
+		log.append("TEMPO=").append(((double) timeTotal) / 1000.0);
 		log.append("\n\n|*************************************************************************|\n#\n");
-		
-		MrUtils.saveTimeLog(log.toString(),MainSpark.inputFileName.split("/"));
+
+		MrUtils.saveTimeLog(log.toString(), MainSpark.inputFileName.split("/"));
 	}
 
 	public static void main(String[] args) {
@@ -303,9 +252,9 @@ public class MainSpark implements Serializable {
 		SparkUtils.printConfigs();
 		countDir++;
 		m.job1();
-//		m.job2();
+		// m.job2();
 		StringBuilder log = new StringBuilder(CountItemsets.countItemsets(outputDirsName));
 		showTotalTime(log);
-//		CountItemsets.printRealItemsets();
+		// CountItemsets.printRealItemsets();
 	}
 }

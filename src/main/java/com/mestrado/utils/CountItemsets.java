@@ -126,26 +126,12 @@ public class CountItemsets {
 		conf.set("fs.defaultFS", MainSpark.clusterUrl);
 
 		for (String dirName : filesNames) {
-			if (!dirName.contains("partition")) {
 				List<String> outputFiles = SparkUtils.getAllFilesInDir(conf, dirName);
 				for (String outFile : outputFiles) {
 					System.out.println("Contando itemsets em " + outFile);
 					CountItemsets.countByOutputDir(conf, outFile);
 				}
-			}
 		}
-
-		for (String dirName : filesNames) {
-			if (dirName.contains("partition")) {
-				// read as sequence file
-				List<String> sequenceFiles = SparkUtils.getAllFilesInDir(conf, dirName);
-				for (String seqFile : sequenceFiles) {
-					System.out.println("Contando itemsets em " + seqFile);
-					countBySequenceDir(conf, seqFile);
-				}
-			}
-		}
-		checkNewItemsets(conf);
 		int total = 0;
 		StringBuilder sb = new StringBuilder();
 		sb.append("\n|**********************************|\n\n");
