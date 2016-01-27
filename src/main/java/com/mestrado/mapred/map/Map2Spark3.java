@@ -28,14 +28,14 @@ import scala.Tuple2;
 public class Map2Spark3 implements Function2<Integer, Iterator<String>, Iterator<Tuple2<String, SupPart>>> {
 
 	private static final long serialVersionUID = 1L;
-	private List<String> partition;
+	private List<String[]> partition;
 	private HashMap<String, Integer> itemSup;
 	private HashPrefixTree hpt;
 	private int maxK;
 	private List<Tuple2<String, SupPart>> keyValue;
 	private double support;
 
-	public Map2Spark3(double support, List<String> partition) {
+	public Map2Spark3(double support, List<String[]> partition) {
 		this.partition = partition;
 		this.support = support;
 	}
@@ -46,13 +46,13 @@ public class Map2Spark3 implements Function2<Integer, Iterator<String>, Iterator
 		itemSup = new HashMap<String, Integer>();
 		hpt = new HashPrefixTree();
 		maxK = 0;
-		keyValue = new ArrayList<Tuple2<String, SupPart>>();
-		keyValue.add(new Tuple2<String, SupPart>("#", null));
 		long countTr = 0;
-		for (String item : partition) {
+		for (String[] item : partition) {
 			buildHashTree(item);
 		}
 		partition.clear();
+		keyValue = new ArrayList<Tuple2<String, SupPart>>();
+		keyValue.add(new Tuple2<String, SupPart>("#", null));
 
 		String[] itemset;
 		String[] tr;
@@ -69,8 +69,8 @@ public class Map2Spark3 implements Function2<Integer, Iterator<String>, Iterator
 		Set<Entry<String, Integer>> itemsSup = itemSup.entrySet();
 		Tuple2<String, SupPart> tuple;
 		for (Entry<String, Integer> entry : itemsSup) {
-			if((((double) entry.getValue())/((double)countTr)) >= support){
-				tuple = new Tuple2<String, SupPart>(entry.getKey(), new SupPart(v1,entry.getValue()));
+			if ((((double) entry.getValue()) / ((double) countTr)) >= support) {
+				tuple = new Tuple2<String, SupPart>(entry.getKey(), new SupPart(v1, entry.getValue()));
 				keyValue.add(tuple);
 			}
 		}
@@ -89,14 +89,15 @@ public class Map2Spark3 implements Function2<Integer, Iterator<String>, Iterator
 			return;
 		} else {
 			itemset[itemsetIndex] = transaction[i];
-
-			StringBuilder sb = new StringBuilder();
-			for (String item : itemset) {
-				if (item != null) {
-					sb.append(item).append(" ");
+			if (itemsetIndex == maxK-1) {
+				StringBuilder sb = new StringBuilder();
+				for (String item : itemset) {
+					if (item != null) {
+						sb.append(item).append(" ");
+					}
 				}
+				addToHashItemSupAndSendToReduce(sb.toString().trim());
 			}
-			addToHashItemSupAndSendToReduce(sb.toString().trim());
 
 			i++;
 			itemsetIndex++;
@@ -116,12 +117,14 @@ public class Map2Spark3 implements Function2<Integer, Iterator<String>, Iterator
 			value++;
 			itemSup.put(item, value);
 			// keyValue.add(new Tuple2<String, String>(item, value[0] + ":1"));
+		} else {
+			itemSup.put(item, 1);
 		}
 	}
 
-	private void buildHashTree(String itemset) {
-		String[] keySpl = itemset.split(" ");
-		itemSup.put(itemset, 0);
+	private void buildHashTree(String[] keySpl) {
+		// String[] keySpl = itemset.split(" ");
+		// itemSup.put(itemset, 0);
 		hpt.add(hpt.getHashNode(), keySpl, 0);
 		if (keySpl.length > maxK) {
 			maxK = keySpl.length;

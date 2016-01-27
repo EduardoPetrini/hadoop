@@ -22,7 +22,7 @@ import scala.Tuple2;
  * 
  * @author eduardo
  */
-public class Map3Spark implements FlatMapFunction<Tuple2<String,Iterable<String>>, String>{
+public class Map3Spark implements FlatMapFunction<Tuple2<String,Iterable<String>>, String[]>{
 	
 	private Map<String,Integer> kLessOneItemsets;
 	
@@ -31,18 +31,18 @@ public class Map3Spark implements FlatMapFunction<Tuple2<String,Iterable<String>
 	}
 
 	@Override
-	public Iterable<String> call(Tuple2<String, Iterable<String>> t) throws Exception {
+	public Iterable<String[]> call(Tuple2<String, Iterable<String>> t) throws Exception {
 		List<String> suffix = new ArrayList<String>((Collection<? extends String>) t._2);
 		Collections.sort(suffix,NUMERIC_ORDER);
 		String prefix;
-    	String newItemset;
-    	List<String> newItemsets = new ArrayList<String>();
+    	String[] newItemset;
+    	List<String[]> newItemsets = new ArrayList<String[]>();
 		for(int i = 0; i < suffix.size()-1; i++){
     		prefix = t._1+" "+suffix.get(i)+" ";
     		for(int j = i+1; j < suffix.size(); j++){
-    			newItemset = prefix+suffix.get(j);
+    			newItemset = (prefix+suffix.get(j)).split(" ");
     			
-    			if(allSubsetIsFrequent(newItemset.split(" "))){
+    			if(allSubsetIsFrequent(newItemset)){
     				newItemsets.add(newItemset);
     			}
         	}

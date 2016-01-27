@@ -17,6 +17,7 @@ import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.api.java.function.VoidFunction;
 import org.apache.spark.broadcast.Broadcast;
 import org.apache.spark.storage.StorageLevel;
 
@@ -128,11 +129,11 @@ public class MainSpark implements Serializable {
 
 		ClassTag<Integer> integerTag = ClassManifestFactory$.MODULE$.fromClass(Integer.class);
 		JavaPairRDD<String, Integer> partCountedPair = new JavaPairRDD<String, Integer>(partCounted.rdd(), stringTag, integerTag);
-//		partCounted.unpersist();
+		partCounted.unpersist();
 //		partCountedPair.persist(StorageLevel.MEMORY_AND_DISK());
 		
 		global = global.union(partCountedPair.reduceByKey((v1,v2) -> v1+v2)).reduceByKey((v1,v2) -> v1 > v2 ? v1 : v2).filter(kv -> kv._2 >= supBroad.value());//caso há algum global parcial que foi contado
-//		partCountedPair.unpersist();
+		partCountedPair.unpersist();
 
 		// Global 1-itemsets finished, go to disk
 		System.out.println("Save in " + MainSpark.outputDir + kCount.value());
@@ -140,14 +141,15 @@ public class MainSpark implements Serializable {
 		outputFiles.add(MainSpark.outputDir + kCount.value());
 
 		// Create 2-itemsets by global RDD
-		List<String> newItemsetsCandidates = SparkUtils.create2Itemsets(global.sortByKey(new SerializableComparator()).collect());
+		List<String[]> newItemsetsCandidates = SparkUtils.create2Itemsets(global.sortByKey(new SerializableComparator()).collect());
+		global.unpersist();
 		kCount.add(1);
 		System.out.println("\n\n*******************************\n\n Execution step "+kCount.value()+"\n\n********************************\n");
 //		global.unpersist();
 
 		// Count twoItemsets at the inputFile partition using a HashMap
 		// twoItemsets can to be much big
-		List<Tuple2<String, Integer>> lista;
+//		List<Tuple2<String, Integer>> lista;
 		JavaPairRDD<String,Iterable<String>> prefixSufixRDD;
 		JavaRDD<Tuple2<String, SupPart>> newItemsetsFrequents;
 		boolean creatItemsets = true;
@@ -161,17 +163,19 @@ public class MainSpark implements Serializable {
 				outputFiles.add(MainSpark.outputDir + kCount.value());
 				break;
 			}
+			
 //			List<Tuple2<String, SupPart>> l = newItemsetsFrequents.collect();
 //			for (Tuple2<String, SupPart> t : l) {
 //				 System.out.println(t._1+" partition/sup "+t._2.getPartitionId()+" / "+t._2.getSup());
 //			}
 			maped = new JavaPairRDD<String, SupPart>(newItemsetsFrequents.rdd(), stringTag, supPartTag);
-//			newItemsetsFrequents.unpersist();
+			newItemsetsFrequents.unpersist();
 //			maped.persist(StorageLevel.MEMORY_AND_DISK());
 			grouped = maped.groupByKey();
 //			grouped.persist(StorageLevel.MEMORY_AND_DISK());
 //			maped.unpersist();
 			mapReduced = grouped.mapToPair(new Reduce1Spark2(supportRate, totalBlockCount, totalTransactionCount, blocksIds, disArray)).filter(t -> t != null);
+			
 //			if (mapReduced.count() <= 1)
 //				break;
 //			mapReduced.persist(StorageLevel.MEMORY_AND_DISK());
@@ -213,7 +217,16 @@ public class MainSpark implements Serializable {
 			Broadcast<Integer> kBroad = sc.broadcast(kCount.value());
 			System.out.println("\n\n*******************************\n\n Execution step "+kCount.value()+"\n\n********************************\n");
 			//create news item sets candidates in spark
-			prefixSufixRDD = global.keys().mapToPair(key -> new Tuple2<String,String>(key.substring(0, key.lastIndexOf(" ")),key.split(" ")[kBroad.value()-2])).groupByKey();
+			global.foreach(t -> System.out.println(t._1+" : "+t._2));
+			prefixSufixRDD = null;
+			try{
+				prefixSufixRDD = global.keys().mapToPair(key -> new Tuple2<String,String>(key.substring(0, key.lastIndexOf(" ")),key.split(" ")[kBroad.value()-2])).groupByKey();
+			}catch(IndexOutOfBoundsException e){
+				e.printStackTrace();
+				
+				System.out.println("kBroad: "+kBroad.getValue());
+				System.exit(0);
+			}
 //			kBroad.destroy();
 			
 //			List<Tuple2<String,Iterable<String>>> listSS = testRdd.collect();
@@ -226,7 +239,7 @@ public class MainSpark implements Serializable {
 //			System.exit(0);
 			System.out.println("Global size on candidate gen "+global.count());
 			newItemsetsCandidates = prefixSufixRDD.flatMap(new Map3Spark(global.collectAsMap())).collect();
-			
+			global.unpersist();
 //			newItemsetsCandidates = SparkUtils.createKItemsets(global.sortByKey().collect());
 			System.out.println("News candidates vector size: "+newItemsetsCandidates.size());
 //			for(String c: newItemsetsCandidates){

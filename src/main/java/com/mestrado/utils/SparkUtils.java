@@ -218,12 +218,11 @@ public class SparkUtils {
 		System.out.println(log.toString());
 	}
 	
-	public static List<String> create2Itemsets(List<Tuple2<String,Integer>> globalOneItemsets){
-		List<String> twoItemsets = new ArrayList<String>();
-		
+	public static List<String[]> create2Itemsets(List<Tuple2<String,Integer>> globalOneItemsets){
+		List<String[]> twoItemsets = new ArrayList<String[]>();
 		for(int i = 0; i < globalOneItemsets.size(); i++){
 			for(int j = i+1; j < globalOneItemsets.size(); j++){
-				twoItemsets.add(globalOneItemsets.get(i)._1+" "+globalOneItemsets.get(j)._1);
+				twoItemsets.add(new String[]{globalOneItemsets.get(i)._1,globalOneItemsets.get(j)._1});
 			}
 		}
 		
