@@ -7,11 +7,11 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import main.java.com.mestrado.main.MainSpark;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -25,6 +25,8 @@ import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.util.ReflectionUtils;
+
+import main.java.com.mestrado.main.MainSpark;
 
 public class MrUtils {
 	private Log log = LogFactory.getLog(MrUtils.class);
@@ -92,6 +94,10 @@ public class MrUtils {
     public static void delOutDirs(String d) {
         
         System.out.println("Excluindo diretórios anteriores...");
+        
+        File file = new File(MainSpark.durationLogName);
+        file.delete();
+        
         Configuration c = new Configuration(); 
         c.set("fs.defaultFS", MainSpark.clusterUrl);
         
@@ -110,7 +116,7 @@ public class MrUtils {
                     
                     if(aux.getName().contains("output") || aux.getName().contains("inputToGen") ||  aux.getName().contains("inputCached") ||
                     		aux.getName().contains("candidatosTxt") || aux.getName().contains("outputCandidates") || 
-                    		aux.getName().contains("inputCandidates")){
+                    		aux.getName().contains("inputCandidates") || aux.getName().contains("discard")){
                         
                         if(fs.delete(aux, true)){
                         	System.out.println("Excluido diretório -> "+aux.getName());
@@ -296,7 +302,6 @@ public class MrUtils {
             FileSystem fs = FileSystem.get(c);
             if(fs.exists(p)){
 	            FileStatus[] ff = fs.listStatus(p);
-	
 				 for(FileStatus f: ff){
 				     aux = f.getPath();
 				     if(aux.getName().startsWith("part")){
@@ -350,7 +355,7 @@ public class MrUtils {
     	}
     	
     	if (args.length == 0) {
-    		System.out.println("Modo de usar: ... aprioriCpaSpark.jar {INPUT FILENAME} {SUPPORT % (Optional)} {NUM_PARTS (Optional)}");
+    		System.out.println("Modo de usar: ... aprioriCpaSpark.jar {INPUT FILENAME} {SUPPORT % (Optional)} {NUM_PARTS (Optional)} {NUM_BLOCKS (Optional)}");
     		System.exit(1);
     	} else if (args.length == 1) {
     		MainSpark.inputFileName = args[0];
@@ -361,29 +366,49 @@ public class MrUtils {
     		MainSpark.inputFileName = args[0];
     		MainSpark.supportPercentage = Double.parseDouble(args[1]);
     		MainSpark.num_parts = Integer.parseInt(args[2]);
+    	} else if (args.length == 4) {
+        	MainSpark.inputFileName = args[0];
+        	MainSpark.supportPercentage = Double.parseDouble(args[1]);
+        	MainSpark.num_parts = Integer.parseInt(args[2]);
+        	MainSpark.num_blocks = Integer.parseInt(args[3]);
+    	}  else if (args.length == 5) {
+        	MainSpark.inputFileName = args[0];
+        	MainSpark.supportPercentage = Double.parseDouble(args[1]);
+        	MainSpark.num_parts = Integer.parseInt(args[2]);
+        	MainSpark.num_blocks = Integer.parseInt(args[3]);
+        	MainSpark.numExecution = Integer.parseInt((args[4]));
     	} else {
-    		System.out.println("Modo de usar: ... aprioriCpaSpark.jar {INPUT FILENAME} {SUPPORT % (Optional)} {NUM_PARTS (Optional)}");
+    		System.out.println("Modo de usar: ... aprioriCpaSpark.jar {INPUT FILENAME} {SUPPORT % (Optional)} {NUM_PARTS (Optional)} {NUM_BLOCKS (Optional)}");
     		System.exit(1);
     	}
     	
+    	File f = new File("resultados-" + MainSpark.inputFileName);
+    	if (!f.isDirectory()) {
+    		f.mkdir();
+    	}
+    	
+    	MainSpark.durationLogName = "resultados-" + MainSpark.inputFileName + "/" + MainSpark.inputFileName + " - " + MainSpark.supportPercentage + " - " + MainSpark.num_parts + " - " + MainSpark.num_blocks + ".log" + MainSpark.numExecution; 
+    	
     	String inputPathUri = MainSpark.user + MainSpark.inputEntry;
     	
-    	Path inputPath = new Path(inputPathUri);
+    	Path inputPath = new Path(inputPathUri + MainSpark.inputFileName);
     	Configuration c = new Configuration();
         c.set("fs.defaultFS", MainSpark.clusterUrl);
         
         try {	
 			FileSystem fs = inputPath.getFileSystem(c);
-			FileStatus[] subFiles = fs.listStatus(inputPath);
-			Path inputFile = subFiles[0].getPath();
+			
+			//FileStatus[] subFiles = fs.listStatus(inputPath);
+			
+			//Path inputFile = subFiles[0].getPath();*/
 			//MainSpark.inputFileName = inputFile.getName();
-			BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(inputFile)));
+			/*BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(inputPath)));
 			MainSpark.totalTransactionCount = 0;
 			while (br.readLine() != null){
 				MainSpark.totalTransactionCount++;
 			}
 			
-			MainSpark.support = MainSpark.totalTransactionCount * MainSpark.supportPercentage;
+			MainSpark.support = MainSpark.totalTransactionCount * MainSpark.supportPercentage;*/
 			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -501,6 +526,14 @@ public class MrUtils {
         }
     	
     	return partitions;
+    }
+    
+    public static void appendToFile(String fileName, String text) {
+    	try(PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(fileName, true)))) {
+    	    out.println(text);
+    	}catch (IOException e) {
+    	    //exception handling left as an exercise for the reader
+    	}
     }
     
     /**
@@ -681,6 +714,28 @@ public class MrUtils {
 		}
 	}
 	
+	/*public static void saveItemSetsInHDFS(ArrayList<String, Integer> data, String fileOut) {
+		Path p = new Path(fileOut);
+        Configuration c = new Configuration();
+        c.set("fs.defaultFS", MainSpark.clusterUrl);
+        
+        System.out.println("Salvando arquivo de sequência " + fileOut + " com " + data.size() + " elementos...");
+		try {
+			SequenceFile.Writer writer = SequenceFile.createWriter(c, SequenceFile.Writer.file(p),
+			           SequenceFile.Writer.keyClass(Text.class), SequenceFile.Writer.valueClass(IntWritable.class));
+			Text text = new Text();
+			IntWritable value = new IntWritable(1);
+			for(String is : data){
+				text.set(is);
+				writer.append(text, value);
+			}
+			writer.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}*/
+		
 	/**
 	 * 
 	 * @param fileName
@@ -711,17 +766,17 @@ public class MrUtils {
 		Configuration c = new Configuration();
         c.set("fs.defaultFS", MainSpark.clusterUrl);
         
-        try{
+        try {
         	FileSystem fs = FileSystem.get(c);
-        	if(fs.exists(input)){
+        	if (fs.exists(input)){
         		fs.delete(input, true);
         	}
-        	if(FileUtil.copyMerge(fs, path, fs, input, false, c, "")){
+        	if (FileUtil.copyMerge(fs, path, fs, input, false, c, "")) {
         		System.out.println("Arquivos copiados com sucesso!");
-        	}else{
+        	} else{ 
         		System.out.println("Erro ao copiar os arquivos");
         	}
-        }catch(IOException e){
+        } catch(IOException e) {
         	e.printStackTrace();
         }
 	}

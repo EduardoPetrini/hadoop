@@ -18,9 +18,9 @@ import main.java.com.mestrado.main.MainSpark;
 public class CountItemsets {
 	private static Integer itemsetsCounts[];
 
-	public static void countByOutputDir(String outputPath) {
+	public static int countByOutputDir(String outputPath) {
 		Path path = new Path(outputPath);
-		
+		int numLines = 0;
 		Configuration c = new Configuration();
 		try {
             c.set("fs.defaultFS", MainSpark.clusterUrl);
@@ -28,26 +28,20 @@ public class CountItemsets {
 			BufferedReader br = new BufferedReader(new InputStreamReader(
 					fs.open(path)));
 			String line;
-			String[] lineSpt;
 			while ((line = br.readLine()) != null) {
-				line = line.replace("(", "");
-				line = line.replace(")", "");
-				line = line.replace(",", " ");
-				lineSpt = line.split("\\s+");
-				if(itemsetsCounts[lineSpt.length-2] == null){
-					itemsetsCounts[lineSpt.length-2] = new Integer(1);
-				}else{
-					itemsetsCounts[lineSpt.length-2]++;
-				}
+				numLines++;
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		
+		return numLines;
 	}
 	
-	public static void countBySequence(String outputPath){
+	public static int countBySequence(String outputPath){
 		Path path = new Path(outputPath);
 		Configuration c = new Configuration();
+		int numLines = 0;
 		c.set("fs.defaultFS", MainSpark.clusterUrl);
 		try {
 			SequenceFile.Reader reader = new SequenceFile.Reader(c, SequenceFile.Reader.file(path));
@@ -55,18 +49,40 @@ public class CountItemsets {
 			IntWritable value = (IntWritable) ReflectionUtils.newInstance(reader.getValueClass(), c);
 			String[] lineSpt;
 			while (reader.next(key, value)) {
-				lineSpt = key.toString().split(",");
-				if(itemsetsCounts[lineSpt.length-1] == null){
-					itemsetsCounts[lineSpt.length-1] = new Integer(1);
-				}else{
-					itemsetsCounts[lineSpt.length-1]++;
-				}
+				numLines++;
 	        }
 			
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		
+		return numLines;
 	}
+	
+	/*public static String countItemsets() {
+		itemsetsCounts = new Integer[20];
+		//obter todos os arquivos de cada diretório
+		ArrayList<String> outputFileNames;
+		for(int i = 1; i <= MainSpark.countDir; i++){
+			outputFileNames = MrUtils.getAllOuputFilesNames(MainSpark.user + "output" + i);
+			for(String outFile : outputFileNames){
+				System.out.println("Contando itemsets em " + outFile);
+				CountItemsets.countByOutputDir(outFile);
+			}
+		}
+		StringBuilder sb = new StringBuilder();
+		int total = 0;
+		for(int i = 0; i < itemsetsCounts.length; i++){
+			if(itemsetsCounts[i] != null){
+				total += itemsetsCounts[i];
+				sb.append((i + 1)).append("-itemsets: ").append(itemsetsCounts[i]).append("\n\t");
+				System.out.println("Itemsets de tamanho " + (i + 1) + ": " + itemsetsCounts[i]);
+			}
+		}
+		sb.append(total).append("\n");
+		System.out.println("Total: " + total);
+		return sb.toString();
+	}*/
 	
 	public static String countItemsets() {
 		itemsetsCounts = new Integer[20];
@@ -91,5 +107,26 @@ public class CountItemsets {
 		sb.append(total).append("\n");
 		System.out.println("Total: " + total);
 		return sb.toString();
+	}
+	
+	public static void countSparkItemsets() {
+		itemsetsCounts = new Integer[20];
+		int numItemSets = 0;
+		int total = 0;
+
+		ArrayList<String> outputFileNames;
+		for(int i = 1; i <= MainSpark.countDir; i++){
+			numItemSets = 0;
+			outputFileNames = MrUtils.getAllOuputFilesNames(MainSpark.user + "inputCandidates/" + "C" + i);
+			for(String outFile : outputFileNames){
+				//System.out.println("Contando itemsets em " + outFile);
+				numItemSets += CountItemsets.countBySequence(outFile);					
+			}
+			MrUtils.appendToFile(MainSpark.durationLogName, "Itemsets de tamanho " + i + ": " + numItemSets);
+			System.out.println("Itemsets de tamanho " + i + ": " + numItemSets);
+			total += numItemSets;
+		}
+		MrUtils.appendToFile(MainSpark.durationLogName, "Total: " + total);
+		System.out.println("Total: " + total);
 	}
 }
