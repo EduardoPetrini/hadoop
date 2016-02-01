@@ -66,7 +66,7 @@ public class MainSpark implements Serializable {
 	public MainSpark() {
 		countDir = 0;
 		timeTotal = 0;
-		setCluster3();
+		setCluster();
 
 		durations = new ArrayList<Long>();			
 	}
