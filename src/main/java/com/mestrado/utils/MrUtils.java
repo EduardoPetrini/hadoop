@@ -790,7 +790,7 @@ public class MrUtils {
 	 * @param data
 	 */
 	public static void saveTimeLog(String data, String[] inputFileName) {
-		StringBuilder sb = new StringBuilder("/home/hdp/times/");
+		StringBuilder sb = new StringBuilder("/home/hadoop/petrini/times/");
 		File file = new File(sb.toString());
 		if (!file.isDirectory()) {
 			file.mkdirs();

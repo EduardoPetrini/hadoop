@@ -11,6 +11,7 @@ echo "Building hadoop app..."
 mvn clean install 
 
 echo "Copying jar files to $MASTER..."
-scp -r target/aprioriCpa-1.jar hdp@$MASTER:/home/hdp/app-jar/
+#scp -r target/aprioriCpa-1.jar hdp@$MASTER:/home/hdp/app-jar/
+scp -r target/aprioriCpa-1.jar hadoop@$MASTER:/home/hadoop/petrini/app-jar/
 
 echo "done";
