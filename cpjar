@@ -12,7 +12,8 @@ echo "Building hadoop app..."
 mvn clean install
 
 echo "Copying jar files to $MASTER..."
-scp -r target/spark-aprioriDpc-1.0.jar hdp@$MASTER:/home/hdp/app-jar/
+#scp -r target/spark-aprioriDpc-1.0.jar hdp@$MASTER:/home/hdp/app-jar/
+scp -r target/spark-aprioriDpc-1.0.jar hadoop@$MASTER:/home/hadoop/petrini/app-jar/
 
 echo "done "; date;
 
