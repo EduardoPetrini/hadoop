@@ -404,10 +404,8 @@ public class Map1 extends Mapper<LongWritable, Text, Text, Text>{
     	
     	Text key = new Text();
 		Text val = new Text();
-		double rm;
     	for(String item: newFrequents){
     		value = itemSupHash.get(item);
-    		rm = (value/((double) blockSize));
     		if(value != null && ((value/((double) blockSize)) >= support)){
     			//envia para o reduce
     			frequents.add(item);
