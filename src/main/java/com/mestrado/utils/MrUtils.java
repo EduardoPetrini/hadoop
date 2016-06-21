@@ -381,13 +381,13 @@ public class MrUtils {
     		System.out.println("Modo de usar: ... aprioriCpaSpark.jar {INPUT FILENAME} {SUPPORT % (Optional)} {NUM_PARTS (Optional)} {NUM_BLOCKS (Optional)}");
     		System.exit(1);
     	}
-    	
-    	File f = new File("resultados-" + MainSpark.inputFileName);
+    	String logDir = "/home/hadoop/petrini/times/resultados-" + MainSpark.inputFileName;
+    	File f = new File(logDir);
     	if (!f.isDirectory()) {
     		f.mkdir();
     	}
     	
-    	MainSpark.durationLogName = "resultados-" + MainSpark.inputFileName + "/" + MainSpark.inputFileName + " - " + MainSpark.supportPercentage + " - " + MainSpark.num_parts + " - " + MainSpark.num_blocks + ".log" + MainSpark.numExecution; 
+    	MainSpark.durationLogName = logDir+ "/" + MainSpark.inputFileName + " - " + MainSpark.supportPercentage + " - " + MainSpark.num_parts + " - " + MainSpark.num_blocks + ".log" + MainSpark.numExecution; 
     	
     	String inputPathUri = MainSpark.user + MainSpark.inputEntry;
     	
