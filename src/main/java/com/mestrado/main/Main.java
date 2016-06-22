@@ -275,8 +275,8 @@ public class Main {
     	sb.append("TEMPO=").append(seg).append("\n");
     	sb.append("ALLTIME=").append(allTime).append("ms ").append(((double)allTime)/1000.0).append("s ").append(((double)allTime)/1000.0/60.0).append("m\n");
     	sb.append(createStringByArray());
-    	sb.append("-----ITEMSETS-----\n");
-    	sb.append(CountItemsets.countItemsets()).append("\n");
+    	sb.append("-----ITEMSETS-----\nSo many...");
+//    	sb.append(CountItemsets.countItemsets()).append("\n");
         MrUtils.saveTimeLog(sb.toString(), inputFileName.split("/"));
     }
     
