@@ -304,7 +304,7 @@ public class MainSpark implements Serializable {
 		countDir++;
 		m.job1();
 //		m.job2();
-		StringBuilder log = new StringBuilder(CountItemsets.countItemsets(outputDirsName));
+		StringBuilder log = new StringBuilder("");
 		showTotalTime(log);
 //		CountItemsets.printRealItemsets();
 	}
