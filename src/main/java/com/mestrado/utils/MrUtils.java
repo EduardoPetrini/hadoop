@@ -616,10 +616,11 @@ public class MrUtils {
 	}
 
 	public static String countItemsetInOutput(String output) {
-		if (output.contains("outputMR" + Main.countDir)) {
-			return String.valueOf(readAllSequenceFromMatchName(output).size());
-		} else {
-			return String.valueOf(readAllFromHDFSDir(output).size());
-		}
+//		if (output.contains("outputMR" + Main.countDir)) {
+//			return String.valueOf(readAllSequenceFromMatchName(output).size());
+//		} else {
+//			return String.valueOf(readAllFromHDFSDir(output).size());
+//		}
+		return "So many...";
 	}
 }
