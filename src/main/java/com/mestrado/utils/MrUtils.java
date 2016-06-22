@@ -827,10 +827,11 @@ public class MrUtils {
 	}
 
 	public static String countItemsetInOutput(String output) {
-		if (output.contains("C" + Main.countDir)) {
-			return String.valueOf(readAllSequenceFromMatchName(output).size() + ":" + Main.countDir);
-		} else {
-			return String.valueOf(readAllFromHDFSDir(output).size() + ":" + Main.countDir);
-		}
+//		if (output.contains("C" + Main.countDir)) {
+//			return String.valueOf(readAllSequenceFromMatchName(output).size() + ":" + Main.countDir);
+//		} else {
+//			return String.valueOf(readAllFromHDFSDir(output).size() + ":" + Main.countDir);
+//		}
+		return "So many...";
 	}
 }
