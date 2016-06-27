@@ -61,7 +61,7 @@ public class Main {
     public static int NUM_REDUCES = 3;
     public static String NUM_BLOCK = "2b";
     private static ArrayList<String> timeByStep;
-    private static ArrayList<String> itemsetsByStep;
+//    private static ArrayList<String> itemsetsByStep;
     private double timeTotalByStep;
     private static DecimalFormat format = new DecimalFormat("#.000");
     
@@ -69,7 +69,7 @@ public class Main {
         countDir = 0;
         timeTotal = 0;
         timeByStep = new ArrayList<String>();
-        itemsetsByStep = new ArrayList<String>();
+//        itemsetsByStep = new ArrayList<String>();
         timeTotalByStep = 0;
         allTime = 0;
     }
@@ -126,7 +126,7 @@ public class Main {
             if(st == 1){
                 System.exit(st);
             }
-            itemsetsByStep.add(MrUtils.countItemsetInOutput(user+"output"+Main.countDir));
+//            itemsetsByStep.add(MrUtils.countItemsetInOutput(user+"output"+Main.countDir));
         } catch (InterruptedException | ClassNotFoundException | IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -195,7 +195,7 @@ public class Main {
             if(st == 1){
                 System.exit(st);
             }
-            itemsetsByStep.add(MrUtils.countItemsetInOutput(user+"output"+Main.countDir)+":C");
+//            itemsetsByStep.add(MrUtils.countItemsetInOutput(user+"output"+Main.countDir)+":C");
         } catch (InterruptedException | ClassNotFoundException | IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -260,7 +260,7 @@ public class Main {
             if(st == 1){
                 System.exit(st);
             }
-            itemsetsByStep.add(MrUtils.countItemsetInOutput("C"+Main.countDir)+":G");
+//            itemsetsByStep.add(MrUtils.countItemsetInOutput("C"+Main.countDir)+":G");
         } catch (InterruptedException | ClassNotFoundException | IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -299,21 +299,21 @@ public class Main {
     			sb.append(": ").append(t[0]).append("\n");
     		}
     	}
-    	sb.append("\n-----ITEMSETS BY STEP-----\n");
-    	for(String s: itemsetsByStep){
-    		t = s.split(":");
-    		sb.append("Fase ").append(t[1]);
-    		if(t.length == 2){
-    			sb.append(": ").append(t[0]).append("\n");
-    		}else{
-    			if(t[2].equals("C")){
-    				sb.append(" CONTAGEM");
-    			}else{
-    				sb.append(" GERAÇÂO");
-    			}
-    			sb.append(": ").append(t[0]).append("\n");
-    		}
-    	}
+//    	sb.append("\n-----ITEMSETS BY STEP-----\n");
+//    	for(String s: itemsetsByStep){
+//    		t = s.split(":");
+//    		sb.append("Fase ").append(t[1]);
+//    		if(t.length == 2){
+//    			sb.append(": ").append(t[0]).append("\n");
+//    		}else{
+//    			if(t[2].equals("C")){
+//    				sb.append(" CONTAGEM");
+//    			}else{
+//    				sb.append(" GERAÇÂO");
+//    			}
+//    			sb.append(": ").append(t[0]).append("\n");
+//    		}
+//    	}
     	
     	return sb.toString();
     }
@@ -381,7 +381,7 @@ public class Main {
         
         Main.k++; //Main.k == 2;
         Main.countDir++;//2
-        itemsetsByStep.add(MrUtils.countItemsetInOutput("C"+Main.countDir)+":G");
+//        itemsetsByStep.add(MrUtils.countItemsetInOutput("C"+Main.countDir)+":G");
         do{
 	        m.jobCount();//Contar a corrência de Ck na base. Le Ck e salva Lk
 	        if(!checkCountOutput()){
