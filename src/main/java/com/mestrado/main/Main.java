@@ -58,14 +58,14 @@ public class Main {
     public static String NUM_BLOCK = "2b";
     public static int NUM_REDUCES = 2;
     private static ArrayList<String> timeByStep;
-    private static ArrayList<String> itemsetsByStep;
+//    private static ArrayList<String> itemsetsByStep;
     private static DecimalFormat format = new DecimalFormat("#.000");
     
     public Main() {
         countDir = 0;
         timeTotal = 0;
         timeByStep = new ArrayList<String>();
-        itemsetsByStep = new ArrayList<String>();
+//        itemsetsByStep = new ArrayList<String>();
         allTime = 0;
     }
  
@@ -117,14 +117,14 @@ public class Main {
             long ini = job.getStartTime();
             long fim = job.getFinishTime();
             long t = fim - ini;
-            String itemsetStep = MrUtils.countItemsetInOutput(user+"output"+Main.countDir);
-            System.out.println("Tempo AprioriDpc Fase 1: "+((double)t/1000)+" Itemsets: "+itemsetStep);
+//            String itemsetStep = MrUtils.countItemsetInOutput(user+"output"+Main.countDir);
+            System.out.println("Tempo AprioriDpc Fase 1: "+((double)t/1000));
             timeByStep.add(String.valueOf(format.format(((double)t/1000)))+":"+Main.countDir);
             timeTotal += t;
             if(st == 1){
                 System.exit(st);
             }
-            itemsetsByStep.add(itemsetStep + ":" + Main.countDir);
+//            itemsetsByStep.add(itemsetStep + ":" + Main.countDir);
         } catch (InterruptedException | ClassNotFoundException | IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -190,14 +190,14 @@ public class Main {
             long t = fim - ini;
             earlierTime = ((double)t/1000);
             timeByStep.add(String.valueOf(format.format(((double)t/1000)))+":"+Main.countDir);
-            String itemsetStep = MrUtils.countItemsetInOutput(user+"output"+Main.countDir);
-            System.out.println("Tempo AprioriDpc Fase 2: "+earlierTime+" Itemsets: "+itemsetStep);
+//            String itemsetStep = MrUtils.countItemsetInOutput(user+"output"+Main.countDir);
+            System.out.println("Tempo AprioriDpc Fase 2: "+earlierTime);
             
             timeTotal += t;
             if(st == 1){
                 System.exit(st);
             }
-            itemsetsByStep.add(itemsetStep+ ":" + Main.countDir);
+//            itemsetsByStep.add(itemsetStep+ ":" + Main.countDir);
         } catch (InterruptedException | ClassNotFoundException | IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -269,11 +269,11 @@ public class Main {
             if(st == 1){
                 System.exit(st);
             }
-            long item1 = Long.valueOf(MrUtils.countItemsetInOutput(user+"output"+Main.countDir));
-            long item2 = Long.valueOf(MrUtils.countItemsetInOutput("outputMR"+(Main.countDir)));
-            		
-    		itemsetsByStep.add(String.valueOf(item1+item2)+":"+Main.countDir);
-    		System.out.println("Tempo AprioriDpc Fase 3: "+earlierTime+" Itemsets: "+(item1+item2));
+//            long item1 = Long.valueOf(MrUtils.countItemsetInOutput(user+"output"+Main.countDir));
+//            long item2 = Long.valueOf(MrUtils.countItemsetInOutput("outputMR"+(Main.countDir)));
+//            		
+//    		itemsetsByStep.add(String.valueOf(item1+item2)+":"+Main.countDir);
+//    		System.out.println("Tempo AprioriDpc Fase 3: "+earlierTime+" Itemsets: "+(item1+item2));
         } catch (InterruptedException | ClassNotFoundException | IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -304,12 +304,12 @@ private static String createStringByArray(){
     		sb.append("Fase ").append(t[1]);
 			sb.append(": ").append(t[0]).append("\n");
     	}
-    	sb.append("\n-----ITEMSETS BY STEP-----\n");
-    	for(String s: itemsetsByStep){
-    		t = s.split(":");
-    		sb.append("Fase ").append(t[1]);
-			sb.append(": ").append(t[0]).append("\n");
-    	}
+//    	sb.append("\n-----ITEMSETS BY STEP-----\n");
+//    	for(String s: itemsetsByStep){
+//    		t = s.split(":");
+//    		sb.append("Fase ").append(t[1]);
+//			sb.append(": ").append(t[0]).append("\n");
+//    	}
     	
     	return sb.toString();
     }
