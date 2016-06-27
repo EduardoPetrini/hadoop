@@ -95,16 +95,16 @@ public class MainSpark implements Serializable {
 		user = "/user/hdp/";
 	}
 
-	public static void endTime() {
-		StringBuilder sb = new StringBuilder();
-		sb.append("AprioriCpa - support ").append(supportPercentage).append(", transactions ")
-				.append(totalTransactionCount).append(" -- ").append(new Date()).append("\n");
-		sb.append("Arquivo ").append(inputFileName).append("\n\t");
-		sb.append("Quantidade de itemsets gerados: \n\t");
-		sb.append(CountItemsets.countItemsets());
-		sb.append("\n-----------\n");
-		MrUtils.saveTimeLog(sb.toString());
-	}
+//	public static void endTime() {
+//		StringBuilder sb = new StringBuilder();
+//		sb.append("AprioriCpa - support ").append(supportPercentage).append(", transactions ")
+//				.append(totalTransactionCount).append(" -- ").append(new Date()).append("\n");
+//		sb.append("Arquivo ").append(inputFileName).append("\n\t");
+//		sb.append("Quantidade de itemsets gerados: \n\t");
+//		sb.append(CountItemsets.countItemsets());
+//		sb.append("\n-----------\n");
+//		MrUtils.saveTimeLog(sb.toString());
+//	}
 
 	public static boolean checkOutputSequence() {
 		if (!MrUtils.checkOutputMR()) {
