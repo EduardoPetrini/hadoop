@@ -60,7 +60,8 @@ public class Map2Spark2 implements Function2<Integer, Iterator<String>, Iterator
 			}
 		}
 
-		partition.clear();
+//		partition.clear();
+//		partition = null;
 		if (checkPartition)	{
 			String[] itemset;
 			String[] tr;

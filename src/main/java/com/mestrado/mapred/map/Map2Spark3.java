@@ -50,7 +50,7 @@ public class Map2Spark3 implements Function2<Integer, Iterator<String>, Iterator
 		for (String[] item : partition) {
 			buildHashTree(item);
 		}
-		partition.clear();
+//		partition.clear();
 		keyValue = new ArrayList<Tuple2<String, SupPart>>();
 		keyValue.add(new Tuple2<String, SupPart>("#", null));
 
