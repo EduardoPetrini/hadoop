@@ -220,7 +220,7 @@ public class MainSpark implements Serializable {
 
 	public static void Finish() {
 		MrUtils.appendToFile(MainSpark.durationLogName, "\n\n*************************************\n\n");
-//		CountItemsets.countSparkItemsets();
+		CountItemsets.countSparkItemsets();
 	}
 
 	public void runItAll() {

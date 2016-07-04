@@ -50,7 +50,7 @@ public class Map2Spark3 implements PairFlatMapFunction<Iterator<String>, String,
 
 			buildHashTree(item);
 		}
-		partition.clear();
+//		partition.clear();
 
 		String[] itemset;
 		String[] tr;
