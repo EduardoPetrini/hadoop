@@ -15,7 +15,6 @@ import java.util.HashMap;
 
 import main.java.com.mestrado.app.HashNode;
 import main.java.com.mestrado.app.HashPrefixTree;
-import main.java.com.mestrado.app.ItemSup;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
