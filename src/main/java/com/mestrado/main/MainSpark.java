@@ -17,7 +17,6 @@ import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.api.java.function.VoidFunction;
 import org.apache.spark.broadcast.Broadcast;
 import org.apache.spark.storage.StorageLevel;
 
@@ -27,7 +26,6 @@ import main.java.com.mestrado.mapred.map.Map2Spark2;
 import main.java.com.mestrado.mapred.map.Map2Spark3;
 import main.java.com.mestrado.mapred.map.Map3Spark;
 import main.java.com.mestrado.mapred.reduce.Reduce1Spark2;
-import main.java.com.mestrado.utils.CountItemsets;
 import main.java.com.mestrado.utils.MrUtils;
 import main.java.com.mestrado.utils.SerializableComparator;
 import main.java.com.mestrado.utils.SparkUtils;

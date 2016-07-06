@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 
-import main.java.com.mestrado.main.Main;
 import main.java.com.mestrado.main.MainSpark;
 
 import org.apache.hadoop.conf.Configuration;
