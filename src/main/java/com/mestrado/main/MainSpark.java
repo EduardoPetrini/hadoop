@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -25,7 +24,6 @@ import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.FlatMapFunction;
-import org.apache.spark.api.java.function.PairFlatMapFunction;
 import org.apache.spark.api.java.function.PairFunction;
 import org.apache.spark.broadcast.Broadcast;
 
@@ -322,52 +320,10 @@ public class MainSpark implements Serializable {
 
 			JavaPairRDD<String,Integer> resultjobCount = null;
 
-//			JavaRDD<String> pairs = sc.parallelize(currentItemSet);
-
-//			List<String[]> kek = pairs.map(x -> x.split(" ")).collect();	
 			resultjobCount = lines.mapPartitionsToPair(new Map2Spark3(sizeKItemset), true)
 					.filter(kv -> !kv._1.equalsIgnoreCase("#"))
 					.reduceByKey((x, y) -> x + y)
 					.filter(f -> f._2 >= broadcastSupport.value());
-//			fullList = lines.mapPartitions(new FlatMapFunction<Iterator<String>, String>() {
-//				public Iterable<String> call(Iterator<String> it) {
-//
-//					List<String[]> kek_ = kek;
-//					List<String> result = new ArrayList<String>();
-//					String t;
-//					String[] transactions;
-//					String[] itemset;
-//					List<String> keysOut = new ArrayList<String>();
-//															
-//					HashPrefixTree hpt_ = new HashPrefixTree();
-//
-//					for (int j = 0; j < kek_.size(); j++) {
-//						hpt_.add(hpt_.getHashNode(), kek_.get(j), 0);
-//					}
-//					
-//					System.out.println("**************************ARVORE CRIADA!!!");
-//					
-//					kek_.clear();										
-//					
-//					int k = broadcastK.getValue();
-//
-//					while (it.hasNext()) {
-//						t = it.next();
-//
-//						transactions = t.split(" ");
-//	
-//						keysOut.clear();
-//
-//						for (int j = 0; j < transactions.length; j++) {
-//							itemset = new String[k];
-//							subSet(keysOut, transactions, hpt_.getHashNode(), j, itemset, 0, k);
-//						}
-//
-//						result.addAll(keysOut);
-//					}		
-//					return result;
-//				}
-//			});																			
 			
 			if (resultjobCount.count() == 0) {
 				System.out.println("************************ C" + MainSpark.k + " empty! *****************************");
@@ -474,13 +430,6 @@ public class MainSpark implements Serializable {
 
 			// Can make this better
 			sizeKItemset = newK2.collect();
-
-//			ArrayList<String> killme = new ArrayList<String>();
-//			for (Tuple2<String, Integer> t : kek2) {				
-//				killme.add(t._1);
-//			}
-//
-//			sizeKItemset = killme;
 
 			/* Log duration */
 
