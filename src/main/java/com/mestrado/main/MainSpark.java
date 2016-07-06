@@ -23,7 +23,6 @@ import org.apache.spark.broadcast.Broadcast;
 import main.java.com.mestrado.mapred.map.Map2Spark3;
 import main.java.com.mestrado.utils.ComparatorUtils;
 import main.java.com.mestrado.utils.ComparatorUtilsOne;
-import main.java.com.mestrado.utils.CountItemsets;
 import main.java.com.mestrado.utils.MrUtils;
 import main.java.com.mestrado.utils.SparkUtils;
 import scala.Tuple2;
@@ -68,51 +67,10 @@ public class MainSpark implements Serializable {
 		timeTotal = 0;
 		outputDirsName = new ArrayList<String>();
 	}
-
-	// public void print(List<Tuple2<String,Iterable<String>>> lista){
-	// System.out.println("********************************* printing");
-	// for(Tuple2<String,Iterable<String>> l: lista){
-	// System.out.println(l._1+" -> "+l._2);
-	// }
-	// System.out.println("****************************** end printing");
-	// }
-	//
-	// public void print2(List<Tuple2<String,String>> lista){
-	// System.out.println("********************************* printing");
-	// for(Tuple2<String,String> l: lista){
-	// System.out.println(l._1+" -> "+l._2);
-	// }
-	// System.out.println("****************************** end printing");
-	// }
-	//
-	// public void print3(List<Tuple2<Text,Text>> lista){
-	// System.out.println("********************************* printing");
-	// for(Tuple2<Text,Text> l: lista){
-	// System.out.println(l._1+" -> "+l._2);
-	// }
-	// System.out.println("****************************** end printing");
-	// }
-
-//	public void printVector(List<String[]> vet){
-//		for(String[] a: vet){
-//			for(String b: a){
-//				System.out.print(b+" ");
-//			}
-//			System.out.println("");
-//		}
-//	}
-//	
-//	public void printVectorString(List<String> vet){
-//		for(String a: vet){
-//			System.out.println(a);
-//		}
-//	}
 	
 	public void job1() {
 		SparkConf conf = new SparkConf().setAppName("Spark DPC").setMaster(sparkUrl);
 		JavaSparkContext sc = new JavaSparkContext(conf);
-		// sc.addJar("target/spark-imrApriori-1.0-jar-with-dependencies.jar");
-//		Broadcast<Double> broadSup = sc.broadcast(MainSpark.supportRate);
 		Broadcast<Double> broadSupTotal = sc.broadcast(MainSpark.supportRate * MainSpark.totalTransactionCount);
 		Accumulator<Integer> dirCount = sc.accumulator(1);
 		StringBuilder log = new StringBuilder();
