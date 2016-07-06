@@ -8,7 +8,7 @@ This projec contains some Apriori implementations on Hadoop/MapReduce and Spark.
  - CPA (Zhou & Huange, 2014) in dev/CPA branch.
 
 ### Spark
- - IMRAprioriAcc-Spark in dev/IMRAprioriAcc-Spark branch.
- - DPC-Spark in dev/DPC-Spark branch.
- - CPA-Spark in dev/CPA-Spark branch.
- - IMRAprioriAccCpa-Spark branch.
+ - IMRAprioriAcc on Spark in dev/IMRAprioriAcc-Spark branch.
+ - DPC on Spark in dev/DPC-Spark branch.
+ - CPA on Spark in dev/CPA-Spark branch.
+ - IMRAprioriAcc with Cpa on Spark in dev/IMRAprioriAcc-Cpa-Spark branch.
