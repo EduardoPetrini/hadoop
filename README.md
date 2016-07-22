@@ -1,6 +1,6 @@
 # Apriori Algorithm Implementations on MapReduce and Spark
 
-This projec contains some Apriori implementations on Hadoop/MapReduce and Spark. The implementations is organized in branchs as follow:
+This project contains some Apriori implementations on Hadoop/MapReduce and Spark. The implementations are organized in branchs as follow:
 
 ### Hadoop
  - IMRApriori v2 (Farzanier & Cercone, 2013) named here as IMRAprioriAcc in [dev/IMRAprioriAcc](https://github.com/EduardoPetrini/hadoop/tree/dev/IMRAprioriAcc) branch.
